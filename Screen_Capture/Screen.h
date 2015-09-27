@@ -7,13 +7,13 @@ namespace SL {
 	namespace Screen_Capture {
 	
 		struct Screen_Info {
-			int Width = 0;
-			int Height = 0;
-			int Depth = 0;
-			char Device[32];
-			int Offsetx = 0;
-			int Offsety = 0;
-			int Index = 0;
+			int Width = 0;//width in pixels of the screen
+			int Height = 0;//Height in pixels of the screen
+			int Depth = 0;//Depth in pixels of the screen
+			char Device[32];//name of the screen
+			int Offsetx = 0;//distance in pixels from the MOST left screen. This can be negative because the primary monitor starts at 0, but this screen could be layed out to the left of the primary, in which case the offset is negative
+			int Offsety = 0;//distance in pixels from the MOST bottom of the screen
+			int Index = 0;//Index of the screen from LEFT to right of the physical monitors
 		};
 		class Screen {
 

@@ -2,7 +2,7 @@
 c++ screen capturing library.
 TO USE:
 
-see the Test Project for a simepl demo
+see the Test Project for a simple demo
 
 
 	auto monitorinfo = SL::Screen_Capture::GetMoitors();

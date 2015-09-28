@@ -55,18 +55,64 @@ auto CreateCaptureBitmap(const std::vector<SL::Screen_Capture::Screen_Info>& scr
 	return RAIIHBITMAP(CreateCompatibleBitmap(desktopdc, width, height));
 }
 
-std::vector<char> CaptureDesktop(HDC desktop, HDC capturedc, HBITMAP bitmap, int left, int top, int width, int height)
+#define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)>(handle, &::CloseHandle)
+void SaveBMP(BITMAPINFOHEADER bi, char* imgdata, std::string dst) {
+	BITMAPFILEHEADER   bmfHeader;
+	// A file is created, this is where we will save the screen capture.
+	auto hFile(RAIIHANDLE(CreateFileA(dst.c_str(),
+		GENERIC_WRITE,
+		0,
+		NULL,
+		CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL)));
+
+	// Add the size of the headers to the size of the bitmap to get the total file size
+	DWORD dwSizeofDIB = bi.biSizeImage + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+
+	//Offset to where the actual bitmap bits start.
+	bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+
+	//Size of the file
+	bmfHeader.bfSize = dwSizeofDIB;
+
+	//bfType must always be BM for Bitmaps
+	bmfHeader.bfType = 0x4D42; //BM   
+
+	DWORD dwBytesWritten = 0;
+	WriteFile(hFile.get(), (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
+	WriteFile(hFile.get(), (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
+	WriteFile(hFile.get(), (LPSTR)imgdata, bi.biSizeImage, &dwBytesWritten, NULL);
+}
+
+std::vector<char> CaptureDesktop(HDC desktop, HDC capturedc, HBITMAP bitmap, int left, int top, int width, int height, bool capturemouse)
 {
 	std::vector<char> retdata;
 	// Selecting an object into the specified DC 
 	auto originalBmp = SelectObject(capturedc, bitmap);
 	retdata.resize(height*width * 4);
+
 	if (!BitBlt(capturedc, 0, 0, width, height, desktop, left, top, SRCCOPY | CAPTUREBLT)) {
 		//if the screen cannot be captured, set everything to 1 and return 
 		memset(retdata.data(), 1, retdata.size());
 		SelectObject(capturedc, originalBmp);
 		return retdata;
 	}
+	
+	if (capturemouse) {
+
+		CURSORINFO cursorInfo;
+		cursorInfo.cbSize = sizeof(cursorInfo);
+		GetCursorInfo(&cursorInfo);
+		if ((cursorInfo.ptScreenPos.y > left && cursorInfo.ptScreenPos.y < left + width) || (cursorInfo.ptScreenPos.y + 32 > left && cursorInfo.ptScreenPos.y + 32 < left + width) ) {
+			ICONINFO ii = { 0 };
+			GetIconInfo(cursorInfo.hCursor, &ii);
+			auto colorbmp = RAIIHBITMAP(ii.hbmColor);//make sure this is cleaned up properly
+			auto maskbmp = RAIIHBITMAP(ii.hbmMask);//make sure this is cleaned up properly
+			DrawIcon(capturedc, cursorInfo.ptScreenPos.x - ii.xHotspot, cursorInfo.ptScreenPos.y - ii.yHotspot, cursorInfo.hCursor);
+		}
+	
+	}
+
 
 	BITMAPINFOHEADER   bi;
 	memset(&bi, 0, sizeof(bi));
@@ -87,27 +133,34 @@ std::vector<char> CaptureDesktop(HDC desktop, HDC capturedc, HBITMAP bitmap, int
 	GetDIBits(desktop, bitmap, 0, (UINT)height, retdata.data(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
 	SelectObject(capturedc, originalBmp);
 
+	//Sanity check to ensure the data is correct
+	//SaveBMP(bi, retdata.data(), "c:\\users\\scott\\desktop\\one.bmp");
 	return retdata;
 }
 
-std::vector<std::shared_ptr<SL::Screen_Capture::Screen>> SL::Screen_Capture::GetScreens(int index)
+std::vector<std::shared_ptr<SL::Screen_Capture::Screen>> SL::Screen_Capture::GetScreens(bool capturemouse, int index)
 {
-	///// The section in the comment block area is always fast 1-2 ms so recreating the resources each time is not a big deal
+	///// The section in the comment block area is always fast, 1-2 ms so recreating the resources each time is not a big deal
 	auto ret = std::vector<std::shared_ptr<SL::Screen_Capture::Screen>>();
 	auto Screens = GetMoitors();
+	if (Screens.empty()) return ret;
 	auto desktopdc = RAIIHDC(CreateDCA("DISPLAY", NULL, NULL, NULL));
+	if (desktopdc.get() == NULL) return ret;
 	auto capturedc = RAIIHDC(CreateCompatibleDC(desktopdc.get()));
+	if (capturedc.get() == NULL) return ret;
 	auto capturebmp = CreateCaptureBitmap(Screens, desktopdc.get());
+	if (capturebmp.get() == NULL) return ret;
 	///////
+
 	//each screen grab below is where the time is spent specifically in the BitBlt function. On my computer this takes approx 30 ish ms to grab a 1080 @ 32 bits. This is unfortunately the fastest method on windows
 	if (index == -1) {//get all screens
 		for (auto& a : Screens) {
-			ret.push_back(std::make_shared<SL::Screen_Capture::Screen>(a,CaptureDesktop(desktopdc.get(), capturedc.get(), capturebmp.get(), a.Offsetx, a.Offsety, a.Width, a.Height)));
+			ret.push_back(std::make_shared<SL::Screen_Capture::Screen>(a, CaptureDesktop(desktopdc.get(), capturedc.get(), capturebmp.get(), a.Offsetx, a.Offsety, a.Width, a.Height, capturemouse)));
 		}
 	}
 	else if (index < Screens.size() && index>-1) {
 		auto& a = Screens[index];
-		ret.push_back(std::make_shared<SL::Screen_Capture::Screen>(a, CaptureDesktop(desktopdc.get(), capturedc.get(), capturebmp.get(), a.Offsetx, a.Offsety, a.Width, a.Height)));
+		ret.push_back(std::make_shared<SL::Screen_Capture::Screen>(a, CaptureDesktop(desktopdc.get(), capturedc.get(), capturebmp.get(), a.Offsetx, a.Offsety, a.Width, a.Height, capturemouse)));
 	}
 	return ret;
 }

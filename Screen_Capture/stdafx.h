@@ -4,10 +4,15 @@
 //
 
 #pragma once
+#ifdef _WIN32
 
-#define NOMINMAX 
+#define NOMINMAX
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
 
+#include <atlbase.h>
+
+
+#endif
 
 // TODO: reference additional headers your program requires here

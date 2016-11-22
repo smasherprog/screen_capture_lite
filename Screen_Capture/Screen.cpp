@@ -1,74 +1,148 @@
 #include "stdafx.h"
 #include "Screen.h"
-
+#include "ScreenInfo.h"
+#include <assert.h>
+#include <algorithm>
 
 
 namespace SL {
 	namespace Screen_Capture {
-		struct Blk {
-			size_t size = 0;
-			char* data = nullptr;
-		};
-	}
-}
 
-class BufferManager {
-	size_t _Bytes_Allocated = 0;
-	const size_t MAX_ALLOCATED_BYTES = 1024 * 1024 * 64;//64 MB MAX
-	std::vector<std::shared_ptr<SL::Screen_Capture::Blk>> _Buffer;
-	std::mutex _BufferLock;
-public:
-	std::shared_ptr<SL::Screen_Capture::Blk> AquireBuffer(size_t req_bytes) {
-		std::lock_guard<std::mutex> lock(_BufferLock);
-		auto found = std::remove_if(begin(_Buffer), end(_Buffer), [=](std::shared_ptr<SL::Screen_Capture::Blk>& c) {  return c->size >= req_bytes; });
+#if _WIN32
 
-		if (found == _Buffer.end()) {
-			auto b = new SL::Screen_Capture::Blk;
-			b->data = new char[req_bytes];
-			b->size = req_bytes;
-			return std::shared_ptr<SL::Screen_Capture::Blk>(b, [](SL::Screen_Capture::Blk* b) { delete[] b->data; delete b; });
-		}
-		else {
-			auto ret(*found);
-			_Bytes_Allocated -= ret->size;
-			_Buffer.erase(found);
+		//RAII Objects to ensure proper destruction
+#define RAIIHDC(handle) std::unique_ptr<std::remove_pointer<HDC>::type, decltype(&::DeleteDC)>(handle, &::DeleteDC)
+#define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(&::DeleteObject)>(handle, &::DeleteObject)
+#define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)>(handle, &::CloseHandle)
+
+		SL::Screen_Capture::Image CaptureDesktopImage(const std::vector<ScreenInfo>& screens)
+		{
+			Image ret;
+			int left(0), top(0);
+			for (const auto& mon : screens) {
+				ret.Width += mon.Width;
+				ret.Height = std::max(ret.Height, mon.Height);
+				left = std::min(left, mon.Offsetx);
+				top = std::min(top, mon.Offsety);
+			}
+			assert(ret.Width >= 0);
+			assert(ret.Height >= 0);
+
+			static auto desktopdc(RAIIHDC(CreateDCA("DISPLAY", NULL, NULL, NULL)));
+			static auto capturedc(RAIIHDC(CreateCompatibleDC(desktopdc.get())));
+			static auto capturebmp(RAIIHBITMAP(CreateCompatibleBitmap(desktopdc.get(), ret.Width, ret.Height)));
+		
+			if (!desktopdc || !capturedc || !capturebmp) return ret;
+
+			// Selecting an object into the specified DC 
+			auto originalBmp = SelectObject(capturedc.get(), capturebmp.get());
+
+			ret.Data = std::shared_ptr<char>(new char[get_imagesize(ret)], [](char* p) { delete[]p; });//always
+		
+			if (BitBlt(capturedc.get(), 0, 0, ret.Width, ret.Height, desktopdc.get(), left, top, SRCCOPY | CAPTUREBLT) == FALSE) {
+				//if the screen cannot be captured, set everything to 1 and return 
+				memset(ret.Data.get(), 1, get_imagesize(ret));
+				SelectObject(capturedc.get(), originalBmp);
+				return ret;
+			}
+			BITMAPINFO bmpInfo;
+			memset(&bmpInfo, 0, sizeof(BITMAPINFO));
+
+			bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+			bmpInfo.bmiHeader.biWidth = ret.Width;
+			bmpInfo.bmiHeader.biHeight = -ret.Height;
+			bmpInfo.bmiHeader.biPlanes = 1;
+			bmpInfo.bmiHeader.biBitCount = get_pixelstride()*8;//always 32 bits damnit!!!
+			bmpInfo.bmiHeader.biCompression = BI_RGB;
+			bmpInfo.bmiHeader.biSizeImage = ((ret.Width * bmpInfo.bmiHeader.biBitCount + 31) / get_pixelstride() * 8) * get_pixelstride()* ret.Width;
+
+			GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)ret.Width, ret.Data.get(), (BITMAPINFO *)&bmpInfo, DIB_RGB_COLORS);
+
+			SelectObject(capturedc.get(), originalBmp);
+
 			return ret;
 		}
+
+#elif __APPLE__
+#include "TargetConditionals.h"
+#if TARGET_IPHONE_SIMULATOR
+		// iOS Simulator
+#elif TARGET_OS_IPHONE
+		// iOS device
+#elif TARGET_OS_MAC
+		// Other kinds of Mac OS
+#else
+#   error "Unknown Apple platform"
+#endif
+
+
+#include <ApplicationServices/ApplicationServices.h>
+
+		std::shared_ptr<Image> CaptureDesktopImage()
+		{
+			auto image_ref = CGDisplayCreateImage(CGMainDisplayID());
+			auto provider = CGImageGetDataProvider(image_ref);
+			auto dataref = CGDataProviderCopyData(provider);
+			size_t w, h;
+			w = CGImageGetWidth(image_ref);
+			h = CGImageGetHeight(image_ref);
+			size_t bpp = CGImageGetBitsPerPixel(image_ref) / 8;
+
+			auto img = Image::CreateImage(h, w, (const char*)(CFDataGetBytePtr(dataref)), bpp);
+
+			CFRelease(dataref);
+			CFRelease(provider);
+			CGImageRelease(image_ref);
+			return img;
+		}
+
+#elif __ANDROID__
+		std::shared_ptr<Image> CaptureDesktopImage()
+		{
+			return Image::CreateImage(0, 0);
+		}
+#elif __linux__
+
+
+		std::shared_ptr<Image> CaptureDesktopImage()
+		{
+			auto display = XOpenDisplay(NULL);
+			auto root = DefaultRootWindow(display);
+			auto screen = XDefaultScreen(display);
+			auto visual = DefaultVisual(display, screen);
+			auto depth = DefaultDepth(display, screen);
+
+			XWindowAttributes gwa;
+			XGetWindowAttributes(display, root, &gwa);
+			auto width = gwa.width;
+			auto height = gwa.height;
+
+			XShmSegmentInfo shminfo;
+			auto image = XShmCreateImage(display, visual, depth, ZPixmap, NULL, &shminfo, width, height);
+			shminfo.shmid = shmget(IPC_PRIVATE, image->bytes_per_line * image->height, IPC_CREAT | 0777);
+
+			shminfo.readOnly = False;
+			shminfo.shmaddr = image->data = (char*)shmat(shminfo.shmid, 0, 0);
+
+			XShmAttach(display, &shminfo);
+
+			XShmGetImage(display, root, image, 0, 0, AllPlanes);
+
+			XShmDetach(display, &shminfo);
+
+			auto px = Image::CreateImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel / 8);
+			assert(image->bits_per_pixel == 32);//this should always be true... Ill write a case where it isnt, but for now it should be
+
+			XDestroyImage(image);
+			shmdt(shminfo.shmaddr);
+			shmctl(shminfo.shmid, IPC_RMID, 0);
+			XCloseDisplay(display);
+
+			return px;
+
+		}
+#endif
 	}
-	void ReleaseBuffer(std::shared_ptr<SL::Screen_Capture::Blk>& buffer) {
-		if (buffer == nullptr) return;
-		if (_Bytes_Allocated < MAX_ALLOCATED_BYTES) {//ignore the fact that this will mean our buffer holds more than our maxsize
-			std::lock_guard<std::mutex> lock(_BufferLock);
-			auto found = std::find(begin(_Buffer), end(_Buffer), buffer);
-			if (found == _Buffer.end()) {
-				_Bytes_Allocated += buffer->size;
-				_Buffer.emplace_back(buffer);
-			}
-		}//otherwise ignore and let it be reclaimed
-	}
-};
-
-static BufferManager Buffer_Manager;
-
-SL::Screen_Capture::Image::~Image() {
-	Buffer_Manager.ReleaseBuffer(_Data);
-}
-char * SL::Screen_Capture::Image::getData() const
-{
-	return _Data->data;
-}
-std::shared_ptr<SL::Screen_Capture::Blk> SL::Screen_Capture::AquireBuffer(size_t req_bytes) {
-	return Buffer_Manager.AquireBuffer(req_bytes);
-}
-void SL::Screen_Capture::ReleaseBuffer(std::shared_ptr<Blk>& buffer) {
-	Buffer_Manager.ReleaseBuffer(buffer);
-}
-size_t SL::Screen_Capture::getSize(const std::shared_ptr<Blk>& b)
-{
-	return b->size;
 }
 
-char * SL::Screen_Capture::getData(const std::shared_ptr<Blk>& b)
-{
-	return b->data;
-}
+

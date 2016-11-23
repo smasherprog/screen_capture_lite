@@ -1,4 +1,4 @@
-#include "stdafx.h"
+
 #include "Screen.h"
 #include <algorithm>
 

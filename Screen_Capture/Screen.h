@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 
-
 namespace SL {
 	namespace Screen_Capture {
 		struct ScreenInfo {

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Screen.h"
 #include <assert.h>
 #include <algorithm>

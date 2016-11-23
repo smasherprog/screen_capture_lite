@@ -1,13 +1,30 @@
-#include "stdafx.h"
 #include "Screen.h"
 #include <assert.h>
-#include <algorithm>
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xlibint.h>
+#include <X11/keysym.h>
+#include <X11/Xutil.h>
+#include <sys/shm.h>
+#include <X11/extensions/XTest.h>
+#include <X11/extensions/Xfixes.h>
+#include <X11/extensions/XShm.h>
 
 namespace SL {
 	namespace Screen_Capture {
 
 #if __linux__
+
+		typedef struct {
+			short x_org;
+			short y_org;
+			short width;
+			short height;
+		} FLScreenInfo;
+		static FLScreenInfo screens[16];
+		static float dpi[16][2];
+
 
 		void Save(const Image & img, std::string path)
 		{
@@ -16,6 +33,7 @@ namespace SL {
 
 		std::vector<SL::Screen_Capture::ScreenInfo> SL::Screen_Capture::GetMoitors()
 		{
+			if (!fl_display) fl_open_display();
 			num_screens = ScreenCount(fl_display);
 			if (num_screens > MAX_SCREENS) num_screens = MAX_SCREENS;
 

@@ -1,8 +1,5 @@
-// Test.cpp : Defines the entry point for the console application.
-//
-
 #include "stdafx.h"
-#include "..\Screen_Capture\Screen.h"
+#include "Screen.h"
 #include <iostream>
 #include <chrono>
 

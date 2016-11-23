@@ -3,7 +3,6 @@
 
 #include "stdafx.h"
 #include "..\Screen_Capture\Screen.h"
-#include "..\Screen_Capture\ScreenInfo.h"
 #include <iostream>
 #include <chrono>
 
@@ -24,7 +23,7 @@ int main()
 	auto screen = SL::Screen_Capture::CaptureDesktopImage(monitors);
 	std::cout << "took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() << "ms\n";
 
-
+	SL::Screen_Capture::Save(screen, "testing.bmp");
 
 	int k;
 	std::cin >> k;

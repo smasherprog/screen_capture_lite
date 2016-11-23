@@ -138,11 +138,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Screen.h" />
-    <ClInclude Include="ScreenInfo.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ScreenInfo.cpp" />
+    <ClCompile Include="Screen_Linux.cpp" />
+    <ClCompile Include="Screen_Mac.cpp" />
+    <ClCompile Include="Screen_Win.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

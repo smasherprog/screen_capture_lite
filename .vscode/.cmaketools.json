@@ -1,0 +1,12 @@
+{
+  "variant": {
+    "label": "Release",
+    "keywordSettings": {
+      "buildType": "release"
+    },
+    "description": "Enable optimizations, omit debug info"
+  },
+  "activeEnvironments": [
+    "Visual C++ 14.0 - amd64"
+  ]
+}

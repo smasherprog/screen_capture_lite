@@ -1,12 +1,27 @@
-
-#if _WIN32
-#include "Screen.h"
-#include <assert.h>
+#include "ScreenCaptureManager.h"
+#include <vector>
+#include <chrono>
 #include <algorithm>
-#include <fstream>
+#include <assert.h>
+#include <iostream>
 
+struct ScreenInfo {
+	int Width = 0;//width in pixels of the screen 
+	int Height = 0;//Height in pixels of the screen 
+	int Depth = 0;//Depth in pixels of the screen, i.e. 32 bit 
+	char Device[32];//name of the screen 
+	int Offsetx = 0;//distance in pixels from the MOST left screen. This can be negative because the primary monitor starts at 0, but this screen could be layed out to the left of the primary, in which case the offset is negative 
+	int Offsety = 0;//distance in pixels from the TOP MOST screen 
+	int Index = 0;//Index of the screen from LEFT to right of the physical monitors 
+};
+void Reorder(std::vector<ScreenInfo>& screens) {
+	//organize the monitors so that the ordering is left to right for displaying purposes 
+	std::sort(begin(screens), end(screens), [](const ScreenInfo& i, const ScreenInfo& j) { return i.Offsetx < j.Offsetx; });
+	auto index = 0;
+	for (auto& x : screens) x.Index = index++;
+}
 #define NOMINMAX
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
 
 //RAII Objects to ensure proper destruction
@@ -14,46 +29,11 @@
 #define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(&::DeleteObject)>(handle, &::DeleteObject)
 #define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)>(handle, &::CloseHandle)
 
-void SL::Screen_Capture::Save(const Image& img, std::string path)
+SL::Screen_Capture::Image CaptureDesktopImage(const std::vector<ScreenInfo>& screens)
 {
-	assert(path.find(".bmp") != path.npos);
-	//must be bmp.. save is for testing that the file is correct
-	BITMAPINFOHEADER   bi;
-	memset(&bi, 0, sizeof(bi));
+	auto start = std::chrono::high_resolution_clock::now();
 
-	bi.biSize = sizeof(BITMAPINFOHEADER);
-
-	bi.biWidth = img.Width;
-	bi.biHeight = -img.Height;
-	bi.biPlanes = 1;
-	bi.biBitCount = get_pixelstride() * 8;//always 32 bits damnit!!!
-	bi.biCompression = BI_RGB;
-	bi.biSizeImage = ((img.Width * bi.biBitCount + 31) / (get_pixelstride() * 8)) * get_pixelstride()* img.Height;
-
-	BITMAPFILEHEADER   bmfHeader;
-	memset(&bmfHeader, 0, sizeof(bmfHeader));
-	// A file is created, this is where we will save the screen capture.
-	std::ofstream hFile(path, std::ios::trunc | std::ios::binary);
-	assert(hFile);
-
-	//Offset to where the actual bitmap bits start.
-	bmfHeader.bfOffBits = (DWORD)sizeof(bmfHeader) + (DWORD)sizeof(bi);
-
-	//Size of the file
-	bmfHeader.bfSize = bi.biSizeImage + bmfHeader.bfOffBits;
-
-	//bfType must always be BM for Bitmaps
-	bmfHeader.bfType = 0x4D42; //BM   
-
-	hFile.write((char*)&bmfHeader, sizeof(bmfHeader));
-	hFile.write((char*)&bi, sizeof(bi));
-	hFile.write(img.Data.get(), bi.biSizeImage);
-
-}
-
-SL::Screen_Capture::Image SL::Screen_Capture::CaptureDesktopImage(const std::vector<ScreenInfo>& screens)
-{
-	Image ret;
+	SL::Screen_Capture::Image ret;
 	int left(0), top(0);
 	for (const auto& mon : screens) {
 		ret.Width += mon.Width;
@@ -68,20 +48,21 @@ SL::Screen_Capture::Image SL::Screen_Capture::CaptureDesktopImage(const std::vec
 	static auto capturedc(RAIIHDC(CreateCompatibleDC(desktopdc.get())));
 	static auto capturebmp(RAIIHBITMAP(CreateCompatibleBitmap(desktopdc.get(), ret.Width, ret.Height)));
 
-	if (!desktopdc || !capturedc || !capturebmp) return ret;
+	if (!desktopdc || !capturedc || !capturebmp)
+		return ret;
 
-	// Selecting an object into the specified DC 
+	// Selecting an object into the specified DC
 	auto originalBmp = SelectObject(capturedc.get(), capturebmp.get());
 
-	ret.Data = std::shared_ptr<char>(new char[get_imagesize(ret)], [](char* p) { delete[]p; });//always
+	ret.Data = std::shared_ptr<char>(new char[ret.Height*ret.Width*ret.PixelStride], [](char* p) { delete[] p; }); //always
 
 	if (BitBlt(capturedc.get(), 0, 0, ret.Width, ret.Height, desktopdc.get(), left, top, SRCCOPY | CAPTUREBLT) == FALSE) {
-		//if the screen cannot be captured, set everything to 1 and return 
-		memset(ret.Data.get(), 1, get_imagesize(ret));
+		//if the screen cannot be captured, set everything to 1 and return
+		memset(ret.Data.get(), 1, ret.Height*ret.Width*ret.PixelStride);
 		SelectObject(capturedc.get(), originalBmp);
 		return ret;
 	}
-	BITMAPINFOHEADER   bi;
+	BITMAPINFOHEADER bi;
 	memset(&bi, 0, sizeof(bi));
 
 	bi.biSize = sizeof(BITMAPINFOHEADER);
@@ -89,27 +70,28 @@ SL::Screen_Capture::Image SL::Screen_Capture::CaptureDesktopImage(const std::vec
 	bi.biWidth = ret.Width;
 	bi.biHeight = -ret.Height;
 	bi.biPlanes = 1;
-	bi.biBitCount = get_pixelstride() * 8;//always 32 bits damnit!!!
+	bi.biBitCount = ret.PixelStride * 8; //always 32 bits damnit!!!
 	bi.biCompression = BI_RGB;
-	bi.biSizeImage = ((ret.Width * bi.biBitCount + 31) / (get_pixelstride() * 8)) * get_pixelstride()* ret.Height;
+	bi.biSizeImage = ((ret.Width * bi.biBitCount + 31) / (ret.PixelStride * 8)) * ret.PixelStride* ret.Height;
 
-	GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)ret.Height, ret.Data.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
+	GetDIBits(desktopdc.get(), capturebmp.get(), 0, (UINT)ret.Height, ret.Data.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
 	SelectObject(capturedc.get(), originalBmp);
 
+	std::cout << "took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() << "ms\n";
 	return ret;
 }
 
-std::vector<SL::Screen_Capture::ScreenInfo> SL::Screen_Capture::GetMoitors()
+std::vector<ScreenInfo> GetMoitors()
 {
-	std::vector<SL::Screen_Capture::ScreenInfo> ret;
+	std::vector<ScreenInfo> ret;
 	DISPLAY_DEVICEA dd;
 	ZeroMemory(&dd, sizeof(dd));
 	dd.cb = sizeof(dd);
 	for (auto i = 0; EnumDisplayDevicesA(NULL, i, &dd, 0); i++) {
 		//monitor must be attached to desktop and not a mirroring device
 		if ((dd.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) & !(dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER)) {
-			SL::Screen_Capture::ScreenInfo temp;
+			ScreenInfo temp;
 			DEVMODEA devMode;
 			devMode.dmSize = sizeof(devMode);
 			EnumDisplaySettingsA(dd.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);
@@ -126,7 +108,3 @@ std::vector<SL::Screen_Capture::ScreenInfo> SL::Screen_Capture::GetMoitors()
 	Reorder(ret);
 	return ret;
 }
-
-
-
-#endif

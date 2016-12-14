@@ -7,6 +7,7 @@
 
 #pragma once
 #include <memory>
+#include <atomic>
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 
@@ -15,12 +16,16 @@
 #include <dxgi1_2.h>
 #include <DirectXMath.h>
 #include <wrl.h>
-#include <warning.h>
 #include <DirectXMath.h>
 
 #include <d3dcompiler.h>
+#include "ScreenTypes.h"
 
+
+#pragma comment(lib,"dxgi.lib")
+#pragma comment(lib,"d3d11.lib")
 #pragma comment(lib,"d3dcompiler.lib")
+
 using namespace DirectX;
 
 namespace SL {
@@ -55,7 +60,7 @@ namespace SL {
 		{
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> Frame;
 			DXGI_OUTDUPL_FRAME_INFO FrameInfo = { 0 };
-			std::unique_ptr<BYTE[]> MetaData;
+			std::shared_ptr<BYTE> MetaData;
 			UINT DirtyCount = 0;
 			UINT MoveCount = 0;
 		};		
@@ -71,16 +76,14 @@ namespace SL {
 		struct THREAD_DATA
 		{
 			// Used to indicate abnormal error condition
-			HANDLE UnexpectedErrorEvent;
+			std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent;
 			// Used to indicate a transition event occurred e.g. PnpStop, PnpStart, mode change, TDR, desktop switch and the application needs to recreate the duplication interface
-			HANDLE ExpectedErrorEvent;
+			std::shared_ptr<std::atomic_bool> ExpectedErrorEvent;
 			// Used by WinProc to signal to threads to exit
-			HANDLE TerminateThreadsEvent;
+			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
 
-			HANDLE TexSharedHandle;
 			UINT Output;
-			INT OffsetX;
-			INT OffsetY;
+			ImageCallback CallBack;
 			std::shared_ptr<PTR_INFO> PtrInfo;
 			DX_RESOURCES DxRes;
 		} ;

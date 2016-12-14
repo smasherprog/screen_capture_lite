@@ -1,5 +1,6 @@
 #pragma once
 #include "CommonTypes.h"
+#include "ScreenTypes.h"
 #include <thread>
 #include <vector>
 
@@ -18,7 +19,7 @@ namespace SL {
 			~DXThreadManager();
 
 			void Clean();
-			DUPL_RETURN Initialize(INT SingleOutput, UINT OutputCount, HANDLE UnexpectedErrorEvent, HANDLE ExpectedErrorEvent, HANDLE TerminateThreadsEvent, HANDLE SharedHandle, _In_ RECT* DesktopDim);
+			DUPL_RETURN Initialize(std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent, std::shared_ptr<std::atomic_bool> ExpectedErrorEvent, std::shared_ptr<std::atomic_bool> TerminateThreadsEvent, ImageCallback& cb);
 			PTR_INFO* GetPointerInfo();
 			void WaitForThreadTermination();
 

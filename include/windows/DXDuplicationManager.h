@@ -18,14 +18,14 @@ namespace SL {
 			DUPL_RETURN GetFrame(FRAME_DATA* Data, bool* Timeout);
 			DUPL_RETURN DoneWithFrame();
 			DUPL_RETURN InitDupl(ID3D11Device* Device, UINT Output);
-			DUPL_RETURN GetMouse(PTR_INFO* PtrInfo, DXGI_OUTDUPL_FRAME_INFO* FrameInfo, INT OffsetX, INT OffsetY);
+			DUPL_RETURN GetMouse(PTR_INFO* PtrInfo, DXGI_OUTDUPL_FRAME_INFO* FrameInfo);
 			void GetOutputDesc(DXGI_OUTPUT_DESC* DescPtr);
 
 		private:
 
 			Microsoft::WRL::ComPtr<IDXGIOutputDuplication> m_DeskDupl;
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> m_AcquiredDesktopImage;
-			std::unique_ptr<BYTE[]> m_MetaDataBuffer;
+			std::shared_ptr<BYTE> m_MetaDataBuffer;
 			UINT m_MetaDataSize;
 			UINT m_OutputNumber;
 			DXGI_OUTPUT_DESC m_OutputDesc;

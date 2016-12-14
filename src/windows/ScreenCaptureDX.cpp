@@ -9,31 +9,87 @@
 namespace SL {
 	namespace Screen_Capture {
 
+
 		ScreenCaptureDX::ScreenCaptureDX()
 		{
-			// Event used by the threads to signal an unexpected error and we want to quit the app
-	
 
 		}
 		ScreenCaptureDX::~ScreenCaptureDX()
 		{
-		
+			StopProcessing();
 		}
-
-		void ScreenCaptureDX::StartProcessing(ImageCallback img_cb)
+		void ScreenCaptureDX::StopProcessing()
 		{
-			auto thrdmanager = std::make_unique<DXThreadManager>();
-
-			// Event used by the threads to signal an unexpected error and we want to quit the app
-			auto UnexpectedErrorEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-			// Event for when a thread encounters an expected error
-			auto ExpectedErrorEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-			// Event to tell spawned threads to quit
-			auto TerminateThreadsEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-
-
-
+			_KeepRunning = false;
+			_InterruptableSleeper.wake();
+			if (_Thread.joinable()) {
+				_Thread.join();
+			}
 		}
+
+		void ScreenCaptureDX::StartProcessing(ImageCallback& img_cb)
+		{
+			StopProcessing();
+			_KeepRunning = true;
+
+			_Thread = std::thread([&]() {
+
+				DXThreadManager ThreadMgr;
+				auto expectederror = std::make_shared<std::atomic_bool>(false);
+				auto unexpectederror = std::make_shared<std::atomic_bool>(false);
+				auto terminatethreads = std::make_shared<std::atomic_bool>(false);
+
+				bool FirstTime = true;
+
+				while (_KeepRunning) {
+					DUPL_RETURN Ret = DUPL_RETURN_SUCCESS;
+					if (FirstTime || *expectederror)
+					{
+						if (!FirstTime)
+						{
+							// Terminate other threads
+							*terminatethreads = true;
+							ThreadMgr.WaitForThreadTermination();
+							*unexpectederror = *expectederror = *terminatethreads = false;
+
+							// Clean up
+							ThreadMgr.Clean();
+
+						}
+						else
+						{
+							// First time through the loop so nothing to clean up
+							FirstTime = false;
+						}
+						Ret = ThreadMgr.Initialize(unexpectederror, expectederror, terminatethreads, img_cb);
+					}
+					else
+					{
+
+					}
+
+					// Check if for errors
+					if (Ret != DUPL_RETURN_SUCCESS)
+					{
+						if (Ret == DUPL_RETURN_ERROR_EXPECTED)
+						{
+							// Some type of system transition is occurring so retry
+							*expectederror = true;
+						}
+						else
+						{
+							// Unexpected error so exit
+							break;
+						}
+					}
+					std::this_thread::sleep_for(std::chrono::milliseconds(50));
+					//_InterruptableSleeper.sleepFor(std::chrono::milliseconds(50));
+				}
+				*terminatethreads = true;
+				ThreadMgr.WaitForThreadTermination();
+			});
+		}
+
 
 	}
 }

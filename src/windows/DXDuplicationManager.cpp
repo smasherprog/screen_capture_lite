@@ -60,7 +60,7 @@ namespace SL {
 				if (FrameInfo.TotalMetadataBufferSize > m_MetaDataSize)
 				{
 
-					m_MetaDataBuffer = std::make_unique<BYTE[]>(FrameInfo.TotalMetadataBufferSize);
+					m_MetaDataBuffer = std::shared_ptr<BYTE>(new BYTE[FrameInfo.TotalMetadataBufferSize], [](BYTE* ptr) { delete[] ptr; });
 					if (!m_MetaDataBuffer)
 					{
 						m_MetaDataSize = 0;
@@ -96,7 +96,7 @@ namespace SL {
 				}
 				Data->DirtyCount = BufSize / sizeof(RECT);
 
-				Data->MetaData = std::move(m_MetaDataBuffer);
+				Data->MetaData = m_MetaDataBuffer;
 			}
 
 			Data->Frame = m_AcquiredDesktopImage;
@@ -170,7 +170,7 @@ namespace SL {
 			return DUPL_RETURN_SUCCESS;
 		}
 
-		DUPL_RETURN DXDuplicationManager::GetMouse(PTR_INFO * PtrInfo, DXGI_OUTDUPL_FRAME_INFO * FrameInfo, INT OffsetX, INT OffsetY)
+		DUPL_RETURN DXDuplicationManager::GetMouse(PTR_INFO * PtrInfo, DXGI_OUTDUPL_FRAME_INFO * FrameInfo)
 		{
 
 			// A non-zero mouse update timestamp indicates that there is a mouse position update and optionally a shape change
@@ -198,8 +198,8 @@ namespace SL {
 			// Update position
 			if (UpdatePosition)
 			{
-				PtrInfo->Position.x = FrameInfo->PointerPosition.Position.x + m_OutputDesc.DesktopCoordinates.left - OffsetX;
-				PtrInfo->Position.y = FrameInfo->PointerPosition.Position.y + m_OutputDesc.DesktopCoordinates.top - OffsetY;
+				PtrInfo->Position.x = FrameInfo->PointerPosition.Position.x + m_OutputDesc.DesktopCoordinates.left;
+				PtrInfo->Position.y = FrameInfo->PointerPosition.Position.y + m_OutputDesc.DesktopCoordinates.top;
 				PtrInfo->WhoUpdatedPositionLast = m_OutputNumber;
 				PtrInfo->LastTimeStamp = FrameInfo->LastMouseUpdateTime;
 				PtrInfo->Visible = FrameInfo->PointerPosition.Visible != 0;

@@ -7,25 +7,93 @@ namespace SL {
 	namespace Screen_Capture {
 
 
+		UINT GetMonitorCount() {
 
-		HRESULT SystemTransitionsExpectedErrors[] = {
-			DXGI_ERROR_DEVICE_REMOVED,
-			DXGI_ERROR_ACCESS_LOST,
-			static_cast<HRESULT>(WAIT_ABANDONED),
-			S_OK                                    // Terminate list with zero valued HRESULT
-		};
+			// Driver types supported
+			D3D_DRIVER_TYPE DriverTypes[] =
+			{
+				D3D_DRIVER_TYPE_HARDWARE,
+				D3D_DRIVER_TYPE_WARP,
+				D3D_DRIVER_TYPE_REFERENCE,
+			};
+			UINT NumDriverTypes = ARRAYSIZE(DriverTypes);
+
+			// Feature levels supported
+			D3D_FEATURE_LEVEL FeatureLevels[] =
+			{
+				D3D_FEATURE_LEVEL_11_0,
+				D3D_FEATURE_LEVEL_10_1,
+				D3D_FEATURE_LEVEL_10_0,
+				D3D_FEATURE_LEVEL_9_1
+			};
+			UINT NumFeatureLevels = ARRAYSIZE(FeatureLevels);
+			D3D_FEATURE_LEVEL FeatureLevel;
+			HRESULT hr;
+
+			Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
+			Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_DeviceContext;
+			Microsoft::WRL::ComPtr<IDXGIDevice> DxgiDevice;
+			Microsoft::WRL::ComPtr<IDXGIAdapter> DxgiAdapter;
+
+			for (UINT DriverTypeIndex = 0; DriverTypeIndex < NumDriverTypes; ++DriverTypeIndex)
+			{
+				hr = D3D11CreateDevice(nullptr, DriverTypes[DriverTypeIndex], nullptr, 0, FeatureLevels, NumFeatureLevels, D3D11_SDK_VERSION, m_Device.GetAddressOf(), &FeatureLevel, m_DeviceContext.GetAddressOf());
+				if (SUCCEEDED(hr))
+				{
+					// Device creation succeeded, no need to loop anymore
+					break;
+				}
+			}
+			if (FAILED(hr))
+			{
+				return ProcessFailure(m_Device.Get(), L"Device creation in OUTPUTMANAGER failed", L"Error", hr, SystemTransitionsExpectedErrors);
+			}
+
+
+
+			hr = m_Device.Get()->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(DxgiDevice.GetAddressOf()));
+			if (FAILED(hr))
+			{
+				return ProcessFailure(nullptr, L"Failed to QI for DXGI Device", L"Error", hr);
+			}
+
+
+			hr = DxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(DxgiAdapter.GetAddressOf()));
+
+			if (FAILED(hr))
+			{
+				return ProcessFailure(m_Device.Get(), L"Failed to get parent DXGI Adapter", L"Error", hr, SystemTransitionsExpectedErrors);
+			}
+
+
+		
+
+			// Figure out right dimensions for full size desktop texture and # of outputs to duplicate
+			UINT OutputCount = 0;
+
+			hr = S_OK;
+			for (OutputCount = 0; SUCCEEDED(hr); ++OutputCount)
+			{
+				Microsoft::WRL::ComPtr<IDXGIOutput> DxgiOutput;
+				hr = DxgiAdapter->EnumOutputs(OutputCount, DxgiOutput.GetAddressOf());
+			}
+
+			--OutputCount;
+			return OutputCount;
+		}
+
 		DWORD ProcessExit(DUPL_RETURN Ret, THREAD_DATA* TData) {
 			if (Ret != DUPL_RETURN_SUCCESS)
 			{
 				if (Ret == DUPL_RETURN_ERROR_EXPECTED)
 				{
 					// The system is in a transition state so request the duplication be restarted
-					SetEvent(TData->ExpectedErrorEvent);
+					*TData->ExpectedErrorEvent = true;
 				}
 				else
 				{
 					// Unexpected error so exit the application
-					SetEvent(TData->UnexpectedErrorEvent);
+					*TData->UnexpectedErrorEvent = true;
 				}
 			}
 			return 0;
@@ -40,16 +108,13 @@ namespace SL {
 			DXFrameProcessor DispMgr;
 			DXDuplicationManager DuplMgr;
 
-			// D3D objects
-			Microsoft::WRL::ComPtr<ID3D11Texture2D> SharedSurf;
-			Microsoft::WRL::ComPtr<IDXGIKeyedMutex> KeyMutex;
 			DUPL_RETURN Ret;
 			HDESK CurrentDesktop = nullptr;
 			CurrentDesktop = OpenInputDesktop(0, FALSE, GENERIC_ALL);
 			if (!CurrentDesktop)
 			{
 				// We do not have access to the desktop so request a retry
-				SetEvent(TData->ExpectedErrorEvent);
+				*TData->ExpectedErrorEvent = true;
 				Ret = DUPL_RETURN_ERROR_EXPECTED;
 				return ProcessExit(Ret, TData.get());
 			}
@@ -66,22 +131,8 @@ namespace SL {
 			}
 
 			// New display manager
-			DispMgr.InitD3D(&TData->DxRes);
-	
-			// Obtain handle to sync shared Surface
-			HRESULT hr = TData->DxRes.Device->OpenSharedResource(TData->TexSharedHandle, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(SharedSurf.GetAddressOf()));
-			if (FAILED(hr))
-			{
-				Ret = ProcessFailure(TData->DxRes.Device.Get(), L"Opening shared texture failed", L"Error", hr, SystemTransitionsExpectedErrors);
-				return ProcessExit(Ret, TData.get());
-			}
+			DispMgr.InitD3D(TData.get());
 
-			hr = SharedSurf.Get()->QueryInterface(__uuidof(IDXGIKeyedMutex), reinterpret_cast<void**>(KeyMutex.GetAddressOf()));
-			if (FAILED(hr))
-			{
-				Ret = ProcessFailure(nullptr, L"Failed to get keyed mutex interface in spawned thread", L"Error", hr);
-				return ProcessExit(Ret, TData.get());
-			}
 
 			// Make duplication manager
 			Ret = DuplMgr.InitDupl(TData->DxRes.Device.Get(), TData->Output);
@@ -99,7 +150,7 @@ namespace SL {
 			bool WaitToProcessCurrentFrame = false;
 			FRAME_DATA CurrentData;
 
-			while ((WaitForSingleObjectEx(TData->TerminateThreadsEvent, 0, FALSE) == WAIT_TIMEOUT))
+			while (!*TData->TerminateThreadsEvent)
 			{
 				auto start = std::chrono::high_resolution_clock::now();
 				if (!WaitToProcessCurrentFrame)
@@ -122,53 +173,25 @@ namespace SL {
 					}
 				}
 
-				// We have a new frame so try and process it
-				// Try to acquire keyed mutex in order to access shared surface
-				hr = KeyMutex->AcquireSync(0, 1000);
-				if (hr == static_cast<HRESULT>(WAIT_TIMEOUT))
-				{
-					// Can't use shared surface right now, try again later
-					WaitToProcessCurrentFrame = true;
-					continue;
-				}
-				else if (FAILED(hr))
-				{
-					// Generic unknown failure
-					Ret = ProcessFailure(TData->DxRes.Device.Get(), L"Unexpected error acquiring KeyMutex", L"Error", hr, SystemTransitionsExpectedErrors);
-					DuplMgr.DoneWithFrame();
-					break;
-				}
 
 				// We can now process the current frame
 				WaitToProcessCurrentFrame = false;
 
 				// Get mouse info
-				Ret = DuplMgr.GetMouse(TData->PtrInfo.get(), &(CurrentData.FrameInfo), TData->OffsetX, TData->OffsetY);
+				//Ret = DuplMgr.GetMouse(TData->PtrInfo.get(), &(CurrentData.FrameInfo), &DesktopDesc);
 				if (Ret != DUPL_RETURN_SUCCESS)
 				{
 					DuplMgr.DoneWithFrame();
-					KeyMutex->ReleaseSync(1);
 					break;
 				}
 
 				// Process new frame
-				Ret = DispMgr.ProcessFrame(&CurrentData, SharedSurf.Get(), TData->OffsetX, TData->OffsetY, &DesktopDesc);
+				Ret = DispMgr.ProcessFrame(&CurrentData, &DesktopDesc);
 				if (Ret != DUPL_RETURN_SUCCESS)
 				{
 					DuplMgr.DoneWithFrame();
-					KeyMutex->ReleaseSync(1);
 					break;
 				}
-
-				// Release acquired keyed mutex
-				hr = KeyMutex->ReleaseSync(1);
-				if (FAILED(hr))
-				{
-					Ret = ProcessFailure(TData->DxRes.Device.Get(), L"Unexpected error releasing the keyed mutex", L"Error", hr, SystemTransitionsExpectedErrors);
-					DuplMgr.DoneWithFrame();
-					break;
-				}
-
 				// Release frame back to desktop duplication
 				Ret = DuplMgr.DoneWithFrame();
 				if (Ret != DUPL_RETURN_SUCCESS)
@@ -189,7 +212,7 @@ namespace SL {
 
 		DXThreadManager::DXThreadManager()
 		{
-
+			m_PtrInfo = std::make_shared<PTR_INFO>();
 		}
 		DXThreadManager::~DXThreadManager()
 		{
@@ -206,9 +229,10 @@ namespace SL {
 			m_ThreadCount = 0;
 		}
 
-		DUPL_RETURN DXThreadManager::Initialize(INT SingleOutput, UINT OutputCount, HANDLE UnexpectedErrorEvent, HANDLE ExpectedErrorEvent, HANDLE TerminateThreadsEvent, HANDLE SharedHandle, _In_ RECT* DesktopDim)
+		DUPL_RETURN DXThreadManager::Initialize(std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent, std::shared_ptr<std::atomic_bool> ExpectedErrorEvent, std::shared_ptr<std::atomic_bool> TerminateThreadsEvent, ImageCallback& cb)
 		{
-			m_ThreadCount = OutputCount;
+
+			m_ThreadCount = GetMonitorCount();
 			m_ThreadHandles.resize(m_ThreadCount);
 			m_ThreadData.resize(m_ThreadCount);
 
@@ -220,10 +244,8 @@ namespace SL {
 				m_ThreadData[i]->UnexpectedErrorEvent = UnexpectedErrorEvent;
 				m_ThreadData[i]->ExpectedErrorEvent = ExpectedErrorEvent;
 				m_ThreadData[i]->TerminateThreadsEvent = TerminateThreadsEvent;
-				m_ThreadData[i]->Output = (SingleOutput < 0) ? i : SingleOutput;
-				m_ThreadData[i]->TexSharedHandle = SharedHandle;
-				m_ThreadData[i]->OffsetX = DesktopDim->left;
-				m_ThreadData[i]->OffsetY = DesktopDim->top;
+				m_ThreadData[i]->Output = i;
+				m_ThreadData[i]->CallBack = cb;
 				m_ThreadData[i]->PtrInfo = m_PtrInfo;
 
 				Ret = InitializeDx(&m_ThreadData[i]->DxRes);

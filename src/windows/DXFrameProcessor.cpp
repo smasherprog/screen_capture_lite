@@ -5,48 +5,51 @@ namespace SL {
 
 		DXFrameProcessor::DXFrameProcessor()
 		{
+			m_DirtyVertexBufferAllocSize = 0;
 		}
 
 		DXFrameProcessor::~DXFrameProcessor()
 		{
 		}
-		void DXFrameProcessor::InitD3D(DX_RESOURCES * Data)
+		void DXFrameProcessor::InitD3D(THREAD_DATA * Data)
 		{
-			m_Device = Data->Device;
-			m_DeviceContext = Data->DeviceContext;
-			m_VertexShader = Data->VertexShader;
-			m_PixelShader = Data->PixelShader;
-			m_InputLayout = Data->InputLayout;
-			m_SamplerLinear = Data->SamplerLinear;
+			m_Device = Data->DxRes.Device;
+			m_DeviceContext = Data->DxRes.DeviceContext;
+			m_VertexShader = Data->DxRes.VertexShader;
+			m_PixelShader = Data->DxRes.PixelShader;
+			m_InputLayout = Data->DxRes.InputLayout;
+			m_SamplerLinear = Data->DxRes.SamplerLinear;
+			CallBack = Data->CallBack;
 		}
 		void DXFrameProcessor::CleanRefs()
 		{
 			m_DeviceContext = nullptr;
 			m_Device = nullptr;
 			m_MoveSurf = nullptr;
+			m_CopySurf = nullptr;
+				
 			m_VertexShader = nullptr;
 			m_PixelShader = nullptr;
 			m_InputLayout = nullptr;
 			m_SamplerLinear = nullptr;
 			m_RTV = nullptr;
-
+			CallBack = [](const Image& img, Captured_Image type) {};
 		}
+
+
 		//
 		// Process a given frame and its metadata
 		//
-		DUPL_RETURN DXFrameProcessor::ProcessFrame(FRAME_DATA* Data, ID3D11Texture2D* SharedSurf, INT OffsetX, INT OffsetY, DXGI_OUTPUT_DESC* DeskDesc)
+		DUPL_RETURN DXFrameProcessor::ProcessFrame(FRAME_DATA* Data, DXGI_OUTPUT_DESC* DeskDesc)
 		{
 			DUPL_RETURN Ret = DUPL_RETURN_SUCCESS;
 
 			// Process dirties and moves
 			if (Data->FrameInfo.TotalMetadataBufferSize)
 			{
-				D3D11_TEXTURE2D_DESC Desc;
-				Data->Frame->GetDesc(&Desc);
-
 				if (Data->MoveCount)
 				{
-					Ret = CopyMove(SharedSurf, reinterpret_cast<DXGI_OUTDUPL_MOVE_RECT*>(Data->MetaData.get()), Data->MoveCount, OffsetX, OffsetY, DeskDesc, Desc.Width, Desc.Height);
+					Ret = CopyMove(Data->Frame.Get(), reinterpret_cast<DXGI_OUTDUPL_MOVE_RECT*>(Data->MetaData.get()), Data->MoveCount, DeskDesc);
 					if (FAILED(Ret))
 					{
 						return Ret;
@@ -55,7 +58,9 @@ namespace SL {
 
 				if (Data->DirtyCount)
 				{
-					Ret = CopyDirty(Data->Frame.Get(), SharedSurf, reinterpret_cast<RECT*>(Data->MetaData.get() + (Data->MoveCount * sizeof(DXGI_OUTDUPL_MOVE_RECT))), Data->DirtyCount, OffsetX, OffsetY, DeskDesc);
+					Image img;
+					CallBack(img, SL::Screen_Capture::Captured_Image::IMAGE_NEW);
+					Ret = CopyDirty(Data->Frame.Get(), reinterpret_cast<RECT*>(Data->MetaData.get() + (Data->MoveCount * sizeof(DXGI_OUTDUPL_MOVE_RECT))), Data->DirtyCount, DeskDesc);
 				}
 			}
 
@@ -131,16 +136,18 @@ namespace SL {
 		//
 		// Copy move rectangles
 		//
-		DUPL_RETURN DXFrameProcessor::CopyMove(ID3D11Texture2D* SharedSurf, DXGI_OUTDUPL_MOVE_RECT* MoveBuffer, UINT MoveCount, INT OffsetX, INT OffsetY, DXGI_OUTPUT_DESC* DeskDesc, INT TexWidth, INT TexHeight)
+		DUPL_RETURN DXFrameProcessor::CopyMove(ID3D11Texture2D* SrcSurface, DXGI_OUTDUPL_MOVE_RECT* MoveBuffer, UINT MoveCount, DXGI_OUTPUT_DESC* DeskDesc)
 		{
-			D3D11_TEXTURE2D_DESC FullDesc;
-			SharedSurf->GetDesc(&FullDesc);
+			
+			D3D11_TEXTURE2D_DESC ThisDesc;
+			SrcSurface->GetDesc(&ThisDesc);
 
 			// Make new intermediate surface to copy into for moving
 			if (!m_MoveSurf)
 			{
+			
 				D3D11_TEXTURE2D_DESC MoveDesc;
-				MoveDesc = FullDesc;
+				MoveDesc = ThisDesc;
 				MoveDesc.Width = DeskDesc->DesktopCoordinates.right - DeskDesc->DesktopCoordinates.left;
 				MoveDesc.Height = DeskDesc->DesktopCoordinates.bottom - DeskDesc->DesktopCoordinates.top;
 				MoveDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
@@ -157,17 +164,17 @@ namespace SL {
 				RECT SrcRect;
 				RECT DestRect;
 
-				SetMoveRect(&SrcRect, &DestRect, DeskDesc, &(MoveBuffer[i]), TexWidth, TexHeight);
+				SetMoveRect(&SrcRect, &DestRect, DeskDesc, &(MoveBuffer[i]), ThisDesc.Width, ThisDesc.Height);
 
 				// Copy rect out of shared surface
 				D3D11_BOX Box;
-				Box.left = SrcRect.left + DeskDesc->DesktopCoordinates.left - OffsetX;
-				Box.top = SrcRect.top + DeskDesc->DesktopCoordinates.top - OffsetY;
+				Box.left = SrcRect.left + DeskDesc->DesktopCoordinates.left ;
+				Box.top = SrcRect.top + DeskDesc->DesktopCoordinates.top;
 				Box.front = 0;
-				Box.right = SrcRect.right + DeskDesc->DesktopCoordinates.left - OffsetX;
-				Box.bottom = SrcRect.bottom + DeskDesc->DesktopCoordinates.top - OffsetY;
+				Box.right = SrcRect.right + DeskDesc->DesktopCoordinates.left;
+				Box.bottom = SrcRect.bottom + DeskDesc->DesktopCoordinates.top;
 				Box.back = 1;
-				m_DeviceContext->CopySubresourceRegion(m_MoveSurf.Get(), 0, SrcRect.left, SrcRect.top, 0, SharedSurf, 0, &Box);
+				m_DeviceContext->CopySubresourceRegion(m_MoveSurf.Get(), 0, SrcRect.left, SrcRect.top, 0, SrcSurface, 0, &Box);
 
 				// Copy back to shared surface
 				Box.left = SrcRect.left;
@@ -176,7 +183,7 @@ namespace SL {
 				Box.right = SrcRect.right;
 				Box.bottom = SrcRect.bottom;
 				Box.back = 1;
-				m_DeviceContext->CopySubresourceRegion(SharedSurf, 0, DestRect.left + DeskDesc->DesktopCoordinates.left - OffsetX, DestRect.top + DeskDesc->DesktopCoordinates.top - OffsetY, 0, m_MoveSurf.Get(), 0, &Box);
+				m_DeviceContext->CopySubresourceRegion(SrcSurface, 0, DestRect.left + DeskDesc->DesktopCoordinates.left, DestRect.top + DeskDesc->DesktopCoordinates.top, 0, m_MoveSurf.Get(), 0, &Box);
 			}
 
 
@@ -187,10 +194,10 @@ namespace SL {
 		// Sets up vertices for dirty rects for rotated desktops
 		//
 
-		void DXFrameProcessor::SetDirtyVert(VERTEX* Vertices, RECT* Dirty, INT OffsetX, INT OffsetY, DXGI_OUTPUT_DESC* DeskDesc, D3D11_TEXTURE2D_DESC* FullDesc, D3D11_TEXTURE2D_DESC* ThisDesc)
+		void DXFrameProcessor::SetDirtyVert(VERTEX* Vertices, RECT* Dirty, DXGI_OUTPUT_DESC* DeskDesc, D3D11_TEXTURE2D_DESC* ThisDesc)
 		{
-			INT CenterX = FullDesc->Width / 2;
-			INT CenterY = FullDesc->Height / 2;
+			INT CenterX = ThisDesc->Width / 2;
+			INT CenterY = ThisDesc->Height / 2;
 
 			INT Width = DeskDesc->DesktopCoordinates.right - DeskDesc->DesktopCoordinates.left;
 			INT Height = DeskDesc->DesktopCoordinates.bottom - DeskDesc->DesktopCoordinates.top;
@@ -254,19 +261,19 @@ namespace SL {
 			}
 
 			// Set positions
-			Vertices[0].Pos = XMFLOAT3((DestDirty.left + DeskDesc->DesktopCoordinates.left - OffsetX - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.bottom + DeskDesc->DesktopCoordinates.top - OffsetY - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[0].Pos = XMFLOAT3((DestDirty.left + DeskDesc->DesktopCoordinates.left  - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.bottom + DeskDesc->DesktopCoordinates.top  - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
-			Vertices[1].Pos = XMFLOAT3((DestDirty.left + DeskDesc->DesktopCoordinates.left - OffsetX - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.top + DeskDesc->DesktopCoordinates.top - OffsetY - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[1].Pos = XMFLOAT3((DestDirty.left + DeskDesc->DesktopCoordinates.left  - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.top + DeskDesc->DesktopCoordinates.top - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
-			Vertices[2].Pos = XMFLOAT3((DestDirty.right + DeskDesc->DesktopCoordinates.left - OffsetX - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.bottom + DeskDesc->DesktopCoordinates.top - OffsetY - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[2].Pos = XMFLOAT3((DestDirty.right + DeskDesc->DesktopCoordinates.left - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.bottom + DeskDesc->DesktopCoordinates.top - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
 			Vertices[3].Pos = Vertices[2].Pos;
 			Vertices[4].Pos = Vertices[1].Pos;
-			Vertices[5].Pos = XMFLOAT3((DestDirty.right + DeskDesc->DesktopCoordinates.left - OffsetX - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.top + DeskDesc->DesktopCoordinates.top - OffsetY - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[5].Pos = XMFLOAT3((DestDirty.right + DeskDesc->DesktopCoordinates.left - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.top + DeskDesc->DesktopCoordinates.top - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
 
 			Vertices[3].TexCoord = Vertices[2].TexCoord;
@@ -276,19 +283,28 @@ namespace SL {
 		//
 		// Copies dirty rectangles
 		//
-		DUPL_RETURN DXFrameProcessor::CopyDirty(ID3D11Texture2D* SrcSurface, ID3D11Texture2D* SharedSurf, RECT* DirtyBuffer, UINT DirtyCount, INT OffsetX, INT OffsetY, DXGI_OUTPUT_DESC* DeskDesc)
+		DUPL_RETURN DXFrameProcessor::CopyDirty(ID3D11Texture2D* SrcSurface, RECT* DirtyBuffer, UINT DirtyCount, DXGI_OUTPUT_DESC* DeskDesc)
 		{
 			HRESULT hr;
-
-			D3D11_TEXTURE2D_DESC FullDesc;
-			SharedSurf->GetDesc(&FullDesc);
-
 			D3D11_TEXTURE2D_DESC ThisDesc;
 			SrcSurface->GetDesc(&ThisDesc);
 
+			if (!m_CopySurf)
+			{
+				D3D11_TEXTURE2D_DESC CopyDesc;
+				CopyDesc = ThisDesc;
+				CopyDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
+				CopyDesc.MiscFlags = 0;
+				HRESULT hr = m_Device->CreateTexture2D(&CopyDesc, nullptr, m_CopySurf.GetAddressOf());
+				if (FAILED(hr))
+				{
+					return ProcessFailure(m_Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
+				}
+			}
+
 			if (!m_RTV)
 			{
-				hr = m_Device->CreateRenderTargetView(SharedSurf, nullptr, &m_RTV);
+				hr = m_Device->CreateRenderTargetView(m_CopySurf.Get(), nullptr, &m_RTV);
 				if (FAILED(hr))
 				{
 					return ProcessFailure(m_Device.Get(), L"Failed to create render target view for dirty rects", L"Error", hr, SystemTransitionsExpectedErrors);
@@ -336,7 +352,7 @@ namespace SL {
 			VERTEX* DirtyVertex = reinterpret_cast<VERTEX*>(m_DirtyVertexBufferAlloc.get());
 			for (UINT i = 0; i < DirtyCount; ++i, DirtyVertex += 6)
 			{
-				SetDirtyVert(DirtyVertex, &(DirtyBuffer[i]), OffsetX, OffsetY, DeskDesc, &FullDesc, &ThisDesc);
+				SetDirtyVert(DirtyVertex, &(DirtyBuffer[i]), DeskDesc, &ThisDesc);
 			}
 
 			// Create vertex buffer
@@ -361,8 +377,8 @@ namespace SL {
 			m_DeviceContext->IASetVertexBuffers(0, 1, VertBuf.GetAddressOf(), &Stride, &Offset);
 
 			D3D11_VIEWPORT VP;
-			VP.Width = static_cast<FLOAT>(FullDesc.Width);
-			VP.Height = static_cast<FLOAT>(FullDesc.Height);
+			VP.Width = static_cast<FLOAT>(ThisDesc.Width);
+			VP.Height = static_cast<FLOAT>(ThisDesc.Height);
 			VP.MinDepth = 0.0f;
 			VP.MaxDepth = 1.0f;
 			VP.TopLeftX = 0.0f;

@@ -1,5 +1,4 @@
 #include "ScreenCaptureManager.h"
-#include "InterruptableSleeper.h"
 #include <assert.h>
 #include <algorithm>
 #include <fstream>
@@ -17,13 +16,12 @@ namespace SL {
 				while (keeprunning) {
 
 
-					sleeper.sleepFor(std::chrono::milliseconds{ sleeptime });
 				}
 			}
 		public:
 
 			std::thread thread;
-			InterruptableSleeper sleeper;
+
 			int sleeptime = 100;//in ms
 			ImageCallback callback;
 			bool keeprunning = true;
@@ -40,7 +38,7 @@ namespace SL {
 			}
 			void stop() {
 				if (thread.joinable()) {
-					sleeper.wake();
+		
 					thread.join();
 				}
 			}

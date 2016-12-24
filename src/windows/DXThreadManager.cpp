@@ -66,7 +66,7 @@ namespace SL {
 			}
 
 
-		
+
 
 			// Figure out right dimensions for full size desktop texture and # of outputs to duplicate
 			UINT OutputCount = 0;
@@ -146,64 +146,55 @@ namespace SL {
 			RtlZeroMemory(&DesktopDesc, sizeof(DXGI_OUTPUT_DESC));
 			DuplMgr.GetOutputDesc(&DesktopDesc);
 
-			// Main duplication loop
-			bool WaitToProcessCurrentFrame = false;
-			FRAME_DATA CurrentData;
 
+
+			FRAME_DATA CurrentData;
+			CurrentData.SrcreenIndex = TData->Output;
 			while (!*TData->TerminateThreadsEvent)
 			{
 				auto start = std::chrono::high_resolution_clock::now();
-				if (!WaitToProcessCurrentFrame)
-				{
+				bool TimeOut;	
+			
 					// Get new frame from desktop duplication
-					bool TimeOut;
-					Ret = DuplMgr.GetFrame(&CurrentData, &TimeOut);
+				Ret = DuplMgr.GetFrame(&CurrentData, &TimeOut);
+				if (Ret != DUPL_RETURN_SUCCESS)
+				{
+					// An error occurred getting the next frame drop out of loop which
+					// will check if it was expected or not
+					break;
+				}
+
+				// Check for timeout
+				if (TimeOut)
+				{
+					// No new frame at the moment
+					continue;
+				}
+				{
+
+					std::lock_guard<std::mutex> lock(*TData->GlobalLock);
+					// Process new frame
+					DispMgr.ProcessFrame(&CurrentData, &DesktopDesc);
+					// Release frame back to desktop duplication
+					Ret = DuplMgr.DoneWithFrame();
 					if (Ret != DUPL_RETURN_SUCCESS)
 					{
-						// An error occurred getting the next frame drop out of loop which
-						// will check if it was expected or not
 						break;
 					}
-
-					// Check for timeout
-					if (TimeOut)
-					{
-						// No new frame at the moment
-						continue;
-					}
 				}
-
-
-				// We can now process the current frame
-				WaitToProcessCurrentFrame = false;
-
-				// Get mouse info
-				//Ret = DuplMgr.GetMouse(TData->PtrInfo.get(), &(CurrentData.FrameInfo), &DesktopDesc);
-				if (Ret != DUPL_RETURN_SUCCESS)
-				{
-					DuplMgr.DoneWithFrame();
-					break;
-				}
-
-				// Process new frame
-				Ret = DispMgr.ProcessFrame(&CurrentData, &DesktopDesc);
-				if (Ret != DUPL_RETURN_SUCCESS)
-				{
-					DuplMgr.DoneWithFrame();
-					break;
-				}
-				// Release frame back to desktop duplication
-				Ret = DuplMgr.DoneWithFrame();
-				if (Ret != DUPL_RETURN_SUCCESS)
-				{
-					break;
-				}
+				auto mspassed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
 				std::string msg = "took ";
-				msg += std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count()) + "ms\n";
+				msg += std::to_string(mspassed) + "ms for output ";
+				msg += std::to_string(TData->Output) + "\n";
 				OutputDebugStringA(msg.c_str());
+				auto timetowait = 100 - mspassed;
+				if (timetowait > 0) {
 
-
+					std::this_thread::sleep_for(std::chrono::milliseconds(timetowait));
+				}
 			}
+
+			OutputDebugStringA("Exiting Thread\n");
 
 			return 0;
 
@@ -235,7 +226,7 @@ namespace SL {
 			m_ThreadCount = GetMonitorCount();
 			m_ThreadHandles.resize(m_ThreadCount);
 			m_ThreadData.resize(m_ThreadCount);
-
+			auto globallock = std::make_shared<std::mutex>();
 			// Create appropriate # of threads for duplication
 			DUPL_RETURN Ret = DUPL_RETURN_SUCCESS;
 			for (int i = 0; i < m_ThreadCount; ++i)
@@ -247,6 +238,7 @@ namespace SL {
 				m_ThreadData[i]->Output = i;
 				m_ThreadData[i]->CallBack = cb;
 				m_ThreadData[i]->PtrInfo = m_PtrInfo;
+				m_ThreadData[i]->GlobalLock = globallock;
 
 				Ret = InitializeDx(&m_ThreadData[i]->DxRes);
 				if (Ret != DUPL_RETURN_SUCCESS)

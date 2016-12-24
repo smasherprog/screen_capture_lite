@@ -8,6 +8,7 @@
 #pragma once
 #include <memory>
 #include <atomic>
+#include <mutex>
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 
@@ -63,6 +64,7 @@ namespace SL {
 			std::shared_ptr<BYTE> MetaData;
 			UINT DirtyCount = 0;
 			UINT MoveCount = 0;
+			UINT SrcreenIndex = 0;
 		};		
 		struct DX_RESOURCES
 		{
@@ -82,6 +84,7 @@ namespace SL {
 			// Used by WinProc to signal to threads to exit
 			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
 
+			std::shared_ptr<std::mutex> GlobalLock;
 			UINT Output;
 			ImageCallback CallBack;
 			std::shared_ptr<PTR_INFO> PtrInfo;

@@ -41,18 +41,14 @@ namespace SL {
 			{
 				return ProcessFailure(m_Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
 			}
-
-			// If still holding old frame, destroy it
 			m_AcquiredDesktopImage = nullptr;
-
 			// QI for IDXGIResource
 			hr = DesktopResource.Get()->QueryInterface(__uuidof(ID3D11Texture2D), reinterpret_cast<void **>(m_AcquiredDesktopImage.GetAddressOf()));
-			DesktopResource = nullptr;
 			if (FAILED(hr))
 			{
 				return ProcessFailure(nullptr, L"Failed to QI for ID3D11Texture2D from acquired IDXGIResource in DUPLICATIONMANAGER", L"Error", hr);
 			}
-
+	
 			// Get metadata
 			if (FrameInfo.TotalMetadataBufferSize)
 			{
@@ -98,7 +94,6 @@ namespace SL {
 
 				Data->MetaData = m_MetaDataBuffer;
 			}
-
 			Data->Frame = m_AcquiredDesktopImage;
 			Data->FrameInfo = FrameInfo;
 
@@ -114,7 +109,6 @@ namespace SL {
 				return ProcessFailure(m_Device.Get(), L"Failed to release frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
 			}
 			m_AcquiredDesktopImage = nullptr;
-
 			return DUPL_RETURN_SUCCESS;
 
 		}
@@ -124,18 +118,16 @@ namespace SL {
 			m_Device = Device;
 
 			// Get DXGI device
-			IDXGIDevice* DxgiDevice = nullptr;
-			HRESULT hr = Device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&DxgiDevice));
+			Microsoft::WRL::ComPtr<IDXGIDevice> DxgiDevice;
+			HRESULT hr = Device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(DxgiDevice.GetAddressOf()));
 			if (FAILED(hr))
 			{
 				return ProcessFailure(nullptr, L"Failed to QI for DXGI Device", L"Error", hr);
 			}
 
 			// Get DXGI adapter
-			IDXGIAdapter* DxgiAdapter = nullptr;
-			hr = DxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(&DxgiAdapter));
-			DxgiDevice->Release();
-			DxgiDevice = nullptr;
+			Microsoft::WRL::ComPtr<IDXGIAdapter> DxgiAdapter;
+			hr = DxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(DxgiAdapter.GetAddressOf()));
 			if (FAILED(hr))
 			{
 				return ProcessFailure(m_Device.Get(), L"Failed to get parent DXGI Adapter", L"Error", hr, SystemTransitionsExpectedErrors);
@@ -154,14 +146,14 @@ namespace SL {
 
 			// QI for Output 1
 			Microsoft::WRL::ComPtr<IDXGIOutput1> DxgiOutput1;
-			hr = DxgiOutput.Get()->QueryInterface(__uuidof(DxgiOutput1), reinterpret_cast<void**>(DxgiOutput1.GetAddressOf()));
+			hr = DxgiOutput.Get()->QueryInterface(__uuidof(IDXGIOutput1), reinterpret_cast<void**>(DxgiOutput1.GetAddressOf()));
 			if (FAILED(hr))
 			{
 				return ProcessFailure(nullptr, L"Failed to QI for DxgiOutput1 in DUPLICATIONMANAGER", L"Error", hr);
 			}
 
 			// Create desktop duplication
-			hr = DxgiOutput1->DuplicateOutput(Device, &m_DeskDupl);
+			hr = DxgiOutput1->DuplicateOutput(Device, m_DeskDupl.GetAddressOf());
 			if (FAILED(hr))
 			{
 				return ProcessFailure(m_Device.Get(), L"Failed to get duplicate output in DUPLICATIONMANAGER", L"Error", hr, CreateDuplicationExpectedErrors);

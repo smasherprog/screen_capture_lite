@@ -1,12 +1,12 @@
 {
   "variant": {
-    "label": "Release",
+    "label": "Debug",
     "keywordSettings": {
-      "buildType": "release"
+      "buildType": "debug"
     },
-    "description": "Enable optimizations, omit debug info"
+    "description": "Emit debug information without performing optimizations"
   },
   "activeEnvironments": [
-    "Visual C++ 14.0 - amd64"
+    "Visual C++ 14.0 - x86"
   ]
 }

@@ -29,11 +29,11 @@ void Reorder(std::vector<ScreenInfo>& screens) {
 #define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(&::DeleteObject)>(handle, &::DeleteObject)
 #define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)>(handle, &::CloseHandle)
 
-SL::Screen_Capture::Image CaptureDesktopImage(const std::vector<ScreenInfo>& screens)
+SL::Screen_Capture::CapturedImage CaptureDesktopImage(const std::vector<ScreenInfo>& screens)
 {
 	auto start = std::chrono::high_resolution_clock::now();
 
-	SL::Screen_Capture::Image ret;
+	SL::Screen_Capture::CapturedImage ret;
 	int left(0), top(0);
 	for (const auto& mon : screens) {
 		ret.Width += mon.Width;

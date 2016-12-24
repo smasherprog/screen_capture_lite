@@ -4,16 +4,18 @@
 
 namespace SL {
 	namespace Screen_Capture {
-		struct Image {
+		struct CapturedImage {
 			std::shared_ptr<char> Data;
 			int Height = 0;
 			int Width = 0;
-			int Top = 0;
-			int Left = 0;
+			int RelativeTop = 0;
+			int RelativeLeft = 0;
+			int AbsoluteTop = 0;
+			int AbsoluteLeft = 0;
+			int ScreenIndex;
 			const int PixelStride = 4;//in bytes
 		};
-		enum Captured_Image{ IMAGE_NEW, IMAGE_DIF, IMAGE_PERMISSION_NEEDED, IMAGE_ERROR  };
-		typedef std::function<void(const Image& img, Captured_Image type)> ImageCallback;
+		typedef std::function<void(const CapturedImage& img)> ImageCallback;
 
     }
 }

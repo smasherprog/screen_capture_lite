@@ -24,11 +24,13 @@ namespace SL {
 			Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_DeviceContext;
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> m_MoveSurf;
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> m_CopySurf;
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> m_StagingSurf;
 			Microsoft::WRL::ComPtr<ID3D11VertexShader> m_VertexShader;
 			Microsoft::WRL::ComPtr<ID3D11PixelShader> m_PixelShader;
 			Microsoft::WRL::ComPtr<ID3D11InputLayout> m_InputLayout;
 			Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RTV;
 			Microsoft::WRL::ComPtr<ID3D11SamplerState> m_SamplerLinear;
+
 			ImageCallback CallBack;
 
 			std::unique_ptr<BYTE[]> m_DirtyVertexBufferAlloc;

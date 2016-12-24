@@ -21,7 +21,6 @@ namespace SL {
 		void ScreenCaptureDX::StopProcessing()
 		{
 			_KeepRunning = false;
-			_InterruptableSleeper.wake();
 			if (_Thread.joinable()) {
 				_Thread.join();
 			}

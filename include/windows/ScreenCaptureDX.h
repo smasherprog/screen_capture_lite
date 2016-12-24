@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ScreenTypes.h"
-#include "InterruptableSleeper.h"
+#include <thread>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -9,7 +9,6 @@ namespace SL {
 		class ScreenCaptureDX {
 	
 			std::thread _Thread;
-			InterruptableSleeper _InterruptableSleeper;
 			bool _KeepRunning;
 
 		public:

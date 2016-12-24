@@ -1,4 +1,5 @@
 #include "DXFrameProcessor.h"
+#include <string>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -27,13 +28,13 @@ namespace SL {
 			m_Device = nullptr;
 			m_MoveSurf = nullptr;
 			m_CopySurf = nullptr;
-				
+
 			m_VertexShader = nullptr;
 			m_PixelShader = nullptr;
 			m_InputLayout = nullptr;
 			m_SamplerLinear = nullptr;
 			m_RTV = nullptr;
-			CallBack = [](const Image& img, Captured_Image type) {};
+			CallBack = [](const CapturedImage& img) {};
 		}
 
 
@@ -58,9 +59,75 @@ namespace SL {
 
 				if (Data->DirtyCount)
 				{
-					Image img;
-					CallBack(img, SL::Screen_Capture::Captured_Image::IMAGE_NEW);
-					Ret = CopyDirty(Data->Frame.Get(), reinterpret_cast<RECT*>(Data->MetaData.get() + (Data->MoveCount * sizeof(DXGI_OUTDUPL_MOVE_RECT))), Data->DirtyCount, DeskDesc);
+					auto dirtyrects = reinterpret_cast<RECT*>(Data->MetaData.get() + (Data->MoveCount * sizeof(DXGI_OUTDUPL_MOVE_RECT)));
+
+					Ret = CopyDirty(Data->Frame.Get(), dirtyrects, Data->DirtyCount, DeskDesc);
+
+					D3D11_TEXTURE2D_DESC ThisDesc;
+					Data->Frame->GetDesc(&ThisDesc);
+					HRESULT hr;
+					if (!m_StagingSurf)
+					{
+						D3D11_TEXTURE2D_DESC StagingDesc;
+						StagingDesc = ThisDesc;
+						StagingDesc.BindFlags = 0;
+						StagingDesc.Usage = D3D11_USAGE_STAGING;
+						StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+						StagingDesc.MiscFlags = 0;
+						hr = m_Device->CreateTexture2D(&StagingDesc, nullptr, m_StagingSurf.GetAddressOf());
+						if (FAILED(hr))
+						{
+							return ProcessFailure(m_Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
+						}
+					}
+			
+					for (UINT i = 0; i < Data->DirtyCount; ++i)
+					{
+						D3D11_BOX Box;
+						Box.left = dirtyrects[i].left;
+						Box.top = dirtyrects[i].top;
+						Box.front = 0;
+						Box.right = dirtyrects[i].right;
+						Box.bottom = dirtyrects[i].bottom;
+						Box.back = 1;
+						//m_DeviceContext->CopySubresourceRegion(m_StagingSurf.Get(), 0, dirtyrects[i].left, dirtyrects[i].top, 0, m_CopySurf.Get(), 0, &Box);
+						m_DeviceContext->CopyResource(m_StagingSurf.Get(), m_CopySurf.Get());
+						D3D11_MAPPED_SUBRESOURCE MappingDesc;
+						hr = m_DeviceContext->Map(m_StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
+
+						// Get the data
+						if (MappingDesc.pData == NULL) {
+							return ProcessFailure(m_Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
+						}
+						else {
+							CapturedImage img;
+							img.ScreenIndex = Data->SrcreenIndex;
+							img.Height = (Box.bottom - Box.top);
+							img.Width = (Box.right - Box.left);
+							img.RelativeTop = Box.top;
+							img.RelativeLeft = Box.left;
+							img.AbsoluteLeft = DeskDesc->DesktopCoordinates.left + Box.left;
+							img.AbsoluteTop = DeskDesc->DesktopCoordinates.top + Box.top;
+							auto sizeneeded = 4 * img.Height *img.Width;
+							img.Data = std::shared_ptr<char>(new char[sizeneeded], [](char* ptr) { if (ptr) delete[] ptr; });
+							auto startsrc = img.Data.get();
+							auto dststart = (char*)MappingDesc.pData + (Box.left * img.PixelStride);
+
+							for (auto t = Box.top; t < img.Height; t++) {
+								memcpy(startsrc, dststart, img.Width * img.PixelStride);
+								startsrc += img.Width * img.PixelStride;
+								dststart += MappingDesc.RowPitch;
+							}
+
+							CallBack(img);
+						}
+						// Unlock the memory
+						m_DeviceContext->Unmap(m_StagingSurf.Get(), 0);
+
+					}
+
+
+
 				}
 			}
 
@@ -138,14 +205,14 @@ namespace SL {
 		//
 		DUPL_RETURN DXFrameProcessor::CopyMove(ID3D11Texture2D* SrcSurface, DXGI_OUTDUPL_MOVE_RECT* MoveBuffer, UINT MoveCount, DXGI_OUTPUT_DESC* DeskDesc)
 		{
-			
+
 			D3D11_TEXTURE2D_DESC ThisDesc;
 			SrcSurface->GetDesc(&ThisDesc);
 
 			// Make new intermediate surface to copy into for moving
 			if (!m_MoveSurf)
 			{
-			
+
 				D3D11_TEXTURE2D_DESC MoveDesc;
 				MoveDesc = ThisDesc;
 				MoveDesc.Width = DeskDesc->DesktopCoordinates.right - DeskDesc->DesktopCoordinates.left;
@@ -168,7 +235,7 @@ namespace SL {
 
 				// Copy rect out of shared surface
 				D3D11_BOX Box;
-				Box.left = SrcRect.left + DeskDesc->DesktopCoordinates.left ;
+				Box.left = SrcRect.left + DeskDesc->DesktopCoordinates.left;
 				Box.top = SrcRect.top + DeskDesc->DesktopCoordinates.top;
 				Box.front = 0;
 				Box.right = SrcRect.right + DeskDesc->DesktopCoordinates.left;
@@ -261,19 +328,19 @@ namespace SL {
 			}
 
 			// Set positions
-			Vertices[0].Pos = XMFLOAT3((DestDirty.left + DeskDesc->DesktopCoordinates.left  - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.bottom + DeskDesc->DesktopCoordinates.top  - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[0].Pos = XMFLOAT3((DestDirty.left - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.bottom  - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
-			Vertices[1].Pos = XMFLOAT3((DestDirty.left + DeskDesc->DesktopCoordinates.left  - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.top + DeskDesc->DesktopCoordinates.top - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[1].Pos = XMFLOAT3((DestDirty.left - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.top  - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
-			Vertices[2].Pos = XMFLOAT3((DestDirty.right + DeskDesc->DesktopCoordinates.left - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.bottom + DeskDesc->DesktopCoordinates.top - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[2].Pos = XMFLOAT3((DestDirty.right  - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.bottom - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
 			Vertices[3].Pos = Vertices[2].Pos;
 			Vertices[4].Pos = Vertices[1].Pos;
-			Vertices[5].Pos = XMFLOAT3((DestDirty.right + DeskDesc->DesktopCoordinates.left - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.top + DeskDesc->DesktopCoordinates.top - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[5].Pos = XMFLOAT3((DestDirty.right  - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.top - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
 
 			Vertices[3].TexCoord = Vertices[2].TexCoord;
@@ -283,6 +350,8 @@ namespace SL {
 		//
 		// Copies dirty rectangles
 		//
+
+
 		DUPL_RETURN DXFrameProcessor::CopyDirty(ID3D11Texture2D* SrcSurface, RECT* DirtyBuffer, UINT DirtyCount, DXGI_OUTPUT_DESC* DeskDesc)
 		{
 			HRESULT hr;
@@ -304,7 +373,7 @@ namespace SL {
 
 			if (!m_RTV)
 			{
-				hr = m_Device->CreateRenderTargetView(m_CopySurf.Get(), nullptr, &m_RTV);
+				hr = m_Device->CreateRenderTargetView(m_CopySurf.Get(), nullptr, m_RTV.GetAddressOf());
 				if (FAILED(hr))
 				{
 					return ProcessFailure(m_Device.Get(), L"Failed to create render target view for dirty rects", L"Error", hr, SystemTransitionsExpectedErrors);
@@ -319,7 +388,9 @@ namespace SL {
 
 			// Create new shader resource view
 			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> ShaderResource;
+		
 			hr = m_Device->CreateShaderResourceView(SrcSurface, &ShaderDesc, ShaderResource.GetAddressOf());
+
 			if (FAILED(hr))
 			{
 				return ProcessFailure(m_Device.Get(), L"Failed to create shader resource view for dirty rects", L"Error", hr, SystemTransitionsExpectedErrors);
@@ -350,6 +421,9 @@ namespace SL {
 
 			// Fill them in
 			VERTEX* DirtyVertex = reinterpret_cast<VERTEX*>(m_DirtyVertexBufferAlloc.get());
+			auto str = std::to_string(DirtyCount);
+			OutputDebugStringA(str.c_str());
+
 			for (UINT i = 0; i < DirtyCount; ++i, DirtyVertex += 6)
 			{
 				SetDirtyVert(DirtyVertex, &(DirtyBuffer[i]), DeskDesc, &ThisDesc);
@@ -386,6 +460,7 @@ namespace SL {
 			m_DeviceContext->RSSetViewports(1, &VP);
 
 			m_DeviceContext->Draw(6 * DirtyCount, 0);
+
 
 			return DUPL_RETURN_SUCCESS;
 		}

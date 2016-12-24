@@ -27,7 +27,6 @@ endif()
 set(SCREEN_CAPTURE_COMMON_SRC 
     ${Screen_Capture_SOURCE_DIR}/include/ScreenTypes.h
     ${Screen_Capture_SOURCE_DIR}/include/ScreenCaptureManager.h
-    ${Screen_Capture_SOURCE_DIR}/include/InterruptableSleeper.h
     ${Screen_Capture_SOURCE_DIR}/src/ScreenCaptureManager.cpp
 )
 set(SCREEN_CAPTURE_COMMON_INC

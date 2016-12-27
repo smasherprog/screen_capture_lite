@@ -60,7 +60,7 @@ namespace SL {
 				if (Data->DirtyCount)
 				{
 					auto dirtyrects = reinterpret_cast<RECT*>(Data->MetaData.get() + (Data->MoveCount * sizeof(DXGI_OUTDUPL_MOVE_RECT)));
-
+			
 					Ret = CopyDirty(Data->Frame.Get(), dirtyrects, Data->DirtyCount, DeskDesc);
 
 					D3D11_TEXTURE2D_DESC ThisDesc;
@@ -100,6 +100,7 @@ namespace SL {
 							return ProcessFailure(m_Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
 						}
 						else {
+						
 							CapturedImage img;
 							img.ScreenIndex = Data->SrcreenIndex;
 							img.Height = (Box.bottom - Box.top);
@@ -110,15 +111,14 @@ namespace SL {
 							img.AbsoluteTop = DeskDesc->DesktopCoordinates.top + Box.top;
 							auto sizeneeded = 4 * img.Height *img.Width;
 							img.Data = std::shared_ptr<char>(new char[sizeneeded], [](char* ptr) { if (ptr) delete[] ptr; });
-							auto startsrc = img.Data.get();
-							auto dststart = (char*)MappingDesc.pData + (Box.left * img.PixelStride);
+							auto dststart = img.Data.get();
+							auto srcstart = ((char*)MappingDesc.pData) + (Box.top * MappingDesc.RowPitch) + (Box.left * img.PixelStride);
 
-							for (auto t = Box.top; t < img.Height; t++) {
-								memcpy(startsrc, dststart, img.Width * img.PixelStride);
-								startsrc += img.Width * img.PixelStride;
-								dststart += MappingDesc.RowPitch;
+							for (auto t = Box.top; t < Box.bottom; t++) {
+								memcpy(dststart, srcstart, img.Width * img.PixelStride);
+								dststart += img.Width * img.PixelStride;
+								srcstart += MappingDesc.RowPitch;
 							}
-
 							CallBack(img);
 						}
 						// Unlock the memory
@@ -328,14 +328,14 @@ namespace SL {
 			}
 
 			// Set positions
-			Vertices[0].Pos = XMFLOAT3((DestDirty.left - CenterX) / static_cast<FLOAT>(CenterX),
+			Vertices[0].Pos = XMFLOAT3((DestDirty.left- CenterX) / static_cast<FLOAT>(CenterX),
 				-1 * (DestDirty.bottom  - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
-			Vertices[1].Pos = XMFLOAT3((DestDirty.left - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.top  - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[1].Pos = XMFLOAT3((DestDirty.left  - CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.top - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
-			Vertices[2].Pos = XMFLOAT3((DestDirty.right  - CenterX) / static_cast<FLOAT>(CenterX),
-				-1 * (DestDirty.bottom - CenterY) / static_cast<FLOAT>(CenterY),
+			Vertices[2].Pos = XMFLOAT3((DestDirty.right- CenterX) / static_cast<FLOAT>(CenterX),
+				-1 * (DestDirty.bottom  - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
 			Vertices[3].Pos = Vertices[2].Pos;
 			Vertices[4].Pos = Vertices[1].Pos;

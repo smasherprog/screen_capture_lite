@@ -1,46 +1,33 @@
 #include "ScreenCaptureManager.h"
-#include <assert.h>
-#include <algorithm>
-#include <fstream>
 #include <thread>
-#include <mutex>
-#include <deque>
-#include <condition_variable>
 
+#ifdef WIN32
+#include "ScreenCaptureDX.h"
+#endif // DEBUG
 
 namespace SL {
 	namespace Screen_Capture {
 
 		class ScreenCaptureManagerImpl {
-			void run() {
-				while (keeprunning) {
-
-
-				}
-			}
+#ifdef WIN32
+			SL::Screen_Capture::ScreenCaptureDX FrameGrabber;
+#endif
 		public:
-
-			std::thread thread;
 
 			int sleeptime = 100;//in ms
 			ImageCallback callback;
-			bool keeprunning = true;
 
 			ScreenCaptureManagerImpl() {
-
-
+			
 			}
 			~ScreenCaptureManagerImpl() {
-
+				stop();
 			}
 			void start() {
-				thread = std::thread(&SL::Screen_Capture::ScreenCaptureManagerImpl::run, this);
+				FrameGrabber.StartProcessing(callback);
 			}
 			void stop() {
-				if (thread.joinable()) {
-		
-					thread.join();
-				}
+				FrameGrabber.StopProcessing();
 			}
 		};
 

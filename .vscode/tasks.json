@@ -1,0 +1,52 @@
+{
+    "version": "0.1.0",
+    "isShellCommand": true,
+    "showOutput": "always",
+    "suppressTaskName": true,
+    "options": {
+        "cwd": "${workspaceRoot}/build"
+    },
+    "echoCommand": true,
+    "windows": {
+        "command": "cmd",
+        "args": ["/C"],
+        "tasks": [
+            {
+                "taskName": "clean",
+                "args": [ "rd /s /q", "${workspaceRoot}\\build"]
+            },
+            {
+                "taskName": "cmake",
+                "args": ["cmake", "--build","${workspaceRoot}\\build"],
+                "isBuildCommand": true,
+                 "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+            }
+        ]
+    },
+    "linux": {
+        "command": "sh",
+        "args": ["-c"],
+           "tasks": [
+            {
+                "taskName": "clean",
+                "args": [ "rm -rf", "${workspaceRoot}/build" ]
+            },
+            {
+                "taskName": "cmake",
+               "args": ["cmake", "--build","${cwd}"],
+                "isBuildCommand": true
+            }
+        ]
+    }
+}

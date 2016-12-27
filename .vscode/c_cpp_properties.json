@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": ["/usr/include"],
+            "browse" : {
+                "limitSymbolsToIncludedHeaders" : true,
+                "databaseFilename" : ""
+            }
+        },
+        {
+            "name": "Linux",
+            "includePath": ["/usr/include"],
+            "browse" : {
+                "limitSymbolsToIncludedHeaders" : true,
+                "databaseFilename" : ""
+            }
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "c:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10586.0"
+            ],
+            "browse" : {
+                "limitSymbolsToIncludedHeaders" : true,
+                "databaseFilename" : ""
+            }
+        }
+    ]
+}

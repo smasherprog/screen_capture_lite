@@ -2,6 +2,7 @@
 #include "DXFrameProcessor.h"
 #include "DXDuplicationManager.h"
 #include <string>
+#include <fstream>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -193,7 +194,19 @@ namespace SL {
 					std::this_thread::sleep_for(std::chrono::milliseconds(timetowait));
 				}
 			}
-
+			if (Ret != DUPL_RETURN_SUCCESS)
+			{
+				if (Ret == DUPL_RETURN_ERROR_EXPECTED)
+				{
+					// The system is in a transition state so request the duplication be restarted
+					*TData->ExpectedErrorEvent = true;
+				}
+				else
+				{
+					// Unexpected error so exit the application
+					*TData->UnexpectedErrorEvent = true;
+				}
+			}
 			OutputDebugStringA("Exiting Thread\n");
 
 			return 0;
@@ -309,14 +322,9 @@ namespace SL {
 				return ProcessFailure(nullptr, L"Failed to create device in InitializeDx", L"Error", hr);
 			}
 
-			Microsoft::WRL::ComPtr<ID3D10Blob> pBlobVS;
-
-			hr = CompileShader(g_VS, "VS", "vs_4_0", pBlobVS.GetAddressOf());
-			if (FAILED(hr))
-			{
-				return ProcessFailure(Data->Device.Get(), L"Failed to create vertex shader in OUTPUTMANAGER", L"Error", hr, SystemTransitionsExpectedErrors);
-			}
-			hr = Data->Device->CreateVertexShader(pBlobVS->GetBufferPointer(), pBlobVS->GetBufferSize(), NULL, Data->VertexShader.GetAddressOf());
+	
+			UINT Size = ARRAYSIZE(g_VS);
+			hr = Data->Device->CreateVertexShader(g_VS, Size, nullptr, Data->VertexShader.GetAddressOf());
 			if (FAILED(hr))
 			{
 				return ProcessFailure(Data->Device.Get(), L"Failed to create vertex shader in OUTPUTMANAGER", L"Error", hr, SystemTransitionsExpectedErrors);
@@ -330,22 +338,16 @@ namespace SL {
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 			};
 			UINT NumElements = ARRAYSIZE(Layout);
-			hr = Data->Device->CreateInputLayout(Layout, NumElements, pBlobVS->GetBufferPointer(), pBlobVS->GetBufferSize(), Data->InputLayout.GetAddressOf());
+			hr = Data->Device->CreateInputLayout(Layout, NumElements, g_VS, Size, Data->InputLayout.GetAddressOf());
 			if (FAILED(hr))
 			{
 				return ProcessFailure(Data->Device.Get(), L"Failed to create input layout in InitializeDx", L"Error", hr, SystemTransitionsExpectedErrors);
 			}
 			Data->DeviceContext->IASetInputLayout(Data->InputLayout.Get());
 
-			Microsoft::WRL::ComPtr<ID3D10Blob> pBlobPS;
-			hr = CompileShader(g_PS, "PS", "ps_4_0", pBlobPS.GetAddressOf());
-			if (FAILED(hr))
-			{
-				return ProcessFailure(Data->Device.Get(), L"Failed to create pixel shader in OUTPUTMANAGER", L"Error", hr, SystemTransitionsExpectedErrors);
-			}
+			Size = ARRAYSIZE(g_PS);
+			hr = Data->Device->CreatePixelShader(g_PS, Size, nullptr, Data->PixelShader.GetAddressOf());
 
-
-			hr = Data->Device->CreatePixelShader(pBlobPS->GetBufferPointer(), pBlobPS->GetBufferSize(), nullptr, Data->PixelShader.GetAddressOf());
 			if (FAILED(hr))
 			{
 				return ProcessFailure(Data->Device.Get(), L"Failed to create pixel shader in InitializeDx", L"Error", hr, SystemTransitionsExpectedErrors);

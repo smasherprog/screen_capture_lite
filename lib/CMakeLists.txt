@@ -13,7 +13,14 @@ if(WIN32)
         ${Screen_Capture_SOURCE_DIR}/src/windows/ScreenCaptureGDI.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/CommonTypes.h
 		${Screen_Capture_SOURCE_DIR}/src/windows/CommonTypes.cpp
+		${Screen_Capture_SOURCE_DIR}/src/windows/PixelShader.hlsl
+		${Screen_Capture_SOURCE_DIR}/src/windows/VertexShader.hlsl
     )
+
+	set_source_files_properties(${Screen_Capture_SOURCE_DIR}/src/windows/PixelShader.hlsl PROPERTIES VS_SHADER_TYPE Pixel VS_SHADER_MODEL 4.0 VS_SHADER_ENTRYPOINT PS VS_SHADER_FLAGS "/DFLAGS_ADDED /Fh \"../../src/windows/%(Filename).h\"")
+	set_source_files_properties(${Screen_Capture_SOURCE_DIR}/src/windows/VertexShader.hlsl PROPERTIES VS_SHADER_TYPE Vertex VS_SHADER_MODEL 4.0 VS_SHADER_ENTRYPOINT VS VS_SHADER_FLAGS "/DFLAGS_ADDED /Fh \"../../src/windows/%(Filename).h\"")
+
+
     set(SCREEN_CAPTURE_PLATFORM_INC     
         ${Screen_Capture_SOURCE_DIR}/include/windows
         ${Screen_Capture_SOURCE_DIR}/src/windows

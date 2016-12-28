@@ -21,19 +21,16 @@
 
 #include <d3dcompiler.h>
 #include "ScreenTypes.h"
-
+#include "PixelShader.h"
+#include "VertexShader.h"
 
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"d3d11.lib")
-#pragma comment(lib,"d3dcompiler.lib")
 
 using namespace DirectX;
 
 namespace SL {
 	namespace Screen_Capture {
-
-		const char g_VS[] = "struct VS_INPUT{	float4 Pos : POSITION;	float2 Tex : TEXCOORD;};struct VS_OUTPUT{	float4 Pos : SV_POSITION;	float2 Tex : TEXCOORD;};VS_OUTPUT VS(VS_INPUT input){	return input;}";
-		const char g_PS[] = "Texture2D tx : register( t0 );SamplerState samLinear : register(s0);struct PS_INPUT{	float4 Pos : SV_POSITION;	float2 Tex : TEXCOORD;};float4 PS(PS_INPUT input) : SV_Target{	return tx.Sample(samLinear, input.Tex);}";
 
 		extern HRESULT SystemTransitionsExpectedErrors[];
 		extern HRESULT CreateDuplicationExpectedErrors[];
@@ -99,8 +96,7 @@ namespace SL {
 
 
 		DUPL_RETURN ProcessFailure(ID3D11Device* Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT* ExpectedErrors = nullptr);
-		HRESULT CompileShader( LPCSTR pSrcData,  LPCSTR entryPoint,  LPCSTR profile,  ID3DBlob** blob);
-
+	
 
 	}
 }

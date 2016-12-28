@@ -34,7 +34,9 @@ namespace SL {
 			m_InputLayout = nullptr;
 			m_SamplerLinear = nullptr;
 			m_RTV = nullptr;
-			CallBack = [](const CapturedImage& img) {};
+			CallBack = [](const CapturedImage& img) {
+				_CRT_UNUSED(img);
+			};
 		}
 
 
@@ -364,7 +366,7 @@ namespace SL {
 				CopyDesc = ThisDesc;
 				CopyDesc.BindFlags = D3D11_BIND_RENDER_TARGET;
 				CopyDesc.MiscFlags = 0;
-				HRESULT hr = m_Device->CreateTexture2D(&CopyDesc, nullptr, m_CopySurf.GetAddressOf());
+				hr = m_Device->CreateTexture2D(&CopyDesc, nullptr, m_CopySurf.GetAddressOf());
 				if (FAILED(hr))
 				{
 					return ProcessFailure(m_Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);

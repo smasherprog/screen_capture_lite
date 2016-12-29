@@ -3,6 +3,7 @@
 #include "DXDuplicationManager.h"
 #include <string>
 #include <fstream>
+#include "..\..\include\ThreadManager.h"
 
 namespace SL {
 	namespace Screen_Capture {
@@ -173,7 +174,7 @@ namespace SL {
 				}
 				{
 
-					std::lock_guard<std::mutex> lock(*TData->GlobalLock);
+					//std::lock_guard<std::mutex> lock(*TData->GlobalLock);
 					// Process new frame
 					DispMgr.ProcessFrame(&CurrentData, &DesktopDesc);
 					// Release frame back to desktop duplication
@@ -214,73 +215,6 @@ namespace SL {
 
 		}
 
-		DXThreadManager::DXThreadManager()
-		{
-			m_PtrInfo = std::make_shared<PTR_INFO>();
-		}
-		DXThreadManager::~DXThreadManager()
-		{
-			Clean();
-		}
-		void DXThreadManager::Clean()
-		{
-			m_PtrInfo = std::make_shared<PTR_INFO>();
-			for (auto t : m_ThreadHandles) {
-				CloseHandle(t);
-			}
-			m_ThreadHandles.resize(0);
-			m_ThreadData.resize(0);
-			m_ThreadCount = 0;
-		}
-
-		DUPL_RETURN DXThreadManager::Initialize(std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent, std::shared_ptr<std::atomic_bool> ExpectedErrorEvent, std::shared_ptr<std::atomic_bool> TerminateThreadsEvent, ImageCallback& cb)
-		{
-
-			m_ThreadCount = GetMonitorCount();
-			m_ThreadHandles.resize(m_ThreadCount);
-			m_ThreadData.resize(m_ThreadCount);
-			auto globallock = std::make_shared<std::mutex>();
-			// Create appropriate # of threads for duplication
-			DUPL_RETURN Ret = DUPL_RETURN_SUCCESS;
-			for (int i = 0; i < m_ThreadCount; ++i)
-			{
-				m_ThreadData[i] = std::make_shared<THREAD_DATA>();
-				m_ThreadData[i]->UnexpectedErrorEvent = UnexpectedErrorEvent;
-				m_ThreadData[i]->ExpectedErrorEvent = ExpectedErrorEvent;
-				m_ThreadData[i]->TerminateThreadsEvent = TerminateThreadsEvent;
-				m_ThreadData[i]->Output = i;
-				m_ThreadData[i]->CallBack = cb;
-				m_ThreadData[i]->PtrInfo = m_PtrInfo;
-				m_ThreadData[i]->GlobalLock = globallock;
-
-				Ret = InitializeDx(&m_ThreadData[i]->DxRes);
-				if (Ret != DUPL_RETURN_SUCCESS)
-				{
-					return Ret;
-				}
-
-				DWORD ThreadId;
-				m_ThreadHandles[i] = CreateThread(nullptr, 0, SL::Screen_Capture::RunThread, &m_ThreadData[i], 0, &ThreadId);
-				if (m_ThreadHandles[i] == nullptr)
-				{
-					return ProcessFailure(nullptr, L"Failed to create thread", L"Error", E_FAIL);
-				}
-
-			}
-
-			return Ret;
-		}
-		PTR_INFO * DXThreadManager::GetPointerInfo()
-		{
-			return m_PtrInfo.get();
-		}
-		void DXThreadManager::WaitForThreadTermination()
-		{
-			if (m_ThreadCount != 0)
-			{
-				WaitForMultipleObjectsEx(m_ThreadCount, m_ThreadHandles.data(), TRUE, INFINITE, FALSE);
-			}
-		}
 		DUPL_RETURN DXThreadManager::InitializeDx(DX_RESOURCES * Data)
 		{
 

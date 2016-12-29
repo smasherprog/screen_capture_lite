@@ -2,8 +2,8 @@ project(Screen_Capturelib)
 
 if(WIN32)
     set(SCREEN_CAPTURE_PLATFORM_SRC     
-        ${Screen_Capture_SOURCE_DIR}/include/windows/ScreenCaptureDX.h
-        ${Screen_Capture_SOURCE_DIR}/src/windows/ScreenCaptureDX.cpp
+        ${Screen_Capture_SOURCE_DIR}/include/windows/ScreenCaptureWindows.h
+        ${Screen_Capture_SOURCE_DIR}/src/windows/ScreenCaptureWindows.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXDuplicationManager.h
         ${Screen_Capture_SOURCE_DIR}/src/windows/DXDuplicationManager.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXFrameProcessor.h
@@ -32,9 +32,10 @@ elseif(UNIX)
 endif()
 
 set(SCREEN_CAPTURE_COMMON_SRC 
-    ${Screen_Capture_SOURCE_DIR}/include/ScreenTypes.h
-    ${Screen_Capture_SOURCE_DIR}/include/ScreenCaptureManager.h
-    ${Screen_Capture_SOURCE_DIR}/src/ScreenCaptureManager.cpp
+    ${Screen_Capture_SOURCE_DIR}/include/ScreenCapture.h
+    ${Screen_Capture_SOURCE_DIR}/src/ScreenCapture.cpp
+    ${Screen_Capture_SOURCE_DIR}/include/ThreadManager.h
+    ${Screen_Capture_SOURCE_DIR}/src/ThreadManager.cpp
 )
 set(SCREEN_CAPTURE_COMMON_INC
     ${Screen_Capture_SOURCE_DIR}/include

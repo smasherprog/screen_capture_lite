@@ -7,16 +7,16 @@
 namespace SL {
 	namespace Screen_Capture {
 
-		class DXThreadManager {
+		class ThreadManager {
 			std::shared_ptr<PTR_INFO> m_PtrInfo;
 
 			int m_ThreadCount;
-			std::vector<HANDLE> m_ThreadHandles;
+			std::vector<std::thread> m_ThreadHandles;
 			std::vector<std::shared_ptr<THREAD_DATA>> m_ThreadData;
 
 		public:
-			DXThreadManager();
-			~DXThreadManager();
+			ThreadManager();
+			~ThreadManager();
 
 			void Clean();
 			DUPL_RETURN Initialize(std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent, std::shared_ptr<std::atomic_bool> ExpectedErrorEvent, std::shared_ptr<std::atomic_bool> TerminateThreadsEvent, ImageCallback& cb);

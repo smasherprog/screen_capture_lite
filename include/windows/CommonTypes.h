@@ -20,14 +20,11 @@
 #include <DirectXMath.h>
 
 #include <d3dcompiler.h>
-#include "ScreenTypes.h"
 #include "PixelShader.h"
 #include "VertexShader.h"
 
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"d3d11.lib")
-
-using namespace DirectX;
 
 namespace SL {
 	namespace Screen_Capture {
@@ -36,23 +33,6 @@ namespace SL {
 		extern HRESULT CreateDuplicationExpectedErrors[];
 		extern HRESULT FrameInfoExpectedErrors[];
 		extern HRESULT EnumOutputsExpectedErrors[];
-
-		 enum DUPL_RETURN
-		{
-			DUPL_RETURN_SUCCESS = 0,
-			DUPL_RETURN_ERROR_EXPECTED = 1,
-			DUPL_RETURN_ERROR_UNEXPECTED = 2
-		};
-		struct PTR_INFO
-		{
-			std::unique_ptr<BYTE[]> PtrShapeBuffer;
-			DXGI_OUTDUPL_POINTER_SHAPE_INFO ShapeInfo = { 0 };
-			POINT Position = { 0 };
-			bool Visible = false;
-			UINT BufferSize = 0;
-			UINT WhoUpdatedPositionLast = 0;
-			LARGE_INTEGER LastTimeStamp = { 0 };
-		};
 
 		struct FRAME_DATA
 		{
@@ -72,21 +52,7 @@ namespace SL {
 			Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
 			Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerLinear;
 		} ;
-		struct THREAD_DATA
-		{
-			// Used to indicate abnormal error condition
-			std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent;
-			// Used to indicate a transition event occurred e.g. PnpStop, PnpStart, mode change, TDR, desktop switch and the application needs to recreate the duplication interface
-			std::shared_ptr<std::atomic_bool> ExpectedErrorEvent;
-			// Used by WinProc to signal to threads to exit
-			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
 
-			std::shared_ptr<std::mutex> GlobalLock;
-			UINT Output;
-			ImageCallback CallBack;
-			std::shared_ptr<PTR_INFO> PtrInfo;
-			DX_RESOURCES DxRes;
-		} ;
 
 		struct VERTEX
 		{
@@ -96,7 +62,10 @@ namespace SL {
 
 
 		DUPL_RETURN ProcessFailure(ID3D11Device* Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT* ExpectedErrors = nullptr);
-	
+#define RAIIHDC(handle) std::unique_ptr<std::remove_pointer<HDC>::type, decltype(&::DeleteDC)>(handle, &::DeleteDC)
+#define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(&::DeleteObject)>(handle, &::DeleteObject)
+#define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)>(handle, &::CloseHandle)
+
 
 	}
 }

@@ -30,11 +30,12 @@ HRESULT SL::Screen_Capture::EnumOutputsExpectedErrors[] = {
 	S_OK                                    // Terminate list with zero valued HRESULT
 };
 
+#include <iostream>
 
 SL::Screen_Capture::DUPL_RETURN SL::Screen_Capture::ProcessFailure(ID3D11Device * Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT * ExpectedErrors)
 {
 	HRESULT TranslatedHr;
-
+	std::wcout << Str << "\t" << Title << std::endl;
 	// On an error check if the DX device is lost
 	if (Device)
 	{

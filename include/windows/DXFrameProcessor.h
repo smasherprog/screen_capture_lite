@@ -1,7 +1,7 @@
 #pragma once
 #include "CommonTypes.h"
-#include "ScreenTypes.h"
 #include <memory>
+
 namespace SL {
 	namespace Screen_Capture {
 

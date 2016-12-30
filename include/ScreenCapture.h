@@ -2,6 +2,7 @@
 #include <memory>
 #include <functional>
 #include <vector>
+#include <atomic>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -9,10 +10,10 @@ namespace SL {
 			std::shared_ptr<char> Data;
 			int Height = 0;
 			int Width = 0;
-			int RelativeTop = 0;
-			int RelativeLeft = 0;
-			int AbsoluteTop = 0;
-			int AbsoluteLeft = 0;
+			//Offset numbers are the number of pixels of offset within the current monitor
+			int Offsetx = 0;
+			int OffsetY = 0;
+
 			int ScreenIndex;
 			const int PixelStride = 4;//in bytes
 		};
@@ -20,15 +21,14 @@ namespace SL {
 			int Index;
 			int Height;
 			int Width;
+			//Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.
+			int OffsetX;
+			int OffsetY;
+			std::string Name;
 		};
 		std::vector<Monitor> GetMonitors();
 		typedef std::function<void(const CapturedImage& img)> ImageCallback;
-		enum DUPL_RETURN
-		{
-			DUPL_RETURN_SUCCESS = 0,
-			DUPL_RETURN_ERROR_EXPECTED = 1,
-			DUPL_RETURN_ERROR_UNEXPECTED = 2
-		};
+
 
 		class ScreenCaptureManagerImpl;
 		class ScreenCaptureManager {
@@ -39,17 +39,9 @@ namespace SL {
 			~ScreenCaptureManager();
 			void StartCapturing(ImageCallback img_cb, int min_interval);
 			void StopCapturing();
-		};
-		struct THREAD_DATA
-		{
-			// Used to indicate abnormal error condition
-			std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent;
-			// Used to indicate a transition event occurred e.g. PnpStop, PnpStart, mode change, TDR, desktop switch and the application needs to recreate the duplication interface
-			std::shared_ptr<std::atomic_bool> ExpectedErrorEvent;
-			// Used by WinProc to signal to threads to exit
-			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
-			Monitor SelectedMonitor;
-			ImageCallback CallBack;
-		};
+		};		
+		
+	
+	
     }
 }

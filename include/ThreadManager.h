@@ -1,5 +1,6 @@
 #pragma once
 #include "ScreenCapture.h"
+#include "ThreadRunner.h"
 #include <thread>
 #include <vector>
 #include <atomic>
@@ -17,7 +18,7 @@ namespace SL {
 		public:
 			ThreadManager();
 			~ThreadManager();
-			DUPL_RETURN Init(std::shared_ptr<std::atomic_bool>& unexpected, std::shared_ptr<std::atomic_bool>& expected, std::shared_ptr<std::atomic_bool>& terminate, ImageCallback& CallBack);
+			void Init(std::shared_ptr<std::atomic_bool>& unexpected, std::shared_ptr<std::atomic_bool>& expected, std::shared_ptr<std::atomic_bool>& terminate, ImageCallback& CallBack, int mininterval);
 			void Join();
 			void Reset();
 		};

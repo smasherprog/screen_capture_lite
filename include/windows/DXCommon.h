@@ -60,12 +60,16 @@ namespace SL {
 			DirectX::XMFLOAT2 TexCoord;
 		};
 
+		enum DUPL_RETURN
+		{
+			DUPL_RETURN_SUCCESS = 0,
+			DUPL_RETURN_ERROR_EXPECTED = 1,
+			DUPL_RETURN_ERROR_UNEXPECTED = 2
+		};
 
 		DUPL_RETURN ProcessFailure(ID3D11Device* Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT* ExpectedErrors = nullptr);
-#define RAIIHDC(handle) std::unique_ptr<std::remove_pointer<HDC>::type, decltype(&::DeleteDC)>(handle, &::DeleteDC)
-#define RAIIHBITMAP(handle) std::unique_ptr<std::remove_pointer<HBITMAP>::type, decltype(&::DeleteObject)>(handle, &::DeleteObject)
-#define RAIIHANDLE(handle) std::unique_ptr<std::remove_pointer<HANDLE>::type, decltype(&::CloseHandle)>(handle, &::CloseHandle)
-
+        DUPL_RETURN DesktopDuplicationSupported();
+		DUPL_RETURN Initialize(DX_RESOURCES& r);
 
 	}
 }

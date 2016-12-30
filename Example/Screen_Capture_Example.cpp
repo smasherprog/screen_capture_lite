@@ -1,4 +1,4 @@
-#include "ScreenCaptureManager.h"
+#include "ScreenCapture.h"
 #include <iostream> 
 #include <chrono> 
 #include <atomic>
@@ -14,15 +14,15 @@ int main()
 	realcounter = 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;
 	SL::Screen_Capture::ImageCallback func = [&](const SL::Screen_Capture::CapturedImage& img) {
-		if (img.ScreenIndex != 0) return;
-		std::cout << "ScreenIndex " << img.ScreenIndex<<" Height " << img.Height << ", Width " << img.Width << ", Top " << img.AbsoluteTop << ", Left " << img.AbsoluteLeft << std::endl;
+	
+		std::cout << "ScreenIndex " << img.ScreenIndex<<" Height " << img.Height << ", Width " << img.Width << ", OffsetY " << img.OffsetY << ", Offsetx " << img.Offsetx << std::endl;
 		auto r = realcounter.fetch_add(1);
 		std::string s;
-		s += std::to_string(r) + std::string(" ") + std::to_string(img.AbsoluteTop) + std::string(",") + std::to_string(img.AbsoluteLeft) +std::string(" ") +  std::string(".jpg");
+		s += std::to_string(r) + std::string(" ") + std::to_string(img.OffsetY) + std::string(",") + std::to_string(img.Offsetx) +std::string(" ") +  std::string(".jpg");
 
-		if (!tje_encode_to_file(s.c_str(), img.Width, img.Height, 4, (const unsigned char*)img.Data.get())) {
+		/*if (!tje_encode_to_file(s.c_str(), img.Width, img.Height, 4, (const unsigned char*)img.Data.get())) {
 			std::cout << "Could not write JPEG\n";
-		}
+		}*/
 
 	};
 	framgrabber.StartCapturing(func, 100);
@@ -32,8 +32,6 @@ int main()
 	}
 
 	framgrabber.StopCapturing();
-	int k = 0;
-	std::cin >> k;
 	return 0;
 }
 

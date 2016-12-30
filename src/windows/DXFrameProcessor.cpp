@@ -4,41 +4,21 @@
 namespace SL {
 	namespace Screen_Capture {
 
-		DXFrameProcessor::DXFrameProcessor()
+		DXFrameProcessor::DXFrameProcessor(DX_RESOURCES& Data, ImageCallback& cb)
 		{
+			m_Device = Data.Device;
+			m_DeviceContext = Data.DeviceContext;
+			m_VertexShader = Data.VertexShader;
+			m_PixelShader = Data.PixelShader;
+			m_InputLayout = Data.InputLayout;
+			m_SamplerLinear = Data.SamplerLinear;
+			CallBack = cb;
 			m_DirtyVertexBufferAllocSize = 0;
 		}
 
 		DXFrameProcessor::~DXFrameProcessor()
 		{
 		}
-		void DXFrameProcessor::InitD3D(THREAD_DATA * Data)
-		{
-			m_Device = Data->DxRes.Device;
-			m_DeviceContext = Data->DxRes.DeviceContext;
-			m_VertexShader = Data->DxRes.VertexShader;
-			m_PixelShader = Data->DxRes.PixelShader;
-			m_InputLayout = Data->DxRes.InputLayout;
-			m_SamplerLinear = Data->DxRes.SamplerLinear;
-			CallBack = Data->CallBack;
-		}
-		void DXFrameProcessor::CleanRefs()
-		{
-			m_DeviceContext = nullptr;
-			m_Device = nullptr;
-			m_MoveSurf = nullptr;
-			m_CopySurf = nullptr;
-
-			m_VertexShader = nullptr;
-			m_PixelShader = nullptr;
-			m_InputLayout = nullptr;
-			m_SamplerLinear = nullptr;
-			m_RTV = nullptr;
-			CallBack = [](const CapturedImage& img) {
-				_CRT_UNUSED(img);
-			};
-		}
-
 
 		//
 		// Process a given frame and its metadata
@@ -107,10 +87,8 @@ namespace SL {
 							img.ScreenIndex = Data->SrcreenIndex;
 							img.Height = (Box.bottom - Box.top);
 							img.Width = (Box.right - Box.left);
-							img.RelativeTop = Box.top;
-							img.RelativeLeft = Box.left;
-							img.AbsoluteLeft = DeskDesc->DesktopCoordinates.left + Box.left;
-							img.AbsoluteTop = DeskDesc->DesktopCoordinates.top + Box.top;
+							img.OffsetY = Box.top;
+							img.Offsetx = Box.left;
 							auto sizeneeded = 4 * img.Height *img.Width;
 							img.Data = std::shared_ptr<char>(new char[sizeneeded], [](char* ptr) { if (ptr) delete[] ptr; });
 							auto dststart = img.Data.get();
@@ -284,10 +262,10 @@ namespace SL {
 				DestDirty.right = Width - Dirty->top;
 				DestDirty.bottom = Dirty->right;
 
-				Vertices[0].TexCoord = XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[1].TexCoord = XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[2].TexCoord = XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[5].TexCoord = XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[0].TexCoord = DirectX::XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[1].TexCoord = DirectX::XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[2].TexCoord = DirectX::XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[5].TexCoord = DirectX::XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
 				break;
 			}
 			case DXGI_MODE_ROTATION_ROTATE180:
@@ -297,10 +275,10 @@ namespace SL {
 				DestDirty.right = Width - Dirty->left;
 				DestDirty.bottom = Height - Dirty->top;
 
-				Vertices[0].TexCoord = XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[1].TexCoord = XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[2].TexCoord = XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[5].TexCoord = XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[0].TexCoord = DirectX::XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[1].TexCoord = DirectX::XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[2].TexCoord = DirectX::XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[5].TexCoord = DirectX::XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
 				break;
 			}
 			case DXGI_MODE_ROTATION_ROTATE270:
@@ -310,10 +288,10 @@ namespace SL {
 				DestDirty.right = Dirty->bottom;
 				DestDirty.bottom = Height - Dirty->left;
 
-				Vertices[0].TexCoord = XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[1].TexCoord = XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[2].TexCoord = XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[5].TexCoord = XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[0].TexCoord = DirectX::XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[1].TexCoord = DirectX::XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[2].TexCoord = DirectX::XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[5].TexCoord = DirectX::XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
 				break;
 			}
 			default:
@@ -321,27 +299,27 @@ namespace SL {
 			case DXGI_MODE_ROTATION_UNSPECIFIED:
 			case DXGI_MODE_ROTATION_IDENTITY:
 			{
-				Vertices[0].TexCoord = XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[1].TexCoord = XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[2].TexCoord = XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
-				Vertices[5].TexCoord = XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[0].TexCoord = DirectX::XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[1].TexCoord = DirectX::XMFLOAT2(Dirty->left / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[2].TexCoord = DirectX::XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->bottom / static_cast<FLOAT>(ThisDesc->Height));
+				Vertices[5].TexCoord = DirectX::XMFLOAT2(Dirty->right / static_cast<FLOAT>(ThisDesc->Width), Dirty->top / static_cast<FLOAT>(ThisDesc->Height));
 				break;
 			}
 			}
 
 			// Set positions
-			Vertices[0].Pos = XMFLOAT3((DestDirty.left- CenterX) / static_cast<FLOAT>(CenterX),
+			Vertices[0].Pos = DirectX::XMFLOAT3((DestDirty.left- CenterX) / static_cast<FLOAT>(CenterX),
 				-1 * (DestDirty.bottom  - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
-			Vertices[1].Pos = XMFLOAT3((DestDirty.left  - CenterX) / static_cast<FLOAT>(CenterX),
+			Vertices[1].Pos = DirectX::XMFLOAT3((DestDirty.left  - CenterX) / static_cast<FLOAT>(CenterX),
 				-1 * (DestDirty.top - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
-			Vertices[2].Pos = XMFLOAT3((DestDirty.right- CenterX) / static_cast<FLOAT>(CenterX),
+			Vertices[2].Pos = DirectX::XMFLOAT3((DestDirty.right- CenterX) / static_cast<FLOAT>(CenterX),
 				-1 * (DestDirty.bottom  - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
 			Vertices[3].Pos = Vertices[2].Pos;
 			Vertices[4].Pos = Vertices[1].Pos;
-			Vertices[5].Pos = XMFLOAT3((DestDirty.right  - CenterX) / static_cast<FLOAT>(CenterX),
+			Vertices[5].Pos = DirectX::XMFLOAT3((DestDirty.right  - CenterX) / static_cast<FLOAT>(CenterX),
 				-1 * (DestDirty.top - CenterY) / static_cast<FLOAT>(CenterY),
 				0.0f);
 

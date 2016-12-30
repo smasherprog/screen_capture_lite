@@ -1,5 +1,6 @@
 #pragma once
-#include "CommonTypes.h"
+#include "ScreenCapture.h"
+#include "DXCommon.h"
 #include <memory>
 
 namespace SL {
@@ -7,10 +8,9 @@ namespace SL {
 
 		class DXFrameProcessor {
 		public:
-			DXFrameProcessor();
+			DXFrameProcessor(DX_RESOURCES& Data, ImageCallback& cb);
 			~DXFrameProcessor();
-			void InitD3D(THREAD_DATA* Data);
-			void CleanRefs();
+			
 			DUPL_RETURN ProcessFrame(FRAME_DATA* Data, DXGI_OUTPUT_DESC* DeskDesc);
 
 		private:

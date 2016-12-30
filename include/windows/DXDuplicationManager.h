@@ -6,7 +6,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved
 
 #pragma once
-#include "CommonTypes.h"
+#include "DXCommon.h"
 #include <memory>
 namespace SL {
 	namespace Screen_Capture {
@@ -18,7 +18,6 @@ namespace SL {
 			DUPL_RETURN GetFrame(FRAME_DATA* Data, bool* Timeout);
 			DUPL_RETURN DoneWithFrame();
 			DUPL_RETURN InitDupl(ID3D11Device* Device, UINT Output);
-			DUPL_RETURN GetMouse(PTR_INFO* PtrInfo, DXGI_OUTDUPL_FRAME_INFO* FrameInfo);
 			void GetOutputDesc(DXGI_OUTPUT_DESC* DescPtr);
 
 		private:

@@ -30,8 +30,8 @@ namespace SL {
 
 					bool FirstTime = true;
 
-					while (*_TerminateThread) {
-						DUPL_RETURN Ret = DUPL_RETURN_SUCCESS;
+					while (!*_TerminateThread) {
+			
 						if (FirstTime || *expected)
 						{
 							if (!FirstTime)
@@ -48,24 +48,9 @@ namespace SL {
 								// First time through the loop so nothing to clean up
 								FirstTime = false;
 							}
-							Ret = ThreadMgr.Init(unexpected, expected, _TerminateThread, callback);
+							ThreadMgr.Init(unexpected, expected, _TerminateThread, callback, sleeptime);
 						}
-
-						// Check if for errors
-						if (Ret != DUPL_RETURN_SUCCESS)
-						{
-							if (Ret == DUPL_RETURN_ERROR_EXPECTED)
-							{
-								// Some type of system transition is occurring so retry
-								*expected = true;
-							}
-							else
-							{
-								// Unexpected error so exit
-								break;
-							}
-						}
-						std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
+						std::this_thread::sleep_for(std::chrono::milliseconds(30));
 					}
 					*_TerminateThread = true;
 					ThreadMgr.Join();

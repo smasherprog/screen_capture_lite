@@ -2,17 +2,18 @@ project(Screen_Capturelib)
 
 if(WIN32)
     set(SCREEN_CAPTURE_PLATFORM_SRC     
-        ${Screen_Capture_SOURCE_DIR}/include/windows/ScreenCaptureWindows.h
-        ${Screen_Capture_SOURCE_DIR}/src/windows/ScreenCaptureWindows.cpp
+        ${Screen_Capture_SOURCE_DIR}/src/windows/GetMonitors.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXDuplicationManager.h
         ${Screen_Capture_SOURCE_DIR}/src/windows/DXDuplicationManager.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXFrameProcessor.h
         ${Screen_Capture_SOURCE_DIR}/src/windows/DXFrameProcessor.cpp
-        ${Screen_Capture_SOURCE_DIR}/include/windows/DXThreadManager.h
-        ${Screen_Capture_SOURCE_DIR}/src/windows/DXThreadManager.cpp
-        ${Screen_Capture_SOURCE_DIR}/src/windows/ScreenCaptureGDI.cpp
-        ${Screen_Capture_SOURCE_DIR}/include/windows/CommonTypes.h
-		${Screen_Capture_SOURCE_DIR}/src/windows/CommonTypes.cpp
+        ${Screen_Capture_SOURCE_DIR}/include/windows/DXThread.h
+        ${Screen_Capture_SOURCE_DIR}/src/windows/DXThread.cpp
+        ${Screen_Capture_SOURCE_DIR}/src/windows/GDIThread.cpp
+        ${Screen_Capture_SOURCE_DIR}/include/windows/GDIThread.h
+        ${Screen_Capture_SOURCE_DIR}/include/windows/DXCommon.h
+		${Screen_Capture_SOURCE_DIR}/src/windows/DXCommon.cpp
+        ${Screen_Capture_SOURCE_DIR}/src/windows/ThreadRunner.cpp
 		${Screen_Capture_SOURCE_DIR}/src/windows/PixelShader.hlsl
 		${Screen_Capture_SOURCE_DIR}/src/windows/VertexShader.hlsl
     )
@@ -34,6 +35,7 @@ endif()
 set(SCREEN_CAPTURE_COMMON_SRC 
     ${Screen_Capture_SOURCE_DIR}/include/ScreenCapture.h
     ${Screen_Capture_SOURCE_DIR}/src/ScreenCapture.cpp
+    ${Screen_Capture_SOURCE_DIR}/include/ThreadRunner.h
     ${Screen_Capture_SOURCE_DIR}/include/ThreadManager.h
     ${Screen_Capture_SOURCE_DIR}/src/ThreadManager.cpp
 )

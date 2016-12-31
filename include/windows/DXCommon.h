@@ -15,13 +15,7 @@
 #include <windows.h>
 #include <d3d11.h>
 #include <dxgi1_2.h>
-#include <DirectXMath.h>
 #include <wrl.h>
-#include <DirectXMath.h>
-
-#include <d3dcompiler.h>
-#include "PixelShader.h"
-#include "VertexShader.h"
 
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"d3d11.lib")
@@ -34,32 +28,17 @@ namespace SL {
 		extern HRESULT FrameInfoExpectedErrors[];
 		extern HRESULT EnumOutputsExpectedErrors[];
 
-		struct FRAME_DATA
-		{
-			Microsoft::WRL::ComPtr<ID3D11Texture2D> Frame;
-			DXGI_OUTDUPL_FRAME_INFO FrameInfo = { 0 };
-			std::shared_ptr<BYTE> MetaData;
-			UINT DirtyCount = 0;
-			UINT MoveCount = 0;
-			UINT SrcreenIndex = 0;
-		};		
 		struct DX_RESOURCES
 		{
 			Microsoft::WRL::ComPtr<ID3D11Device> Device;
 			Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext;
-			Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
-			Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
-			Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
-			Microsoft::WRL::ComPtr<ID3D11SamplerState> SamplerLinear;
 		} ;
-
-
-		struct VERTEX
+		struct DUPLE_RESOURCES
 		{
-			DirectX::XMFLOAT3 Pos;
-			DirectX::XMFLOAT2 TexCoord;
+			Microsoft::WRL::ComPtr<IDXGIOutputDuplication> OutputDuplication;
+			DXGI_OUTPUT_DESC OutputDesc;
+			UINT Output;
 		};
-
 		enum DUPL_RETURN
 		{
 			DUPL_RETURN_SUCCESS = 0,
@@ -70,6 +49,8 @@ namespace SL {
 		DUPL_RETURN ProcessFailure(ID3D11Device* Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT* ExpectedErrors = nullptr);
         DUPL_RETURN DesktopDuplicationSupported();
 		DUPL_RETURN Initialize(DX_RESOURCES& r);
+		DUPL_RETURN Initialize(DUPLE_RESOURCES& r, ID3D11Device* device, const UINT output);
+		RECT ConvertRect(RECT Dirty, const DXGI_OUTPUT_DESC& DeskDesc);
 
 	}
 }

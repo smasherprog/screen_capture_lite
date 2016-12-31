@@ -17,7 +17,7 @@ void SL::Screen_Capture::ThreadManager::Init(std::shared_ptr<std::atomic_bool>& 
 	m_ThreadHandles.resize(monitors.size());
 	m_ThreadData.resize(monitors.size());
 
-	for (int i = 0; i < monitors.size(); ++i)
+	for (size_t i = 0; i < monitors.size(); ++i)
 	{
 		m_ThreadData[i] = std::make_shared<THREAD_DATA>();
 		m_ThreadData[i]->UnexpectedErrorEvent = unexpected;

@@ -45,7 +45,7 @@ namespace SL {
 				*data->ExpectedErrorEvent = true;
 				return ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
 			}
-			return GDIThread(data);
+			//return GDIThread(data);
 			if (DesktopDuplicationSupported() == DUPL_RETURN::DUPL_RETURN_SUCCESS) {
 				return DXThread(data);
 			}

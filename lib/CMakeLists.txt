@@ -3,8 +3,6 @@ project(Screen_Capturelib)
 if(WIN32)
     set(SCREEN_CAPTURE_PLATFORM_SRC     
         ${Screen_Capture_SOURCE_DIR}/src/windows/GetMonitors.cpp
-        ${Screen_Capture_SOURCE_DIR}/include/windows/DXDuplicationManager.h
-        ${Screen_Capture_SOURCE_DIR}/src/windows/DXDuplicationManager.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXFrameProcessor.h
         ${Screen_Capture_SOURCE_DIR}/src/windows/DXFrameProcessor.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXThread.h
@@ -14,13 +12,7 @@ if(WIN32)
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXCommon.h
 		${Screen_Capture_SOURCE_DIR}/src/windows/DXCommon.cpp
         ${Screen_Capture_SOURCE_DIR}/src/windows/ThreadRunner.cpp
-		${Screen_Capture_SOURCE_DIR}/src/windows/PixelShader.hlsl
-		${Screen_Capture_SOURCE_DIR}/src/windows/VertexShader.hlsl
     )
-
-	set_source_files_properties(${Screen_Capture_SOURCE_DIR}/src/windows/PixelShader.hlsl PROPERTIES VS_SHADER_TYPE Pixel VS_SHADER_MODEL 4.0 VS_SHADER_ENTRYPOINT PS VS_SHADER_FLAGS "/DFLAGS_ADDED /Fh \"../../src/windows/%(Filename).h\"")
-	set_source_files_properties(${Screen_Capture_SOURCE_DIR}/src/windows/VertexShader.hlsl PROPERTIES VS_SHADER_TYPE Vertex VS_SHADER_MODEL 4.0 VS_SHADER_ENTRYPOINT VS VS_SHADER_FLAGS "/DFLAGS_ADDED /Fh \"../../src/windows/%(Filename).h\"")
-
 
     set(SCREEN_CAPTURE_PLATFORM_INC     
         ${Screen_Capture_SOURCE_DIR}/include/windows

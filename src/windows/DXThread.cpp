@@ -1,7 +1,6 @@
 #include "DXThread.h"
 #include "DXCommon.h"
 #include "DXFrameProcessor.h"
-#include "DXDuplicationManager.h"
 #include <string>
 
 
@@ -11,33 +10,19 @@ namespace SL {
 		void DXThread(std::shared_ptr<THREAD_DATA> data) {
 
 
-			DX_RESOURCES res;
-
-			auto Ret = Initialize(res);
-			if (Ret != DUPL_RETURN_SUCCESS) return;// get out
-
-			DXFrameProcessor DispMgr(res, data->CallBack);
-			DXDuplicationManager DuplMgr;
+			DXFrameProcessor DispMgr;
 
 			// Make duplication manager
-			Ret = DuplMgr.InitDupl(res.Device.Get(), data->SelectedMonitor.Index);
+			auto Ret = DispMgr.Init(data->CallBack, data->SelectedMonitor.Index);
 			if (Ret != DUPL_RETURN_SUCCESS) return;// get out
 
-			// Get output description
-			DXGI_OUTPUT_DESC DesktopDesc;
-			RtlZeroMemory(&DesktopDesc, sizeof(DXGI_OUTPUT_DESC));
-			DuplMgr.GetOutputDesc(&DesktopDesc);
-
-
-			FRAME_DATA Currendata;
-			Currendata.SrcreenIndex = data->SelectedMonitor.Index;
 			while (!*data->TerminateThreadsEvent)
 			{
 				auto start = std::chrono::high_resolution_clock::now();
 				bool TimeOut;
 
-				// Get new frame from desktop duplication
-				Ret = DuplMgr.GetFrame(&Currendata, &TimeOut);
+				//Process Frame
+				Ret = DispMgr.ProcessFrame(&TimeOut);
 				if (Ret != DUPL_RETURN_SUCCESS)
 				{
 					// An error occurred getting the next frame drop out of loop which
@@ -50,15 +35,6 @@ namespace SL {
 				{
 					// No new frame at the moment
 					continue;
-				}
-
-				// Process new frame
-				DispMgr.ProcessFrame(&Currendata, &DesktopDesc);
-				// Release frame back to desktop duplication
-				Ret = DuplMgr.DoneWithFrame();
-				if (Ret != DUPL_RETURN_SUCCESS)
-				{
-					break;
 				}
 
 				auto mspassed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();

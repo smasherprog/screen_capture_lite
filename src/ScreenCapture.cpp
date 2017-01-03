@@ -2,6 +2,7 @@
 #include "ThreadManager.h"
 #include <thread>
 #include <atomic>
+#include <algorithm>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -9,8 +10,9 @@ namespace SL {
 		class ScreenCaptureManagerImpl {
 		public:
 
-			int sleeptime = 100;//in ms
-			ImageCallback callback;
+			int SleepTime = 100;//in ms
+			CaptureEntireMonitorCallback CaptureEntireMonitor;
+			CaptureDifMonitorCallback CaptureDifMonitor;
 
 			std::thread _Thread;
 			std::shared_ptr<std::atomic_bool> _TerminateThread;
@@ -30,11 +32,17 @@ namespace SL {
 					_TerminateThread = std::make_shared<std::atomic_bool>(false);
 
 					bool FirstTime = true;
-					auto backtoback_expectederrors = 0;
+					auto sleeptime = 50;
 
 					while (!*_TerminateThread) {
+						//if an expected error occurs, make sure to sleep a little longer each loop that the error orrcurs with a max of 1500 ms
 						if (*expected) {
-							backtoback_expectederrors += 1;
+							sleeptime *= 2;
+							sleeptime = std::min(1500, sleeptime);
+						}
+						else {//if no expected error has occured lower the sleep time a little bit each loop until we reach 50 ms wait time. 
+							sleeptime -= 50;
+							sleeptime = std::max(50, sleeptime);
 						}
 
 						if (FirstTime || *expected)
@@ -53,11 +61,9 @@ namespace SL {
 								// First time through the loop so nothing to clean up
 								FirstTime = false;
 							}
-
-					
-							ThreadMgr.Init(unexpected, expected, _TerminateThread, callback, sleeptime);
+							ThreadMgr.Init(unexpected, expected, _TerminateThread,  CaptureEntireMonitor, CaptureDifMonitor,SleepTime);
 						}
-						std::this_thread::sleep_for(std::chrono::milliseconds(30));
+						std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
 					}
 					*_TerminateThread = true;
 					ThreadMgr.Join();
@@ -82,10 +88,16 @@ namespace SL {
 		{
 			_ScreenCaptureManagerImpl->stop();
 		}
-		void ScreenCaptureManager::StartCapturing(ImageCallback img_cb, int min_interval)
+		void ScreenCaptureManager::Set_CapturCallback(CaptureEntireMonitorCallback img_cb) {
+			_ScreenCaptureManagerImpl->CaptureEntireMonitor = img_cb;
+		}
+		void ScreenCaptureManager::Set_CapturCallback(CaptureDifMonitorCallback img_cb) {
+			_ScreenCaptureManagerImpl->CaptureDifMonitor = img_cb;
+		}
+
+		void ScreenCaptureManager::StartCapturing(int min_interval)
 		{
-			_ScreenCaptureManagerImpl->callback = img_cb;
-			_ScreenCaptureManagerImpl->sleeptime = min_interval;
+			_ScreenCaptureManagerImpl->SleepTime = min_interval;
 			_ScreenCaptureManagerImpl->start();
 		}
 		void ScreenCaptureManager::StopCapturing()

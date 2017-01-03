@@ -18,7 +18,12 @@ namespace SL {
 		public:
 			ThreadManager();
 			~ThreadManager();
-			void Init(std::shared_ptr<std::atomic_bool>& unexpected, std::shared_ptr<std::atomic_bool>& expected, std::shared_ptr<std::atomic_bool>& terminate, ImageCallback& CallBack, int mininterval);
+			void Init(std::shared_ptr<std::atomic_bool>& unexpected, 
+				std::shared_ptr<std::atomic_bool>& expected, 
+				std::shared_ptr<std::atomic_bool>& terminate, 
+				CaptureEntireMonitorCallback& captureentiremonitor,
+				CaptureDifMonitorCallback& capturedifmonitor,
+				int mininterval);
 			void Join();
 			void Reset();
 		};

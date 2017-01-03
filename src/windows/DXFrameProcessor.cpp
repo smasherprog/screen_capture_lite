@@ -7,7 +7,7 @@ namespace SL {
 		class AquireFrameRAII {
 			IDXGIOutputDuplication* _DuplLock;
 		public:
-			AquireFrameRAII(IDXGIOutputDuplication* dupl): _DuplLock(dupl){	}
+			AquireFrameRAII(IDXGIOutputDuplication* dupl) : _DuplLock(dupl) {	}
 
 			~AquireFrameRAII() {
 				auto hr = _DuplLock->ReleaseFrame();
@@ -30,7 +30,7 @@ namespace SL {
 			~MAPPED_SUBRESOURCERAII() {
 				_Context->Unmap(_Resource, _Subresource);
 			}
-			HRESULT Map(ID3D11Resource *pResource,UINT Subresource,D3D11_MAP MapType, UINT MapFlags, D3D11_MAPPED_SUBRESOURCE *pMappedResource) {
+			HRESULT Map(ID3D11Resource *pResource, UINT Subresource, D3D11_MAP MapType, UINT MapFlags, D3D11_MAPPED_SUBRESOURCE *pMappedResource) {
 				if (_Resource != nullptr) {
 					_Context->Unmap(_Resource, _Subresource);
 				}
@@ -44,31 +44,33 @@ namespace SL {
 
 		DXFrameProcessor::DXFrameProcessor()
 		{
-
+			ImageBufferSize = 0;
 		}
 
 		DXFrameProcessor::~DXFrameProcessor()
 		{
 
 		}
-		DUPL_RETURN DXFrameProcessor::Init(ImageCallback& cb, Monitor monitor){
-			DX_RESOURCES data;
-			auto ret = Initialize(data);
+		DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
+			DX_RESOURCES res;
+			auto ret = Initialize(res);
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}
 			DUPLE_RESOURCES dupl;
-			ret = Initialize(dupl, data.Device.Get(), monitor.Index);
+			ret = Initialize(dupl, res.Device.Get(), data->SelectedMonitor.Index);
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}
-			Device = data.Device;
-			DeviceContext = data.DeviceContext;
+			Device = res.Device;
+			DeviceContext = res.DeviceContext;
 			OutputDuplication = dupl.OutputDuplication;
 			OutputDesc = dupl.OutputDesc;
 			Output = dupl.Output;
-			CallBack = cb;
-			CurrentMonitor = monitor;
+
+			Data = data;
+			ImageBufferSize = data->SelectedMonitor.Width* data->SelectedMonitor.Height*PixelStride;
+			ImageBuffer = std::make_unique<char[]>(ImageBufferSize);
 			return ret;
 		}
 		//
@@ -87,7 +89,8 @@ namespace SL {
 			if (hr == DXGI_ERROR_WAIT_TIMEOUT)
 			{
 				return DUPL_RETURN_SUCCESS;
-			}else if (FAILED(hr))
+			}
+			else if (FAILED(hr))
 			{
 				return ProcessFailure(Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
 			}
@@ -101,7 +104,7 @@ namespace SL {
 
 			D3D11_TEXTURE2D_DESC ThisDesc;
 			aquireddesktopimage->GetDesc(&ThisDesc);
-		
+
 			if (!StagingSurf)
 			{
 				D3D11_TEXTURE2D_DESC StagingDesc;
@@ -121,7 +124,7 @@ namespace SL {
 			auto dirtycount = 0;
 			RECT* dirtyrects = nullptr;
 			// Get metadata
-			if (FrameInfo.TotalMetadataBufferSize >0 )
+			if (FrameInfo.TotalMetadataBufferSize > 0)
 			{
 				MetaDataBuffer.reserve(FrameInfo.TotalMetadataBufferSize);
 				UINT bufsize = FrameInfo.TotalMetadataBufferSize;
@@ -146,46 +149,53 @@ namespace SL {
 				dirtycount = bufsize / sizeof(RECT);
 				//convert rects to their correct coords
 				for (auto i = 0; i < dirtycount; i++) {
-					dirtyrects[i]=ConvertRect(dirtyrects[i], OutputDesc);
+					dirtyrects[i] = ConvertRect(dirtyrects[i], OutputDesc);
 				}
 			}
+			DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
+
+			D3D11_MAPPED_SUBRESOURCE MappingDesc;
+			MAPPED_SUBRESOURCERAII mappedresrouce(DeviceContext.Get());
+			hr = mappedresrouce.Map(StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
+			// Get the data
+			if (MappingDesc.pData == NULL) {
+				return ProcessFailure(Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
+			}
+			auto startsrc = (char*)MappingDesc.pData;
+			auto startdst = ImageBuffer.get();
+			auto rowstride = PixelStride*Data->SelectedMonitor.Width;
+			if (rowstride == MappingDesc.RowPitch) {//no need for multiple calls, there is no padding here
+				memcpy(startdst, startsrc, rowstride*Data->SelectedMonitor.Height);
+			}
+			else {
+				for (auto i = 0; i < Data->SelectedMonitor.Height; i++) {
+					memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
+				}
+			}
+
+
+
+			ImageRect ret;
 
 			// Process dirties 
-			if (dirtycount > 0 && dirtyrects != nullptr)
+			if (dirtycount > 0 && dirtyrects != nullptr && Data->CaptureDifMonitor)
 			{
-			
-				DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
-				D3D11_MAPPED_SUBRESOURCE MappingDesc;
-				MAPPED_SUBRESOURCERAII mappedresrouce(DeviceContext.Get());
-
-				hr = mappedresrouce.Map(StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
-				// Get the data
-				if (MappingDesc.pData == NULL) {
-					return ProcessFailure(Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
-				}
-
-				for (auto i = 0; i < dirtycount; i++) 
+				for (auto i = 0; i < dirtycount; i++)
 				{
-					CapturedImage img;
-					img.Height = (dirtyrects[i].bottom - dirtyrects[i].top);
-					img.Width = (dirtyrects[i].right - dirtyrects[i].left);
-					img.OffsetY = dirtyrects[i].top;
-					img.Offsetx = dirtyrects[i].left;
-					auto sizeneeded = img.PixelStride * img.Height *img.Width;
-					img.Data = std::shared_ptr<char>(new char[sizeneeded], [](char* ptr) { if (ptr) delete[] ptr; });
-					auto dststart = img.Data.get();
-					auto srcstart = ((char*)MappingDesc.pData) + (dirtyrects[i].top * MappingDesc.RowPitch) + (dirtyrects[i].left * img.PixelStride);
-
-					for (auto t = dirtyrects[i].top; t <dirtyrects[i].bottom; t++) {
-						memcpy(dststart, srcstart, img.Width * img.PixelStride);
-						dststart += img.Width * img.PixelStride;
-						srcstart += MappingDesc.RowPitch;
-					}
-					CallBack(img, CurrentMonitor);
+					ret.left = dirtyrects[i].top;
+					ret.top = dirtyrects[i].top;
+					ret.bottom = dirtyrects[i].bottom;
+					ret.right = dirtyrects[i].right;
+					Data->CaptureDifMonitor(ImageBuffer.get(), PixelStride, Data->SelectedMonitor, ret);
 				}
-		
-			}
 
+			}
+			if (Data->CaptureEntireMonitor) {
+				ret.left = ret.top = 0;
+				ret.bottom = Data->SelectedMonitor.Height;
+				ret.right = Data->SelectedMonitor.Width;
+				Data->CaptureEntireMonitor(ImageBuffer.get(), PixelStride, Data->SelectedMonitor);
+			}
 			return Ret;
 		}
 

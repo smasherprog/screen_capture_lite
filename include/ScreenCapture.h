@@ -5,16 +5,7 @@
 
 namespace SL {
 	namespace Screen_Capture {
-		struct CapturedImage {
-			std::shared_ptr<char> Data;
-			int Height = 0;
-			int Width = 0;
-			//Offset numbers are the number of pixels of offset within the current monitor
-			int Offsetx = 0;
-			int OffsetY = 0;
-
-			const int PixelStride = 4;//in bytes
-		};
+		
 		struct Monitor{
 			int Index;
 			int Height;
@@ -24,9 +15,16 @@ namespace SL {
 			int OffsetY;
 			std::string Name;
 		};
+		
+		struct ImageRect {
+			int    left = 0;
+			int    top = 0;
+			int    right = 0;
+			int    bottom = 0;
+		};
 		std::vector<Monitor> GetMonitors();
-		typedef std::function<void(const CapturedImage& img, const Monitor& monitor)> ImageCallback;
-
+		typedef std::function<void(const char* data, const int pixelstride /*in bytes*/, const Monitor& monitor)> CaptureEntireMonitorCallback;
+		typedef std::function<void(const char* data, const int pixelstride /*in bytes*/, const Monitor& monitor, const ImageRect& rect)> CaptureDifMonitorCallback;
 
 		class ScreenCaptureManagerImpl;
 		class ScreenCaptureManager {
@@ -35,7 +33,12 @@ namespace SL {
 		public:
 			ScreenCaptureManager();
 			~ScreenCaptureManager();
-			void StartCapturing(ImageCallback img_cb, int min_interval);
+			//set this callback if you want to capture the entire Montitor
+			void Set_CapturCallback(CaptureEntireMonitorCallback img_cb);
+			//set this callback if you want to capture just differences between the frames
+			void Set_CapturCallback(CaptureDifMonitorCallback img_cb);
+
+			void StartCapturing(int min_interval);
 			void StopCapturing();
 		};		
 		enum DUPL_RETURN
@@ -44,7 +47,7 @@ namespace SL {
 			DUPL_RETURN_ERROR_EXPECTED = 1,
 			DUPL_RETURN_ERROR_UNEXPECTED = 2
 		};
-	
+		const int PixelStride = 4;
 	
     }
 }

@@ -15,8 +15,9 @@ namespace SL {
 			// Used to signal to threads to exit
 			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
 			Monitor SelectedMonitor;
-			int CaptureInterval; //in milliseconds
-			ImageCallback CallBack;
+			int CaptureInterval; //in milliseconds	
+			CaptureEntireMonitorCallback CaptureEntireMonitor;
+			CaptureDifMonitorCallback CaptureDifMonitor;
 		};
 		void RunCapture(std::shared_ptr<THREAD_DATA> data);
 

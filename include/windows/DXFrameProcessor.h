@@ -1,5 +1,6 @@
 #pragma once
 #include "DXCommon.h"
+#include "ThreadRunner.h"
 #include <memory>
 
 namespace SL {
@@ -8,7 +9,7 @@ namespace SL {
 		public:
 			DXFrameProcessor();
 			~DXFrameProcessor();
-			DUPL_RETURN Init(ImageCallback& cb, Monitor monitor);
+			DUPL_RETURN Init(std::shared_ptr<THREAD_DATA> data);
 			DUPL_RETURN ProcessFrame();
 
 		private:
@@ -22,8 +23,9 @@ namespace SL {
 			UINT Output;
 			std::vector<BYTE> MetaDataBuffer;
 
-			ImageCallback CallBack;
-			Monitor CurrentMonitor;
+			std::shared_ptr<THREAD_DATA> Data;
+			std::unique_ptr<char[]> ImageBuffer;
+			size_t ImageBufferSize;
 		};
 	}
 }

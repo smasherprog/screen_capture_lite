@@ -39,7 +39,7 @@ namespace SL {
 			T frameprocessor;
 
 			// Make duplication manager
-			auto ret = frameprocessor.Init(data->CallBack, data->SelectedMonitor);
+			auto ret = frameprocessor.Init(data);
 			if (ret != DUPL_RETURN_SUCCESS) {//Directx duplication is NOT supported!
 				return false;
 			}
@@ -51,14 +51,16 @@ namespace SL {
 					{
 						// The system is in a transition state so request the duplication be restarted
 						*data->ExpectedErrorEvent = true;
+						std::cout << "Exiting Thread due to expected error " << std::endl;
 					}
 					else
 					{
 						// Unexpected error so exit the application
 						*data->UnexpectedErrorEvent = true;
+						std::cout << "Exiting Thread due to Unexpected error " << std::endl;
 					}
 				}
-				OutputDebugStringA("Exiting Thread\n");
+				
 				return true;
 			}
 		}
@@ -99,7 +101,7 @@ namespace SL {
 				*data->ExpectedErrorEvent = true;
 				return ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
 			}
-		
+			//TryCapture<GDIFrameProcessor>(data);
 			std::cout << "Starting to Capture on Monitor " << data->SelectedMonitor.Name << std::endl;
 			std::cout << "Trying DirectX Desktop Duplication " << std::endl;
 			if (!TryCapture<DXFrameProcessor>(data)) {//if DX is not supported, fallback to GDI capture

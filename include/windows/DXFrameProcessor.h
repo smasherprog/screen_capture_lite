@@ -1,5 +1,4 @@
 #pragma once
-#include "ScreenCapture.h"
 #include "DXCommon.h"
 #include <memory>
 
@@ -9,8 +8,8 @@ namespace SL {
 		public:
 			DXFrameProcessor();
 			~DXFrameProcessor();
-			DUPL_RETURN Init(ImageCallback& cb, UINT output);
-			DUPL_RETURN ProcessFrame(bool* timedout);
+			DUPL_RETURN Init(ImageCallback& cb, Monitor monitor);
+			DUPL_RETURN ProcessFrame();
 
 		private:
 
@@ -24,7 +23,7 @@ namespace SL {
 			std::vector<BYTE> MetaDataBuffer;
 
 			ImageCallback CallBack;
-
+			Monitor CurrentMonitor;
 		};
 	}
 }

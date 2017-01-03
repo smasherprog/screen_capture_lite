@@ -51,14 +51,14 @@ namespace SL {
 		{
 
 		}
-		DUPL_RETURN DXFrameProcessor::Init(ImageCallback& cb, UINT output) {
+		DUPL_RETURN DXFrameProcessor::Init(ImageCallback& cb, Monitor monitor){
 			DX_RESOURCES data;
 			auto ret = Initialize(data);
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}
 			DUPLE_RESOURCES dupl;
-			ret = Initialize(dupl, data.Device.Get(), output);
+			ret = Initialize(dupl, data.Device.Get(), monitor.Index);
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}
@@ -68,12 +68,13 @@ namespace SL {
 			OutputDesc = dupl.OutputDesc;
 			Output = dupl.Output;
 			CallBack = cb;
+			CurrentMonitor = monitor;
 			return ret;
 		}
 		//
 		// Process a given frame and its metadata
 		//
-		DUPL_RETURN DXFrameProcessor::ProcessFrame(bool* timedout)
+		DUPL_RETURN DXFrameProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
 
@@ -85,12 +86,8 @@ namespace SL {
 			auto hr = frame.AcquireNextFrame(500, &FrameInfo, DesktopResource.GetAddressOf());
 			if (hr == DXGI_ERROR_WAIT_TIMEOUT)
 			{
-				*timedout = true;
 				return DUPL_RETURN_SUCCESS;
-			}
-			*timedout = false;
-
-			if (FAILED(hr))
+			}else if (FAILED(hr))
 			{
 				return ProcessFailure(Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
 			}
@@ -170,7 +167,6 @@ namespace SL {
 				for (auto i = 0; i < dirtycount; i++) 
 				{
 					CapturedImage img;
-					img.ScreenIndex = Output;
 					img.Height = (dirtyrects[i].bottom - dirtyrects[i].top);
 					img.Width = (dirtyrects[i].right - dirtyrects[i].left);
 					img.OffsetY = dirtyrects[i].top;
@@ -185,8 +181,7 @@ namespace SL {
 						dststart += img.Width * img.PixelStride;
 						srcstart += MappingDesc.RowPitch;
 					}
-					CallBack(img);
-
+					CallBack(img, CurrentMonitor);
 				}
 		
 			}

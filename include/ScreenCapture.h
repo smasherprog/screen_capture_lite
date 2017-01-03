@@ -2,7 +2,6 @@
 #include <memory>
 #include <functional>
 #include <vector>
-#include <atomic>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -14,7 +13,6 @@ namespace SL {
 			int Offsetx = 0;
 			int OffsetY = 0;
 
-			int ScreenIndex;
 			const int PixelStride = 4;//in bytes
 		};
 		struct Monitor{
@@ -27,7 +25,7 @@ namespace SL {
 			std::string Name;
 		};
 		std::vector<Monitor> GetMonitors();
-		typedef std::function<void(const CapturedImage& img)> ImageCallback;
+		typedef std::function<void(const CapturedImage& img, const Monitor& monitor)> ImageCallback;
 
 
 		class ScreenCaptureManagerImpl;
@@ -40,7 +38,12 @@ namespace SL {
 			void StartCapturing(ImageCallback img_cb, int min_interval);
 			void StopCapturing();
 		};		
-		
+		enum DUPL_RETURN
+		{
+			DUPL_RETURN_SUCCESS = 0,
+			DUPL_RETURN_ERROR_EXPECTED = 1,
+			DUPL_RETURN_ERROR_UNEXPECTED = 2
+		};
 	
 	
     }

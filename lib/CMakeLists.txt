@@ -5,10 +5,8 @@ if(WIN32)
         ${Screen_Capture_SOURCE_DIR}/src/windows/GetMonitors.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXFrameProcessor.h
         ${Screen_Capture_SOURCE_DIR}/src/windows/DXFrameProcessor.cpp
-        ${Screen_Capture_SOURCE_DIR}/include/windows/DXThread.h
-        ${Screen_Capture_SOURCE_DIR}/src/windows/DXThread.cpp
-        ${Screen_Capture_SOURCE_DIR}/src/windows/GDIThread.cpp
-        ${Screen_Capture_SOURCE_DIR}/include/windows/GDIThread.h
+        ${Screen_Capture_SOURCE_DIR}/include/windows/GDIFrameProcessor.h
+        ${Screen_Capture_SOURCE_DIR}/src/windows/GDIFrameProcessor.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/DXCommon.h
 		${Screen_Capture_SOURCE_DIR}/src/windows/DXCommon.cpp
         ${Screen_Capture_SOURCE_DIR}/src/windows/ThreadRunner.cpp

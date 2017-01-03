@@ -20,6 +20,8 @@
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"d3d11.lib")
 
+#include "ScreenCapture.h"
+
 namespace SL {
 	namespace Screen_Capture {
 
@@ -39,15 +41,9 @@ namespace SL {
 			DXGI_OUTPUT_DESC OutputDesc;
 			UINT Output;
 		};
-		enum DUPL_RETURN
-		{
-			DUPL_RETURN_SUCCESS = 0,
-			DUPL_RETURN_ERROR_EXPECTED = 1,
-			DUPL_RETURN_ERROR_UNEXPECTED = 2
-		};
-
+	
 		DUPL_RETURN ProcessFailure(ID3D11Device* Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT* ExpectedErrors = nullptr);
-        DUPL_RETURN DesktopDuplicationSupported();
+
 		DUPL_RETURN Initialize(DX_RESOURCES& r);
 		DUPL_RETURN Initialize(DUPLE_RESOURCES& r, ID3D11Device* device, const UINT output);
 		RECT ConvertRect(RECT Dirty, const DXGI_OUTPUT_DESC& DeskDesc);

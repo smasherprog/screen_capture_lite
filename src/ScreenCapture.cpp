@@ -1,6 +1,7 @@
 #include "ScreenCapture.h"
 #include "ThreadManager.h"
 #include <thread>
+#include <atomic>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -29,9 +30,13 @@ namespace SL {
 					_TerminateThread = std::make_shared<std::atomic_bool>(false);
 
 					bool FirstTime = true;
+					auto backtoback_expectederrors = 0;
 
 					while (!*_TerminateThread) {
-			
+						if (*expected) {
+							backtoback_expectederrors += 1;
+						}
+
 						if (FirstTime || *expected)
 						{
 							if (!FirstTime)
@@ -48,6 +53,8 @@ namespace SL {
 								// First time through the loop so nothing to clean up
 								FirstTime = false;
 							}
+
+					
 							ThreadMgr.Init(unexpected, expected, _TerminateThread, callback, sleeptime);
 						}
 						std::this_thread::sleep_for(std::chrono::milliseconds(30));

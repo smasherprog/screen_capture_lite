@@ -13,6 +13,7 @@ SL::Screen_Capture::ThreadManager::~ThreadManager() {
 
 void SL::Screen_Capture::ThreadManager::Init(std::shared_ptr<std::atomic_bool>& unexpected, std::shared_ptr<std::atomic_bool>& expected, std::shared_ptr<std::atomic_bool>& terminate, ImageCallback & CallBack, int mininterval)
 {
+	Reset();
 	auto monitors = GetMonitors();
 	m_ThreadHandles.resize(monitors.size());
 	m_ThreadData.resize(monitors.size());

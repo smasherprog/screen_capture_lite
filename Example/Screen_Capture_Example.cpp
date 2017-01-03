@@ -13,9 +13,9 @@ int main()
 	std::atomic<int> realcounter;
 	realcounter = 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;
-	SL::Screen_Capture::ImageCallback func = [&](const SL::Screen_Capture::CapturedImage& img) {
+	auto func = [&](const SL::Screen_Capture::CapturedImage& img, const SL::Screen_Capture::Monitor& monitor) {
 	
-		std::cout << "ScreenIndex " << img.ScreenIndex<<" Height " << img.Height << ", Width " << img.Width << ", OffsetY " << img.OffsetY << ", Offsetx " << img.Offsetx << std::endl;
+		std::cout << "ScreenIndex " << monitor.Index<<" Height " << img.Height << ", Width " << img.Width << ", OffsetY " << img.OffsetY << ", Offsetx " << img.Offsetx << std::endl;
 		auto r = realcounter.fetch_add(1);
 		std::string s;
 		s += std::to_string(r) + std::string(" ") + std::to_string(img.OffsetY) + std::string(",") + std::to_string(img.Offsetx) +std::string(" ") +  std::string(".jpg");

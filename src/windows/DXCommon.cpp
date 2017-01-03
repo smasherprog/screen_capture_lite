@@ -96,53 +96,6 @@ namespace SL {
 
 		}
 
-		DUPL_RETURN DesktopDuplicationSupported()
-		{
-			DX_RESOURCES res;
-			Initialize(res);
-
-			// Get DXGI device
-			Microsoft::WRL::ComPtr<IDXGIDevice> DxgiDevice;
-			auto hr = res.Device.Get()->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(DxgiDevice.GetAddressOf()));
-			if (FAILED(hr))
-			{
-				return ProcessFailure(nullptr, L"Failed to QI for DXGI Device", L"Error", hr);
-			}
-
-			// Get DXGI adapter
-			Microsoft::WRL::ComPtr<IDXGIAdapter> DxgiAdapter;
-			hr = DxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(DxgiAdapter.GetAddressOf()));
-			if (FAILED(hr))
-			{
-				return ProcessFailure(res.Device.Get(), L"Failed to get parent DXGI Adapter", L"Error", hr, SystemTransitionsExpectedErrors);
-			}
-
-			// Get output
-			Microsoft::WRL::ComPtr<IDXGIOutput> DxgiOutput;
-			hr = DxgiAdapter->EnumOutputs(0, DxgiOutput.GetAddressOf());
-
-			if (FAILED(hr))
-			{
-				return ProcessFailure(res.Device.Get(), L"Failed to get specified output in DUPLICATIONMANAGER", L"Error", hr, EnumOutputsExpectedErrors);
-			}
-
-			// QI for Output 1
-			Microsoft::WRL::ComPtr<IDXGIOutput1> DxgiOutput1;
-			hr = DxgiOutput.Get()->QueryInterface(__uuidof(IDXGIOutput1), reinterpret_cast<void**>(DxgiOutput1.GetAddressOf()));
-			if (FAILED(hr))
-			{
-				return ProcessFailure(nullptr, L"Failed to QI for DxgiOutput1 in DUPLICATIONMANAGER", L"Error", hr);
-			}
-			Microsoft::WRL::ComPtr<IDXGIOutputDuplication> m_DeskDupl;
-			// Create desktop duplication
-			hr = DxgiOutput1->DuplicateOutput(res.Device.Get(), m_DeskDupl.GetAddressOf());
-			if (FAILED(hr))
-			{
-				return ProcessFailure(res.Device.Get(), L"Failed to get duplicate output in DUPLICATIONMANAGER", L"Error", hr, CreateDuplicationExpectedErrors);
-			}
-			return DUPL_RETURN::DUPL_RETURN_SUCCESS;
-		}
-
 
 		DUPL_RETURN Initialize(DX_RESOURCES& data)
 		{

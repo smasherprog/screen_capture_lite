@@ -23,8 +23,9 @@ namespace SL {
 			int    bottom = 0;
 		};
 		std::vector<Monitor> GetMonitors();
-		typedef std::function<void(const char* data, const int pixelstride /*in bytes*/, const Monitor& monitor)> CaptureEntireMonitorCallback;
-		typedef std::function<void(const char* data, const int pixelstride /*in bytes*/, const Monitor& monitor, const ImageRect& rect)> CaptureDifMonitorCallback;
+		//the pointers to start data are to the beginning of the ENTIRE image so the callback for the dif is called, users must calculate the correct data to copy out. See the examples directory on how to do this.
+		typedef std::function<void(const char* startdata, const int pixelstride /*in bytes*/, const Monitor& monitor)> CaptureEntireMonitorCallback;
+		typedef std::function<void(const char* startdata, const int pixelstride /*in bytes*/, const Monitor& monitor, const ImageRect& rect)> CaptureDifMonitorCallback;
 
 		class ScreenCaptureManagerImpl;
 		class ScreenCaptureManager {

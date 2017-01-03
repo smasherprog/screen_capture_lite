@@ -6,18 +6,28 @@ namespace SL {
 	namespace Screen_Capture {
 		class AquireFrameRAII {
 			IDXGIOutputDuplication* _DuplLock;
+			bool AquiredLock;
+			void TryRelease() {
+				if (AquiredLock) {
+					auto hr = _DuplLock->ReleaseFrame();
+					if (FAILED(hr) && hr != DXGI_ERROR_WAIT_TIMEOUT)
+					{
+						ProcessFailure(nullptr, L"Failed to release frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
+					}
+				}
+				AquiredLock = false;
+			}
 		public:
-			AquireFrameRAII(IDXGIOutputDuplication* dupl) : _DuplLock(dupl) {	}
+			AquireFrameRAII(IDXGIOutputDuplication* dupl) : _DuplLock(dupl), AquiredLock(false){	}
 
 			~AquireFrameRAII() {
-				auto hr = _DuplLock->ReleaseFrame();
-				if (FAILED(hr))
-				{
-					ProcessFailure(nullptr, L"Failed to release frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
-				}
+				TryRelease();
 			}
 			HRESULT AcquireNextFrame(UINT TimeoutInMilliseconds, DXGI_OUTDUPL_FRAME_INFO *pFrameInfo, IDXGIResource **ppDesktopResource) {
-				return _DuplLock->AcquireNextFrame(TimeoutInMilliseconds, pFrameInfo, ppDesktopResource);
+				auto hr= _DuplLock->AcquireNextFrame(TimeoutInMilliseconds, pFrameInfo, ppDesktopResource);
+				TryRelease();
+				AquiredLock = SUCCEEDED(hr);
+				return hr;
 			}
 		};
 		class MAPPED_SUBRESOURCERAII {
@@ -182,7 +192,7 @@ namespace SL {
 			{
 				for (auto i = 0; i < dirtycount; i++)
 				{
-					ret.left = dirtyrects[i].top;
+					ret.left = dirtyrects[i].left;
 					ret.top = dirtyrects[i].top;
 					ret.bottom = dirtyrects[i].bottom;
 					ret.right = dirtyrects[i].right;

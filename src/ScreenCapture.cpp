@@ -31,39 +31,24 @@ namespace SL {
 					auto unexpected = std::make_shared<std::atomic_bool>(false);
 					_TerminateThread = std::make_shared<std::atomic_bool>(false);
 
-					bool FirstTime = true;
-					auto sleeptime = 50;
+					ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime);
 
 					while (!*_TerminateThread) {
-						//if an expected error occurs, make sure to sleep a little longer each loop that the error orrcurs with a max of 1500 ms
-						if (*expected) {
-							sleeptime *= 2;
-							sleeptime = std::min(1500, sleeptime);
-						}
-						else {//if no expected error has occured lower the sleep time a little bit each loop until we reach 50 ms wait time. 
-							sleeptime -= 50;
-							sleeptime = std::max(50, sleeptime);
-						}
 
-						if (FirstTime || *expected)
+						if (*expected)
 						{
-							if (!FirstTime)
-							{
-								// Terminate other threads
-								*_TerminateThread = true;
-								ThreadMgr.Join();
-								*expected = *unexpected = *_TerminateThread = false;
-								// Clean up
-								ThreadMgr.Reset();
-							}
-							else
-							{
-								// First time through the loop so nothing to clean up
-								FirstTime = false;
-							}
-							ThreadMgr.Init(unexpected, expected, _TerminateThread,  CaptureEntireMonitor, CaptureDifMonitor,SleepTime);
+
+							// Terminate other threads
+							*_TerminateThread = true;
+							ThreadMgr.Join();
+							*expected = *unexpected = *_TerminateThread = false;
+							// Clean up
+							ThreadMgr.Reset();
+							std::this_thread::sleep_for(std::chrono::milliseconds(1000));//sleep for 1 second since an error occcured
+
+							ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime);
 						}
-						std::this_thread::sleep_for(std::chrono::milliseconds(sleeptime));
+						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					}
 					*_TerminateThread = true;
 					ThreadMgr.Join();

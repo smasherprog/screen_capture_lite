@@ -3,6 +3,9 @@ Cross-platform screen capturing library. No extra dependencies ... this is made 
 see the Exmaple folder for a demo
 
 Platforms supported:
-Windows 7 SP1 and Up
-MacOS: InProgress
-Linux: In Progress
+<ul>
+<li>Windows 7 SP1 and Up</li>
+<li>MacOS: InProgress</li>
+<li>Linux: In Progress</li>
+</ul>
+

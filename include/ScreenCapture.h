@@ -42,12 +42,6 @@ namespace SL {
 			void StartCapturing(int min_interval);
 			void StopCapturing();
 		};		
-		enum DUPL_RETURN
-		{
-			DUPL_RETURN_SUCCESS = 0,
-			DUPL_RETURN_ERROR_EXPECTED = 1,
-			DUPL_RETURN_ERROR_UNEXPECTED = 2
-		};
 		const int PixelStride = 4;
 	
     }

@@ -1,11 +1,39 @@
 #include "GDIFrameProcessor.h"
 
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 namespace SL {
 	namespace Screen_Capture {
+		class HDCWrapper {
+		public:
+			HDCWrapper() : DC(nullptr) {}
+			~HDCWrapper() { if (DC != nullptr) { DeleteDC(DC); } }
+			HDC DC;
+		};
+		class HBITMAPWrapper {
+		public:
+			HBITMAPWrapper() : Bitmap(nullptr) {}
+			~HBITMAPWrapper() { if (Bitmap != nullptr) { DeleteObject(Bitmap); } }
+			HBITMAP Bitmap;
+		};
+
+		struct GDIFrameProcessorImpl {
+			
+			HDCWrapper MonitorDC;
+			HDCWrapper CaptureDC;
+			HBITMAPWrapper CaptureBMP;
+			std::shared_ptr<THREAD_DATA> Data;
+			std::unique_ptr<char[]> ImageBuffer;
+			size_t ImageBufferSize;
+		};
+
 
 		GDIFrameProcessor::GDIFrameProcessor()
 		{
-			ImageBufferSize = 0;
+			_GDIFrameProcessorImpl = std::make_unique<GDIFrameProcessorImpl>();
+			_GDIFrameProcessorImpl->ImageBufferSize = 0;
 		}
 
 		GDIFrameProcessor::~GDIFrameProcessor()
@@ -15,16 +43,16 @@ namespace SL {
 		DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
 			auto Ret = DUPL_RETURN_SUCCESS;
 
-			MonitorDC.DC = CreateDCA(data->SelectedMonitor.Name.c_str(), NULL, NULL, NULL);
-			CaptureDC.DC = CreateCompatibleDC(MonitorDC.DC);
-			CaptureBMP.Bitmap = CreateCompatibleBitmap(MonitorDC.DC, data->SelectedMonitor.Width, data->SelectedMonitor.Height);
+			_GDIFrameProcessorImpl->MonitorDC.DC = CreateDCA(data->SelectedMonitor.Name.c_str(), NULL, NULL, NULL);
+			_GDIFrameProcessorImpl->CaptureDC.DC = CreateCompatibleDC(_GDIFrameProcessorImpl->MonitorDC.DC);
+			_GDIFrameProcessorImpl->CaptureBMP.Bitmap = CreateCompatibleBitmap(_GDIFrameProcessorImpl->MonitorDC.DC, data->SelectedMonitor.Width, data->SelectedMonitor.Height);
 
-			if (!MonitorDC.DC || !CaptureDC.DC || !CaptureBMP.Bitmap) {
+			if (!_GDIFrameProcessorImpl->MonitorDC.DC || !_GDIFrameProcessorImpl->CaptureDC.DC || !_GDIFrameProcessorImpl->CaptureBMP.Bitmap) {
 				Ret = DUPL_RETURN::DUPL_RETURN_ERROR_UNEXPECTED;
 			}
-			Data = data;
-			ImageBufferSize = data->SelectedMonitor.Width* data->SelectedMonitor.Height*PixelStride;
-			ImageBuffer = std::make_unique<char[]>(ImageBufferSize);
+			_GDIFrameProcessorImpl->Data = data;
+			_GDIFrameProcessorImpl->ImageBufferSize = data->SelectedMonitor.Width* data->SelectedMonitor.Height*PixelStride;
+			_GDIFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_GDIFrameProcessorImpl->ImageBufferSize);
 			return Ret;
 		}
 		//
@@ -36,16 +64,16 @@ namespace SL {
 
 			ImageRect ret;
 			ret.left = ret.top = 0;
-			ret.bottom = Data->SelectedMonitor.Height;
-			ret.right = Data->SelectedMonitor.Width;
+			ret.bottom = _GDIFrameProcessorImpl->Data->SelectedMonitor.Height;
+			ret.right = _GDIFrameProcessorImpl->Data->SelectedMonitor.Width;
 
 			// Selecting an object into the specified DC
-			auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
+			auto originalBmp = SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, _GDIFrameProcessorImpl->CaptureBMP.Bitmap);
 			
-			if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
+			if (BitBlt(_GDIFrameProcessorImpl->CaptureDC.DC, 0, 0, ret.right, ret.bottom, _GDIFrameProcessorImpl->MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
 				//if the screen cannot be captured, set everything to 1 and return
-				memset(ImageBuffer.get(), 1, ImageBufferSize);
-				SelectObject(CaptureDC.DC, originalBmp);
+				memset(_GDIFrameProcessorImpl->ImageBuffer.get(), 1, _GDIFrameProcessorImpl->ImageBufferSize);
+				SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, originalBmp);
 				Ret = DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
 			}
 			else {
@@ -62,11 +90,11 @@ namespace SL {
 				bi.biCompression = BI_RGB;
 				bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride* ret.bottom;
 			
-				GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)ret.bottom, ImageBuffer.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+				GetDIBits(_GDIFrameProcessorImpl->MonitorDC.DC, _GDIFrameProcessorImpl->CaptureBMP.Bitmap, 0, (UINT)ret.bottom, _GDIFrameProcessorImpl->ImageBuffer.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
-				SelectObject(CaptureDC.DC, originalBmp);
-				if (Data->CaptureEntireMonitor) {
-					Data->CaptureEntireMonitor(ImageBuffer.get(), PixelStride, Data->SelectedMonitor);
+				SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, originalBmp);
+				if (_GDIFrameProcessorImpl->Data->CaptureEntireMonitor) {
+					_GDIFrameProcessorImpl->Data->CaptureEntireMonitor(_GDIFrameProcessorImpl->ImageBuffer.get(), PixelStride, _GDIFrameProcessorImpl->Data->SelectedMonitor);
 				}
 				
 			}

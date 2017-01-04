@@ -1,10 +1,271 @@
 #include "DXFrameProcessor.h"
-#include "DXCommon.h"
+#include <memory>
+#include <atomic>
+#include <mutex>
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+
+#include <windows.h>
+#include <d3d11.h>
+#include <dxgi1_2.h>
+#include <wrl.h>
+
+#pragma comment(lib,"dxgi.lib")
+#pragma comment(lib,"d3d11.lib")
 #include <string>
+#include <iostream>
 
 namespace SL {
 	namespace Screen_Capture {
+		struct DX_RESOURCES
+		{
+			Microsoft::WRL::ComPtr<ID3D11Device> Device;
+			Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext;
+		} ;
+		struct DUPLE_RESOURCES
+		{
+			Microsoft::WRL::ComPtr<IDXGIOutputDuplication> OutputDuplication;
+			DXGI_OUTPUT_DESC OutputDesc;
+			UINT Output;
+		};
+	
+	
+		// These are the errors we expect from general Dxgi API due to a transition
+		HRESULT SystemTransitionsExpectedErrors[] = {
+			DXGI_ERROR_DEVICE_REMOVED,
+			DXGI_ERROR_ACCESS_LOST,
+			static_cast<HRESULT>(WAIT_ABANDONED),
+			S_OK                                    // Terminate list with zero valued HRESULT
+		};
+
+		// These are the errors we expect from IDXGIOutput1::DuplicateOutput due to a transition
+		HRESULT CreateDuplicationExpectedErrors[] = {
+			DXGI_ERROR_DEVICE_REMOVED,
+			static_cast<HRESULT>(E_ACCESSDENIED),
+			DXGI_ERROR_UNSUPPORTED,
+			DXGI_ERROR_SESSION_DISCONNECTED,
+			S_OK                                    // Terminate list with zero valued HRESULT
+		};
+
+		// These are the errors we expect from IDXGIOutputDuplication methods due to a transition
+		HRESULT FrameInfoExpectedErrors[] = {
+			DXGI_ERROR_DEVICE_REMOVED,
+			DXGI_ERROR_ACCESS_LOST,
+			S_OK                                    // Terminate list with zero valued HRESULT
+		};
+
+		// These are the errors we expect from IDXGIAdapter::EnumOutputs methods due to outputs becoming stale during a transition
+		HRESULT EnumOutputsExpectedErrors[] = {
+			DXGI_ERROR_NOT_FOUND,
+			S_OK                                    // Terminate list with zero valued HRESULT
+		};
+
+
+
+		DUPL_RETURN ProcessFailure(ID3D11Device * Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT * ExpectedErrors=nullptr)
+		{
+			HRESULT TranslatedHr;
+			std::wcout << Str << "\t" << Title << std::endl;
+			// On an error check if the DX device is lost
+			if (Device)
+			{
+				HRESULT DeviceRemovedReason = Device->GetDeviceRemovedReason();
+
+				switch (DeviceRemovedReason)
+				{
+				case DXGI_ERROR_DEVICE_REMOVED:
+				case DXGI_ERROR_DEVICE_RESET:
+				case static_cast<HRESULT>(E_OUTOFMEMORY) :
+				{
+					// Our device has been stopped due to an external event on the GPU so map them all to
+					// device removed and continue processing the condition
+					TranslatedHr = DXGI_ERROR_DEVICE_REMOVED;
+					break;
+				}
+
+				case S_OK:
+				{
+					// Device is not removed so use original error
+					TranslatedHr = hr;
+					break;
+				}
+
+				default:
+				{
+					// Device is removed but not a error we want to remap
+					TranslatedHr = DeviceRemovedReason;
+				}
+				}
+			}
+			else
+			{
+				TranslatedHr = hr;
+			}
+
+			// Check if this error was expected or not
+			if (ExpectedErrors)
+			{
+				HRESULT* CurrentResult = ExpectedErrors;
+
+				while (*CurrentResult != S_OK)
+				{
+					if (*(CurrentResult++) == TranslatedHr)
+					{
+						return DUPL_RETURN_ERROR_EXPECTED;
+					}
+				}
+			}
+
+
+			return DUPL_RETURN_ERROR_UNEXPECTED;
+
+
+		}
+
+
+		DUPL_RETURN Initialize(DX_RESOURCES& data)
+		{
+
+			HRESULT hr = S_OK;
+
+			// Driver types supported
+			D3D_DRIVER_TYPE DriverTypes[] =
+			{
+				D3D_DRIVER_TYPE_HARDWARE,
+				D3D_DRIVER_TYPE_WARP,
+				D3D_DRIVER_TYPE_REFERENCE,
+			};
+			UINT NumDriverTypes = ARRAYSIZE(DriverTypes);
+
+			// Feature levels supported
+			D3D_FEATURE_LEVEL FeatureLevels[] =
+			{
+				D3D_FEATURE_LEVEL_11_0,
+				D3D_FEATURE_LEVEL_10_1,
+				D3D_FEATURE_LEVEL_10_0,
+				D3D_FEATURE_LEVEL_9_1
+			};
+			UINT NumFeatureLevels = ARRAYSIZE(FeatureLevels);
+
+			D3D_FEATURE_LEVEL FeatureLevel;
+
+			// Create device
+			for (UINT DriverTypeIndex = 0; DriverTypeIndex < NumDriverTypes; ++DriverTypeIndex)
+			{
+				hr = D3D11CreateDevice(nullptr, DriverTypes[DriverTypeIndex], nullptr, 0, FeatureLevels, NumFeatureLevels, D3D11_SDK_VERSION, data.Device.GetAddressOf(), &FeatureLevel, data.DeviceContext.GetAddressOf());
+				if (SUCCEEDED(hr))
+				{
+					// Device creation success, no need to loop anymore
+					break;
+				}
+			}
+			if (FAILED(hr))
+			{
+				return ProcessFailure(nullptr, L"Failed to create device in InitializeDx", L"Error", hr);
+			}
+
+			return DUPL_RETURN_SUCCESS;
+
+		}
+
+		DUPL_RETURN Initialize(DUPLE_RESOURCES & r, ID3D11Device* device, const UINT output)
+		{
+
+			// Get DXGI device
+			Microsoft::WRL::ComPtr<IDXGIDevice> DxgiDevice;
+			HRESULT hr = device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(DxgiDevice.GetAddressOf()));
+			if (FAILED(hr))
+			{
+				return ProcessFailure(nullptr, L"Failed to QI for DXGI Device", L"Error", hr);
+			}
+
+			// Get DXGI adapter
+			Microsoft::WRL::ComPtr<IDXGIAdapter> DxgiAdapter;
+			hr = DxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(DxgiAdapter.GetAddressOf()));
+			if (FAILED(hr))
+			{
+				return ProcessFailure(device, L"Failed to get parent DXGI Adapter", L"Error", hr, SystemTransitionsExpectedErrors);
+			}
+
+			// Get output
+			Microsoft::WRL::ComPtr<IDXGIOutput> DxgiOutput;
+			hr = DxgiAdapter->EnumOutputs(output, DxgiOutput.GetAddressOf());
+
+			if (FAILED(hr))
+			{
+				return ProcessFailure(device, L"Failed to get specified output in DUPLICATIONMANAGER", L"Error", hr, EnumOutputsExpectedErrors);
+			}
+
+			DxgiOutput->GetDesc(&r.OutputDesc);
+
+			// QI for Output 1
+			Microsoft::WRL::ComPtr<IDXGIOutput1> DxgiOutput1;
+			hr = DxgiOutput.Get()->QueryInterface(__uuidof(IDXGIOutput1), reinterpret_cast<void**>(DxgiOutput1.GetAddressOf()));
+			if (FAILED(hr))
+			{
+				return ProcessFailure(nullptr, L"Failed to QI for DxgiOutput1 in DUPLICATIONMANAGER", L"Error", hr);
+			}
+
+			// Create desktop duplication
+			hr = DxgiOutput1->DuplicateOutput(device, r.OutputDuplication.GetAddressOf());
+			if (FAILED(hr))
+			{
+				return ProcessFailure(device, L"Failed to get duplicate output in DUPLICATIONMANAGER", L"Error", hr, CreateDuplicationExpectedErrors);
+			}
+			r.Output = output;
+			return DUPL_RETURN_SUCCESS;
+
+
+		}
+		RECT ConvertRect(RECT Dirty, const DXGI_OUTPUT_DESC& DeskDesc) {
+			RECT DestDirty = Dirty;
+			INT Width = DeskDesc.DesktopCoordinates.right - DeskDesc.DesktopCoordinates.left;
+			INT Height = DeskDesc.DesktopCoordinates.bottom - DeskDesc.DesktopCoordinates.top;
+
+			// Set appropriate coordinates compensated for rotation
+			switch (DeskDesc.Rotation)
+			{
+			case DXGI_MODE_ROTATION_ROTATE90:
+			{
+
+				DestDirty.left = Width - Dirty.bottom;
+				DestDirty.top = Dirty.left;
+				DestDirty.right = Width - Dirty.top;
+				DestDirty.bottom = Dirty.right;
+
+				break;
+			}
+			case DXGI_MODE_ROTATION_ROTATE180:
+			{
+				DestDirty.left = Width - Dirty.right;
+				DestDirty.top = Height - Dirty.bottom;
+				DestDirty.right = Width - Dirty.left;
+				DestDirty.bottom = Height - Dirty.top;
+
+				break;
+			}
+			case DXGI_MODE_ROTATION_ROTATE270:
+			{
+				DestDirty.left = Dirty.top;
+				DestDirty.top = Height - Dirty.right;
+				DestDirty.right = Dirty.bottom;
+				DestDirty.bottom = Height - Dirty.left;
+
+				break;
+			}
+			case DXGI_MODE_ROTATION_UNSPECIFIED:
+			case DXGI_MODE_ROTATION_IDENTITY:
+			{
+				break;
+			}
+			default:
+				break;
+			}
+			return DestDirty;
+		}
+
 		class AquireFrameRAII {
+
 			IDXGIOutputDuplication* _DuplLock;
 			bool AquiredLock;
 			void TryRelease() {
@@ -50,11 +311,26 @@ namespace SL {
 			}
 		};
 
+		struct DXFrameProcessorImpl {
+			Microsoft::WRL::ComPtr<ID3D11Device> Device;
+			Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext;
+			Microsoft::WRL::ComPtr<ID3D11Texture2D> StagingSurf;
+
+			Microsoft::WRL::ComPtr<IDXGIOutputDuplication> OutputDuplication;
+			DXGI_OUTPUT_DESC OutputDesc;
+			UINT Output;
+			std::vector<BYTE> MetaDataBuffer;
+
+			std::shared_ptr<THREAD_DATA> Data;
+			std::unique_ptr<char[]> ImageBuffer;
+			size_t ImageBufferSize;
+		};
 
 
 		DXFrameProcessor::DXFrameProcessor()
 		{
-			ImageBufferSize = 0;
+			_DXFrameProcessorImpl = std::make_unique<DXFrameProcessorImpl>();
+			_DXFrameProcessorImpl->ImageBufferSize = 0;
 		}
 
 		DXFrameProcessor::~DXFrameProcessor()
@@ -72,15 +348,15 @@ namespace SL {
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}
-			Device = res.Device;
-			DeviceContext = res.DeviceContext;
-			OutputDuplication = dupl.OutputDuplication;
-			OutputDesc = dupl.OutputDesc;
-			Output = dupl.Output;
+			_DXFrameProcessorImpl->Device = res.Device;
+			_DXFrameProcessorImpl->DeviceContext = res.DeviceContext;
+			_DXFrameProcessorImpl->OutputDuplication = dupl.OutputDuplication;
+			_DXFrameProcessorImpl->OutputDesc = dupl.OutputDesc;
+			_DXFrameProcessorImpl->Output = dupl.Output;
 
-			Data = data;
-			ImageBufferSize = data->SelectedMonitor.Width* data->SelectedMonitor.Height*PixelStride;
-			ImageBuffer = std::make_unique<char[]>(ImageBufferSize);
+			_DXFrameProcessorImpl->Data = data;
+			_DXFrameProcessorImpl->ImageBufferSize = data->SelectedMonitor.Width* data->SelectedMonitor.Height*PixelStride;
+			_DXFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_DXFrameProcessorImpl->ImageBufferSize);
 			return ret;
 		}
 		//
@@ -92,7 +368,7 @@ namespace SL {
 
 			Microsoft::WRL::ComPtr<IDXGIResource> DesktopResource;
 			DXGI_OUTDUPL_FRAME_INFO FrameInfo;
-			AquireFrameRAII frame(OutputDuplication.Get());
+			AquireFrameRAII frame(_DXFrameProcessorImpl->OutputDuplication.Get());
 
 			// Get new frame
 			auto hr = frame.AcquireNextFrame(500, &FrameInfo, DesktopResource.GetAddressOf());
@@ -102,7 +378,7 @@ namespace SL {
 			}
 			else if (FAILED(hr))
 			{
-				return ProcessFailure(Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
+				return ProcessFailure(_DXFrameProcessorImpl->Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
 			}
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> aquireddesktopimage;
 			// QI for IDXGIResource
@@ -115,7 +391,7 @@ namespace SL {
 			D3D11_TEXTURE2D_DESC ThisDesc;
 			aquireddesktopimage->GetDesc(&ThisDesc);
 
-			if (!StagingSurf)
+			if (!_DXFrameProcessorImpl->StagingSurf)
 			{
 				D3D11_TEXTURE2D_DESC StagingDesc;
 				StagingDesc = ThisDesc;
@@ -123,10 +399,10 @@ namespace SL {
 				StagingDesc.Usage = D3D11_USAGE_STAGING;
 				StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 				StagingDesc.MiscFlags = 0;
-				hr = Device->CreateTexture2D(&StagingDesc, nullptr, StagingSurf.GetAddressOf());
+				hr = _DXFrameProcessorImpl->Device->CreateTexture2D(&StagingDesc, nullptr, _DXFrameProcessorImpl->StagingSurf.GetAddressOf());
 				if (FAILED(hr))
 				{
-					return ProcessFailure(Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
+					return ProcessFailure(_DXFrameProcessorImpl->Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
 				}
 			}
 
@@ -136,22 +412,22 @@ namespace SL {
 			// Get metadata
 			if (FrameInfo.TotalMetadataBufferSize > 0)
 			{
-				MetaDataBuffer.reserve(FrameInfo.TotalMetadataBufferSize);
+				_DXFrameProcessorImpl->MetaDataBuffer.reserve(FrameInfo.TotalMetadataBufferSize);
 				UINT bufsize = FrameInfo.TotalMetadataBufferSize;
 
 				// Get move rectangles
-				hr = OutputDuplication->GetFrameMoveRects(bufsize, reinterpret_cast<DXGI_OUTDUPL_MOVE_RECT*>(MetaDataBuffer.data()), &bufsize);
+				hr = _DXFrameProcessorImpl->OutputDuplication->GetFrameMoveRects(bufsize, reinterpret_cast<DXGI_OUTDUPL_MOVE_RECT*>(_DXFrameProcessorImpl->MetaDataBuffer.data()), &bufsize);
 				if (FAILED(hr))
 				{
 					return ProcessFailure(nullptr, L"Failed to get frame move rects in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
 				}
 				movecount = bufsize / sizeof(DXGI_OUTDUPL_MOVE_RECT);
 
-				dirtyrects = reinterpret_cast<RECT*>(MetaDataBuffer.data() + bufsize);
+				dirtyrects = reinterpret_cast<RECT*>(_DXFrameProcessorImpl->MetaDataBuffer.data() + bufsize);
 				bufsize = FrameInfo.TotalMetadataBufferSize - bufsize;
 
 				// Get dirty rectangles
-				hr = OutputDuplication->GetFrameDirtyRects(bufsize, dirtyrects, &bufsize);
+				hr = _DXFrameProcessorImpl->OutputDuplication->GetFrameDirtyRects(bufsize, dirtyrects, &bufsize);
 				if (FAILED(hr))
 				{
 					return ProcessFailure(nullptr, L"Failed to get frame dirty rects in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
@@ -159,26 +435,26 @@ namespace SL {
 				dirtycount = bufsize / sizeof(RECT);
 				//convert rects to their correct coords
 				for (auto i = 0; i < dirtycount; i++) {
-					dirtyrects[i] = ConvertRect(dirtyrects[i], OutputDesc);
+					dirtyrects[i] = ConvertRect(dirtyrects[i], _DXFrameProcessorImpl->OutputDesc);
 				}
 			}
-			DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
+			_DXFrameProcessorImpl->DeviceContext->CopyResource(_DXFrameProcessorImpl->StagingSurf.Get(), aquireddesktopimage.Get());
 
 			D3D11_MAPPED_SUBRESOURCE MappingDesc;
-			MAPPED_SUBRESOURCERAII mappedresrouce(DeviceContext.Get());
-			hr = mappedresrouce.Map(StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
+			MAPPED_SUBRESOURCERAII mappedresrouce(_DXFrameProcessorImpl->DeviceContext.Get());
+			hr = mappedresrouce.Map(_DXFrameProcessorImpl->StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
 			// Get the data
 			if (MappingDesc.pData == NULL) {
-				return ProcessFailure(Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
+				return ProcessFailure(_DXFrameProcessorImpl->Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
 			}
 			auto startsrc = (char*)MappingDesc.pData;
-			auto startdst = ImageBuffer.get();
-			auto rowstride = PixelStride*Data->SelectedMonitor.Width;
+			auto startdst = _DXFrameProcessorImpl->ImageBuffer.get();
+			auto rowstride = PixelStride*_DXFrameProcessorImpl->Data->SelectedMonitor.Width;
 			if (rowstride == MappingDesc.RowPitch) {//no need for multiple calls, there is no padding here
-				memcpy(startdst, startsrc, rowstride*Data->SelectedMonitor.Height);
+				memcpy(startdst, startsrc, rowstride*_DXFrameProcessorImpl->Data->SelectedMonitor.Height);
 			}
 			else {
-				for (auto i = 0; i < Data->SelectedMonitor.Height; i++) {
+				for (auto i = 0; i < _DXFrameProcessorImpl->Data->SelectedMonitor.Height; i++) {
 					memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
 				}
 			}
@@ -188,7 +464,7 @@ namespace SL {
 			ImageRect ret;
 
 			// Process dirties 
-			if (dirtycount > 0 && dirtyrects != nullptr && Data->CaptureDifMonitor)
+			if (dirtycount > 0 && dirtyrects != nullptr && _DXFrameProcessorImpl->Data->CaptureDifMonitor)
 			{
 				for (auto i = 0; i < dirtycount; i++)
 				{
@@ -196,15 +472,15 @@ namespace SL {
 					ret.top = dirtyrects[i].top;
 					ret.bottom = dirtyrects[i].bottom;
 					ret.right = dirtyrects[i].right;
-					Data->CaptureDifMonitor(ImageBuffer.get(), PixelStride, Data->SelectedMonitor, ret);
+					_DXFrameProcessorImpl->Data->CaptureDifMonitor(_DXFrameProcessorImpl->ImageBuffer.get(), PixelStride, _DXFrameProcessorImpl->Data->SelectedMonitor, ret);
 				}
 
 			}
-			if (Data->CaptureEntireMonitor) {
+			if (_DXFrameProcessorImpl->Data->CaptureEntireMonitor) {
 				ret.left = ret.top = 0;
-				ret.bottom = Data->SelectedMonitor.Height;
-				ret.right = Data->SelectedMonitor.Width;
-				Data->CaptureEntireMonitor(ImageBuffer.get(), PixelStride, Data->SelectedMonitor);
+				ret.bottom = _DXFrameProcessorImpl->Data->SelectedMonitor.Height;
+				ret.right = _DXFrameProcessorImpl->Data->SelectedMonitor.Width;
+				_DXFrameProcessorImpl->Data->CaptureEntireMonitor(_DXFrameProcessorImpl->ImageBuffer.get(), PixelStride, _DXFrameProcessorImpl->Data->SelectedMonitor);
 			}
 			return Ret;
 		}

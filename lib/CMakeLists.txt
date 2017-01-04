@@ -7,8 +7,6 @@ if(WIN32)
         ${Screen_Capture_SOURCE_DIR}/src/windows/DXFrameProcessor.cpp
         ${Screen_Capture_SOURCE_DIR}/include/windows/GDIFrameProcessor.h
         ${Screen_Capture_SOURCE_DIR}/src/windows/GDIFrameProcessor.cpp
-        ${Screen_Capture_SOURCE_DIR}/include/windows/DXCommon.h
-		${Screen_Capture_SOURCE_DIR}/src/windows/DXCommon.cpp
         ${Screen_Capture_SOURCE_DIR}/src/windows/ThreadRunner.cpp
     )
 
@@ -25,13 +23,14 @@ endif()
 set(SCREEN_CAPTURE_COMMON_SRC 
     ${Screen_Capture_SOURCE_DIR}/include/ScreenCapture.h
     ${Screen_Capture_SOURCE_DIR}/src/ScreenCapture.cpp
-    ${Screen_Capture_SOURCE_DIR}/include/ThreadRunner.h
-    ${Screen_Capture_SOURCE_DIR}/include/ThreadManager.h
-    ${Screen_Capture_SOURCE_DIR}/src/ThreadManager.cpp
+    ${Screen_Capture_SOURCE_DIR}/include/Internal/ThreadManager.h
+    ${Screen_Capture_SOURCE_DIR}/src/Internal/ThreadManager.cpp
 )
 set(SCREEN_CAPTURE_COMMON_INC
     ${Screen_Capture_SOURCE_DIR}/include
     ${Screen_Capture_SOURCE_DIR}/src
+    ${Screen_Capture_SOURCE_DIR}/include/Internal
+    ${Screen_Capture_SOURCE_DIR}/src/Internal
 )
 
 include_directories(${SCREEN_CAPTURE_COMMON_INC} ${SCREEN_CAPTURE_PLATFORM_INC})

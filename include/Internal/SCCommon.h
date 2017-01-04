@@ -1,11 +1,11 @@
 #pragma once
 #include "ScreenCapture.h"
-#include <memory>
+#include <thread>
 #include <atomic>
 
+// this is internal stuff.. 
 namespace SL {
 	namespace Screen_Capture {
-
 		struct THREAD_DATA
 		{
 			// Used to indicate abnormal error condition
@@ -19,7 +19,13 @@ namespace SL {
 			CaptureEntireMonitorCallback CaptureEntireMonitor;
 			CaptureDifMonitorCallback CaptureDifMonitor;
 		};
-		void RunCapture(std::shared_ptr<THREAD_DATA> data);
 
-    }
+		enum DUPL_RETURN
+		{
+			DUPL_RETURN_SUCCESS = 0,
+			DUPL_RETURN_ERROR_EXPECTED = 1,
+			DUPL_RETURN_ERROR_UNEXPECTED = 2
+		};
+
+	}
 }

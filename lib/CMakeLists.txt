@@ -14,10 +14,15 @@ if(WIN32)
         ${Screen_Capture_SOURCE_DIR}/include/windows
         ${Screen_Capture_SOURCE_DIR}/src/windows
     )
+
 elseif(APPLE)
-    set(TARGET_BUILD_PLATFORM apple)
+    set(SCREEN_CAPTURE_PLATFORM_SRC
+        ${Screen_Capture_SOURCE_DIR}/src/ios/GetMonitors.cpp
+        ${Screen_Capture_SOURCE_DIR}/src/ios/ThreadRunner.cpp
+    )
 elseif(UNIX)
-    set(TARGET_BUILD_PLATFORM unix)
+
+    set(${SYSTEM_LIBS})
 endif()
 
 set(SCREEN_CAPTURE_COMMON_SRC 
@@ -37,6 +42,7 @@ set(SCREEN_CAPTURE_COMMON_INC
 include_directories(${SCREEN_CAPTURE_COMMON_INC} ${SCREEN_CAPTURE_PLATFORM_INC})
 
 add_library(${PROJECT_NAME} ${SCREEN_CAPTURE_COMMON_SRC} ${SCREEN_CAPTURE_PLATFORM_SRC})
+
 
 install(TARGETS ${PROJECT_NAME} 
         LIBRARY DESTINATION lib

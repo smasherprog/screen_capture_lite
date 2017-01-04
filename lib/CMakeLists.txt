@@ -23,6 +23,7 @@ endif()
 set(SCREEN_CAPTURE_COMMON_SRC 
     ${Screen_Capture_SOURCE_DIR}/include/ScreenCapture.h
     ${Screen_Capture_SOURCE_DIR}/src/ScreenCapture.cpp
+    ${Screen_Capture_SOURCE_DIR}/include/Internal/SCCommon.h
     ${Screen_Capture_SOURCE_DIR}/include/Internal/ThreadManager.h
     ${Screen_Capture_SOURCE_DIR}/src/Internal/ThreadManager.cpp
 )

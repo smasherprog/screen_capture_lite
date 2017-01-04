@@ -4,11 +4,13 @@
 #include <thread>
 #include <vector>
 #include <atomic>
+#include <string>
+#include <iostream>
+
 
 // this is internal stuff.. 
 namespace SL {
 	namespace Screen_Capture {
-
 		class ThreadManager {
 
 			std::vector<std::thread> m_ThreadHandles;
@@ -37,12 +39,14 @@ namespace SL {
 				{
 					return Ret;
 				}
-				auto mspassed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+                auto mspassed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
+                
+
 				std::string msg = "took ";
 				msg += std::to_string(mspassed) + "ms for output ";
 				msg += std::to_string(data->SelectedMonitor.Index) + "\n";
-				//std::cout << msg << std::endl;
-		
+				std::cout << msg << std::endl;
+
 				auto timetowait = data->CaptureInterval - mspassed;
 				if (timetowait > 0) {
 					std::this_thread::sleep_for(std::chrono::milliseconds(timetowait));

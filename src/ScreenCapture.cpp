@@ -3,6 +3,7 @@
 #include <thread>
 #include <atomic>
 #include <algorithm>
+#include <memory>
 
 namespace SL {
 	namespace Screen_Capture {

@@ -2,15 +2,14 @@ project(Screen_Capture_Example)
 
 
 if(WIN32)
-
-    set(${SYSTEM_LIBS})
+    set(SYSTEM_LIBS)
 elseif(APPLE)
 
 find_library(corefoundation_lib CoreFoundation)
     set(SYSTEM_LIBS ${corefoundation_lib})
 
 elseif(UNIX)
-    set(${SYSTEM_LIBS})
+    set(SYSTEM_LIBS)
 endif()
 
 

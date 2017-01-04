@@ -22,7 +22,6 @@ elseif(APPLE)
     )
 elseif(UNIX)
 
-    set(${SYSTEM_LIBS})
 endif()
 
 set(SCREEN_CAPTURE_COMMON_SRC 

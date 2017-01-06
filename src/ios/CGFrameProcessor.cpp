@@ -24,7 +24,10 @@ namespace SL {
 		}
 		DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
-              //CGDisplayRegisterReconfigurationCallback(<#CGDisplayReconfigurationCallBack  _Nullable callback#>, <#void * _Nullable userInfo#>)
+            _CGFrameProcessorImpl->ImageBufferSize  = data->SelectedMonitor.Height*data->SelectedMonitor.Width*PixelStride;
+            _CGFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_CGFrameProcessorImpl->ImageBufferSize);
+            
+            
 			return ret;
 		}
 		//
@@ -33,7 +36,26 @@ namespace SL {
 		DUPL_RETURN CGFrameProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
-
+            auto imageRef = CGDisplayCreateImage(_CGFrameProcessorImpl->Data->SelectedMonitor.Id);
+        
+            auto width = CGImageGetWidth(imageRef);
+            auto height = CGImageGetHeight(imageRef);
+            auto colorSpace = CGColorSpaceCreateDeviceRGB();
+            auto rawData = _CGFrameProcessorImpl->ImageBuffer.get();
+            auto bytesPerPixel = 4;
+            auto bytesPerRow = bytesPerPixel * width;
+            auto bitsPerComponent = 8;
+            auto context = CGBitmapContextCreate(rawData, width, height,
+                                                         bitsPerComponent, bytesPerRow, colorSpace,
+                                                         kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+            CGColorSpaceRelease(colorSpace);
+            
+            CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
+            CGContextRelease(context);
+            CGImageRelease(imageRef);
+            if(_CGFrameProcessorImpl->Data->CaptureEntireMonitor){
+                _CGFrameProcessorImpl->Data->CaptureEntireMonitor(_CGFrameProcessorImpl->ImageBuffer.get(), PixelStride,_CGFrameProcessorImpl->Data->SelectedMonitor);
+            }
 			return Ret;
 		}
 

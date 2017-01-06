@@ -14,10 +14,10 @@ int main()
 	realcounter = 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;
 	auto diffunc = [&](const char* src, const int pixelstride, const SL::Screen_Capture::Monitor& monitor, const SL::Screen_Capture::ImageRect& rect) {
-		if (monitor.Index != 1) return;
+		if (monitor.Id != 1) return;
 	
 		auto r = realcounter.fetch_add(1);
-		std::cout << " r " << r << "  Diff ScreenIndex " << monitor.Index << " right " << rect.right << ", bottom " << rect.bottom << " top " << rect.top << ", left " << rect.left << std::endl;
+		std::cout << " r " << r << "  Diff ScreenId" << monitor.Id << " right " << rect.right << ", bottom " << rect.bottom << " top " << rect.top << ", left " << rect.left << std::endl;
 		auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
 
 		auto imgdata = std::make_unique<char[]>(pixelstride*(rect.bottom - rect.top) * (rect.right - rect.left));
@@ -40,7 +40,7 @@ int main()
 	};
 	auto wholefunc = [&](const char* src, const int pixelstride, const SL::Screen_Capture::Monitor& monitor) {
 
-		std::cout << "Entire ScreenIndex " << monitor.Index << " Width " << monitor.Width << ", Height " << monitor.Height << std::endl;
+		std::cout << "Entire ScreenId " << monitor.Id << " Width " << monitor.Width << ", Height " << monitor.Height << std::endl;
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
 

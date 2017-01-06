@@ -8,7 +8,7 @@ namespace SL {
 	namespace Screen_Capture {
 		
 		struct Monitor{
-			int Index;
+			int Id;
 			int Height;
 			int Width;
 			//Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.

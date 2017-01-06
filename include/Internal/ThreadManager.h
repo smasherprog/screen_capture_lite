@@ -44,7 +44,7 @@ namespace SL {
 
 				std::string msg = "took ";
 				msg += std::to_string(mspassed) + "ms for output ";
-				msg += std::to_string(data->SelectedMonitor.Index) + "\n";
+				msg += std::to_string(data->SelectedMonitor.Id) + "\n";
 				std::cout << msg << std::endl;
 
 				auto timetowait = data->CaptureInterval - mspassed;

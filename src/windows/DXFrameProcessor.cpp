@@ -344,7 +344,7 @@ namespace SL {
 				return ret;
 			}
 			DUPLE_RESOURCES dupl;
-			ret = Initialize(dupl, res.Device.Get(), data->SelectedMonitor.Index);
+			ret = Initialize(dupl, res.Device.Get(), data->SelectedMonitor.Id);
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}

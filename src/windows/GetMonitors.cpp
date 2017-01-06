@@ -16,7 +16,7 @@ std::vector<SL::Screen_Capture::Monitor> SL::Screen_Capture::GetMonitors() {
 			devMode.dmSize = sizeof(devMode);
 			EnumDisplaySettingsA(dd.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);
 			tmp.Name = dd.DeviceName;
-			tmp.Index = i;
+			tmp.Id = i;
 			tmp.Width = devMode.dmPelsWidth;
 			tmp.Height = devMode.dmPelsHeight;
 			tmp.OffsetX = devMode.dmPosition.x;

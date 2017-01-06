@@ -5,7 +5,9 @@ see the Exmaple folder for a demo
 Platforms supported:
 <ul>
 <li>Windows 7 SP1 and Up</li>
-<li>MacOS: InProgress</li>
+<li>MacOS: Done</li>
 <li>Linux: In Progress</li>
 </ul>
+
+
 

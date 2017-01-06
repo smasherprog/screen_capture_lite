@@ -44,7 +44,7 @@ int main()
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
 
-	/*	if (!tje_encode_to_file(s.c_str(), monitor.Width, monitor.Height, 4, (const unsigned char*)src)) {
+		/*if (!tje_encode_to_file(s.c_str(), monitor.Width, monitor.Height, 4, (const unsigned char*)src)) {
 			std::cout << "Could not write JPEG\n";
 		}*/
 

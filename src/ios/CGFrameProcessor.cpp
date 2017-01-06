@@ -24,6 +24,7 @@ namespace SL {
 		}
 		DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
+            _CGFrameProcessorImpl->Data = data;
             _CGFrameProcessorImpl->ImageBufferSize  = data->SelectedMonitor.Height*data->SelectedMonitor.Width*PixelStride;
             _CGFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_CGFrameProcessorImpl->ImageBufferSize);
             

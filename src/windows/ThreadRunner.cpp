@@ -32,7 +32,7 @@ namespace SL {
 		}
 
 
-		void SL::Screen_Capture::RunCapture(std::shared_ptr<THREAD_DATA> data) {
+		void RunCapture(std::shared_ptr<THREAD_DATA> data) {
 			//need to switch to the input desktop for capturing...
 			HDESK CurrentDesktop = nullptr;
 			CurrentDesktop = OpenInputDesktop(0, FALSE, GENERIC_ALL);

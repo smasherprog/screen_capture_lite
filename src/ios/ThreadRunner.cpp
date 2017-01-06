@@ -1,5 +1,18 @@
 #include "ScreenCapture.h"
 #include "ThreadManager.h"
+#include "CGFrameProcessor.h"
 
-#include "TargetConditionals.h"
-#include <ApplicationServices/ApplicationServices.h>
+
+namespace SL{
+    namespace Screen_Capture{
+        void RunCapture(std::shared_ptr<THREAD_DATA> data){
+            
+            
+            TryCapture<CGFrameProcessor>(data);
+            
+        }
+    }
+}
+
+  
+    

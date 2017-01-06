@@ -6,7 +6,8 @@ if(WIN32)
 elseif(APPLE)
 
 find_library(corefoundation_lib CoreFoundation)
-    set(SYSTEM_LIBS ${corefoundation_lib})
+find_library(cocoa_lib Cocoa)
+    set(SYSTEM_LIBS ${corefoundation_lib} ${cocoa_lib})
 
 elseif(UNIX)
     set(SYSTEM_LIBS)

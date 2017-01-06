@@ -17,8 +17,14 @@ if(WIN32)
 
 elseif(APPLE)
     set(SCREEN_CAPTURE_PLATFORM_SRC
+        ${Screen_Capture_SOURCE_DIR}/include/ios/CGFrameProcessor.h
+        ${Screen_Capture_SOURCE_DIR}/src/ios/CGFrameProcessor.cpp
         ${Screen_Capture_SOURCE_DIR}/src/ios/GetMonitors.cpp
         ${Screen_Capture_SOURCE_DIR}/src/ios/ThreadRunner.cpp
+    )
+    set(SCREEN_CAPTURE_PLATFORM_INC
+        ${Screen_Capture_SOURCE_DIR}/include/ios
+        ${Screen_Capture_SOURCE_DIR}/src/ios
     )
 elseif(UNIX)
 

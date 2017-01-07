@@ -16,20 +16,20 @@ void SL::Screen_Capture::ThreadManager::Init(std::shared_ptr<std::atomic_bool>& 
 	std::shared_ptr<std::atomic_bool>& terminate,
 	CaptureEntireMonitorCallback& captureentiremonitor,
 	CaptureDifMonitorCallback& capturedifmonitor,
-	int mininterval)
+	int mininterval,
+	const std::vector<Monitor>& monitorstocapture)
 {
 	Reset();
-	auto monitors = GetMonitors();
-	m_ThreadHandles.resize(monitors.size());
-	m_ThreadData.resize(monitors.size());
+	m_ThreadHandles.resize(monitorstocapture.size());
+	m_ThreadData.resize(monitorstocapture.size());
 
-	for (size_t i = 0; i < monitors.size(); ++i)
+	for (size_t i = 0; i < monitorstocapture.size(); ++i)
 	{
 		m_ThreadData[i] = std::make_shared<THREAD_DATA>();
 		m_ThreadData[i]->UnexpectedErrorEvent = unexpected;
 		m_ThreadData[i]->ExpectedErrorEvent = expected;
 		m_ThreadData[i]->TerminateThreadsEvent = terminate;
-		m_ThreadData[i]->SelectedMonitor = monitors[i];
+		m_ThreadData[i]->SelectedMonitor = monitorstocapture[i];
 		m_ThreadData[i]->CaptureDifMonitor = capturedifmonitor;
 		m_ThreadData[i]->CaptureEntireMonitor = captureentiremonitor;
 		m_ThreadData[i]->CaptureInterval = mininterval;

@@ -35,7 +35,9 @@ namespace SL {
 		public:
 			ScreenCaptureManager();
 			~ScreenCaptureManager();
-			//set this callback if you want to capture the entire Montitor
+			//Set which monitors should be captured. This allows users to capture only a specific monitor, or all
+			void Set_CaptureMonitors(const std::vector<Monitor>& monitorstocapture);
+			//set this callback if you want to capture the entire Montitor each new frame
 			void Set_CapturCallback(CaptureEntireMonitorCallback img_cb);
 			//set this callback if you want to capture just differences between the frames
 			void Set_CapturCallback(CaptureDifMonitorCallback img_cb);

@@ -24,7 +24,8 @@ namespace SL {
 				std::shared_ptr<std::atomic_bool>& terminate, 
 				CaptureEntireMonitorCallback& captureentiremonitor,
 				CaptureDifMonitorCallback& capturedifmonitor,
-				int mininterval);
+				int mininterval,
+				const std::vector<Monitor>& monitorstocapture);
 			void Join();
 			void Reset();
 		};

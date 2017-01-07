@@ -49,6 +49,10 @@ int main()
 		}*/
 
 	};
+
+	auto monitors = SL::Screen_Capture::GetMonitors();
+
+	framgrabber.Set_CaptureMonitors(monitors);//capture all monitors
 	framgrabber.Set_CapturCallback(diffunc);
 	framgrabber.Set_CapturCallback(wholefunc);
 

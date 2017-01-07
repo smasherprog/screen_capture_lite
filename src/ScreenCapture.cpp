@@ -4,6 +4,7 @@
 #include <atomic>
 #include <algorithm>
 #include <memory>
+#include <assert.h>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -17,6 +18,7 @@ namespace SL {
 
 			std::thread _Thread;
 			std::shared_ptr<std::atomic_bool> _TerminateThread;
+			std::vector<Monitor> Monitors;
 
 			ScreenCaptureManagerImpl() {
 
@@ -25,6 +27,11 @@ namespace SL {
 				stop();
 			}
 			void start() {
+				//users must set the monitors to capture before calling start
+				assert(!Monitors.empty());
+				//users must set at least one callback before starting
+				assert(CaptureEntireMonitor || CaptureDifMonitor);
+
 				stop();
 				_Thread = std::thread([&]() {
 					ThreadManager ThreadMgr;
@@ -32,7 +39,7 @@ namespace SL {
 					auto unexpected = std::make_shared<std::atomic_bool>(false);
 					_TerminateThread = std::make_shared<std::atomic_bool>(false);
 
-					ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime);
+					ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime, Monitors);
 
 					while (!*_TerminateThread) {
 
@@ -47,7 +54,7 @@ namespace SL {
 							ThreadMgr.Reset();
 							std::this_thread::sleep_for(std::chrono::milliseconds(1000));//sleep for 1 second since an error occcured
 
-							ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime);
+							ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime, Monitors);
 						}
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					}
@@ -73,6 +80,10 @@ namespace SL {
 		ScreenCaptureManager::~ScreenCaptureManager()
 		{
 			_ScreenCaptureManagerImpl->stop();
+		}
+		void ScreenCaptureManager::Set_CaptureMonitors(const std::vector<Monitor>& monitorstocapture)
+		{
+			_ScreenCaptureManagerImpl->Monitors = monitorstocapture;
 		}
 		void ScreenCaptureManager::Set_CapturCallback(CaptureEntireMonitorCallback img_cb) {
 			_ScreenCaptureManagerImpl->CaptureEntireMonitor = img_cb;

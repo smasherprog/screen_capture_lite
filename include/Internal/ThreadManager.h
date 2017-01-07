@@ -22,10 +22,10 @@ namespace SL {
 			void Init(std::shared_ptr<std::atomic_bool>& unexpected, 
 				std::shared_ptr<std::atomic_bool>& expected, 
 				std::shared_ptr<std::atomic_bool>& terminate, 
-				CaptureEntireMonitorCallback& captureentiremonitor,
-				CaptureDifMonitorCallback& capturedifmonitor,
+				CaptureCallback& captureentiremonitor,
+				CaptureCallback& capturedifmonitor,
 				int mininterval,
-				const std::vector<Monitor>& monitorstocapture);
+				const std::vector<std::shared_ptr<Monitor>>& monitorstocapture);
 			void Join();
 			void Reset();
 		};
@@ -45,7 +45,7 @@ namespace SL {
 
 				std::string msg = "took ";
 				msg += std::to_string(mspassed) + "ms for output ";
-				msg += std::to_string(data->SelectedMonitor.Id) + "\n";
+				msg += std::to_string(Id(*data->SelectedMonitor)) + "\n";
 				std::cout << msg << std::endl;
 
 				auto timetowait = data->CaptureInterval - mspassed;

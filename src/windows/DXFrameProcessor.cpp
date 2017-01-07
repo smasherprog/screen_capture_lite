@@ -21,15 +21,15 @@ namespace SL {
 		{
 			Microsoft::WRL::ComPtr<ID3D11Device> Device;
 			Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext;
-		} ;
+		};
 		struct DUPLE_RESOURCES
 		{
 			Microsoft::WRL::ComPtr<IDXGIOutputDuplication> OutputDuplication;
 			DXGI_OUTPUT_DESC OutputDesc;
 			UINT Output;
 		};
-	
-	
+
+
 		// These are the errors we expect from general Dxgi API due to a transition
 		HRESULT SystemTransitionsExpectedErrors[] = {
 			DXGI_ERROR_DEVICE_REMOVED,
@@ -62,7 +62,7 @@ namespace SL {
 
 
 
-		DUPL_RETURN ProcessFailure(ID3D11Device * Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT * ExpectedErrors=nullptr)
+		DUPL_RETURN ProcessFailure(ID3D11Device * Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT * ExpectedErrors = nullptr)
 		{
 			HRESULT TranslatedHr;
 			std::wcout << Str << "\t" << Title << std::endl;
@@ -279,13 +279,13 @@ namespace SL {
 				AquiredLock = false;
 			}
 		public:
-			AquireFrameRAII(IDXGIOutputDuplication* dupl) : _DuplLock(dupl), AquiredLock(false){	}
+			AquireFrameRAII(IDXGIOutputDuplication* dupl) : _DuplLock(dupl), AquiredLock(false) {	}
 
 			~AquireFrameRAII() {
 				TryRelease();
 			}
 			HRESULT AcquireNextFrame(UINT TimeoutInMilliseconds, DXGI_OUTDUPL_FRAME_INFO *pFrameInfo, IDXGIResource **ppDesktopResource) {
-				auto hr= _DuplLock->AcquireNextFrame(TimeoutInMilliseconds, pFrameInfo, ppDesktopResource);
+				auto hr = _DuplLock->AcquireNextFrame(TimeoutInMilliseconds, pFrameInfo, ppDesktopResource);
 				TryRelease();
 				AquiredLock = SUCCEEDED(hr);
 				return hr;
@@ -344,7 +344,7 @@ namespace SL {
 				return ret;
 			}
 			DUPLE_RESOURCES dupl;
-			ret = Initialize(dupl, res.Device.Get(), data->SelectedMonitor.Id);
+			ret = Initialize(dupl, res.Device.Get(), Id(*data->SelectedMonitor));
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}
@@ -355,7 +355,7 @@ namespace SL {
 			_DXFrameProcessorImpl->Output = dupl.Output;
 
 			_DXFrameProcessorImpl->Data = data;
-			_DXFrameProcessorImpl->ImageBufferSize = data->SelectedMonitor.Width* data->SelectedMonitor.Height*PixelStride;
+			_DXFrameProcessorImpl->ImageBufferSize = Width(*data->SelectedMonitor)* Height(*data->SelectedMonitor)* PixelStride;
 			_DXFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_DXFrameProcessorImpl->ImageBufferSize);
 			return ret;
 		}
@@ -449,21 +449,19 @@ namespace SL {
 			}
 			auto startsrc = (char*)MappingDesc.pData;
 			auto startdst = _DXFrameProcessorImpl->ImageBuffer.get();
-			auto rowstride = PixelStride*_DXFrameProcessorImpl->Data->SelectedMonitor.Width;
+			auto rowstride = PixelStride*Width(*_DXFrameProcessorImpl->Data->SelectedMonitor);
 			if (rowstride == MappingDesc.RowPitch) {//no need for multiple calls, there is no padding here
-				memcpy(startdst, startsrc, rowstride*_DXFrameProcessorImpl->Data->SelectedMonitor.Height);
+				memcpy(startdst, startsrc, rowstride*Height(*_DXFrameProcessorImpl->Data->SelectedMonitor));
 			}
 			else {
-				for (auto i = 0; i < _DXFrameProcessorImpl->Data->SelectedMonitor.Height; i++) {
+				for (auto i = 0; i < Height(*_DXFrameProcessorImpl->Data->SelectedMonitor); i++) {
 					memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
 				}
 			}
 
-
-
 			ImageRect ret;
-
 			// Process dirties 
+
 			if (dirtycount > 0 && dirtyrects != nullptr && _DXFrameProcessorImpl->Data->CaptureDifMonitor)
 			{
 				for (auto i = 0; i < dirtycount; i++)
@@ -472,15 +470,21 @@ namespace SL {
 					ret.top = dirtyrects[i].top;
 					ret.bottom = dirtyrects[i].bottom;
 					ret.right = dirtyrects[i].right;
-					_DXFrameProcessorImpl->Data->CaptureDifMonitor(_DXFrameProcessorImpl->ImageBuffer.get(), PixelStride, _DXFrameProcessorImpl->Data->SelectedMonitor, ret);
+					//pad is the number of bytes to advance to the next starting point of data. this is NOT the padding to the rightmost side of the image
+					auto pad = (dirtyrects[i].left *PixelStride) + ((Width(*_DXFrameProcessorImpl->Data->SelectedMonitor) - dirtyrects[i].right) *PixelStride);
+
+					auto startdata = _DXFrameProcessorImpl->ImageBuffer.get() + (Width(*_DXFrameProcessorImpl->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left);
+					auto img = CreateImage(ret, PixelStride, pad, startdata);
+					_DXFrameProcessorImpl->Data->CaptureDifMonitor(*img, *_DXFrameProcessorImpl->Data->SelectedMonitor);
 				}
 
 			}
 			if (_DXFrameProcessorImpl->Data->CaptureEntireMonitor) {
 				ret.left = ret.top = 0;
-				ret.bottom = _DXFrameProcessorImpl->Data->SelectedMonitor.Height;
-				ret.right = _DXFrameProcessorImpl->Data->SelectedMonitor.Width;
-				_DXFrameProcessorImpl->Data->CaptureEntireMonitor(_DXFrameProcessorImpl->ImageBuffer.get(), PixelStride, _DXFrameProcessorImpl->Data->SelectedMonitor);
+				ret.bottom = Height(*_DXFrameProcessorImpl->Data->SelectedMonitor);
+				ret.right = Width(*_DXFrameProcessorImpl->Data->SelectedMonitor);
+				auto img = CreateImage(ret, PixelStride, 0, _DXFrameProcessorImpl->ImageBuffer.get());
+				_DXFrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_DXFrameProcessorImpl->Data->SelectedMonitor);
 			}
 			return Ret;
 		}

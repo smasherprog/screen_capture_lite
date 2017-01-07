@@ -42,16 +42,16 @@ namespace SL {
 		}
 		DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
 			auto Ret = DUPL_RETURN_SUCCESS;
-
-			_GDIFrameProcessorImpl->MonitorDC.DC = CreateDCA(data->SelectedMonitor.Name.c_str(), NULL, NULL, NULL);
+			auto name = Name(*data->SelectedMonitor);
+			_GDIFrameProcessorImpl->MonitorDC.DC = CreateDCA(name.c_str(), NULL, NULL, NULL);
 			_GDIFrameProcessorImpl->CaptureDC.DC = CreateCompatibleDC(_GDIFrameProcessorImpl->MonitorDC.DC);
-			_GDIFrameProcessorImpl->CaptureBMP.Bitmap = CreateCompatibleBitmap(_GDIFrameProcessorImpl->MonitorDC.DC, data->SelectedMonitor.Width, data->SelectedMonitor.Height);
+			_GDIFrameProcessorImpl->CaptureBMP.Bitmap = CreateCompatibleBitmap(_GDIFrameProcessorImpl->MonitorDC.DC, Width(*data->SelectedMonitor), Height(*data->SelectedMonitor));
 
 			if (!_GDIFrameProcessorImpl->MonitorDC.DC || !_GDIFrameProcessorImpl->CaptureDC.DC || !_GDIFrameProcessorImpl->CaptureBMP.Bitmap) {
 				Ret = DUPL_RETURN::DUPL_RETURN_ERROR_UNEXPECTED;
 			}
 			_GDIFrameProcessorImpl->Data = data;
-			_GDIFrameProcessorImpl->ImageBufferSize = data->SelectedMonitor.Width* data->SelectedMonitor.Height*PixelStride;
+			_GDIFrameProcessorImpl->ImageBufferSize = Width(*data->SelectedMonitor)* Height(*data->SelectedMonitor)* PixelStride;
 			_GDIFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_GDIFrameProcessorImpl->ImageBufferSize);
 			return Ret;
 		}
@@ -64,8 +64,8 @@ namespace SL {
 
 			ImageRect ret;
 			ret.left = ret.top = 0;
-			ret.bottom = _GDIFrameProcessorImpl->Data->SelectedMonitor.Height;
-			ret.right = _GDIFrameProcessorImpl->Data->SelectedMonitor.Width;
+			ret.bottom = Height(*_GDIFrameProcessorImpl->Data->SelectedMonitor);
+			ret.right = Width(*_GDIFrameProcessorImpl->Data->SelectedMonitor);
 
 			// Selecting an object into the specified DC
 			auto originalBmp = SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, _GDIFrameProcessorImpl->CaptureBMP.Bitmap);
@@ -94,7 +94,9 @@ namespace SL {
 
 				SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, originalBmp);
 				if (_GDIFrameProcessorImpl->Data->CaptureEntireMonitor) {
-					_GDIFrameProcessorImpl->Data->CaptureEntireMonitor(_GDIFrameProcessorImpl->ImageBuffer.get(), PixelStride, _GDIFrameProcessorImpl->Data->SelectedMonitor);
+				
+					auto img = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->ImageBuffer.get());
+					_GDIFrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_GDIFrameProcessorImpl->Data->SelectedMonitor);
 				}
 				
 			}

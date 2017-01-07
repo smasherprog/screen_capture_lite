@@ -9,16 +9,33 @@
 namespace SL {
 	namespace Screen_Capture {
 
+		struct Monitor {
+			int Id;
+			int Height;
+			int Width;
+			//Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.
+			int OffsetX;
+			int OffsetY;
+			std::string Name;
+		};
+		struct Image {
+			ImageRect Bounds;
+			int Pixelstride;
+			int RowPadding;
+			char* Data = nullptr;
+		};
+
+
 		class ScreenCaptureManagerImpl {
 		public:
 
 			int SleepTime = 100;//in ms
-			CaptureEntireMonitorCallback CaptureEntireMonitor;
-			CaptureDifMonitorCallback CaptureDifMonitor;
+			CaptureCallback CaptureEntireMonitor;
+			CaptureCallback CaptureDifMonitor;
 
 			std::thread _Thread;
 			std::shared_ptr<std::atomic_bool> _TerminateThread;
-			std::vector<Monitor> Monitors;
+			std::vector<std::shared_ptr<Monitor>> Monitors;
 
 			ScreenCaptureManagerImpl() {
 
@@ -38,7 +55,7 @@ namespace SL {
 					auto expected = std::make_shared<std::atomic_bool>(false);
 					auto unexpected = std::make_shared<std::atomic_bool>(false);
 					_TerminateThread = std::make_shared<std::atomic_bool>(false);
-
+		
 					ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime, Monitors);
 
 					while (!*_TerminateThread) {
@@ -81,14 +98,15 @@ namespace SL {
 		{
 			_ScreenCaptureManagerImpl->stop();
 		}
-		void ScreenCaptureManager::Set_CaptureMonitors(const std::vector<Monitor>& monitorstocapture)
+		void ScreenCaptureManager::Set_CaptureMonitors(const std::vector<std::shared_ptr<Monitor>>& monitorstocapture)
 		{
 			_ScreenCaptureManagerImpl->Monitors = monitorstocapture;
-		}
-		void ScreenCaptureManager::Set_CapturCallback(CaptureEntireMonitorCallback img_cb) {
+		}		
+
+		void ScreenCaptureManager::Set_CaptureEntireCallback(CaptureCallback img_cb) {
 			_ScreenCaptureManagerImpl->CaptureEntireMonitor = img_cb;
 		}
-		void ScreenCaptureManager::Set_CapturCallback(CaptureDifMonitorCallback img_cb) {
+		void ScreenCaptureManager::Set_CaptureDifCallback(CaptureCallback img_cb) {
 			_ScreenCaptureManagerImpl->CaptureDifMonitor = img_cb;
 		}
 
@@ -102,6 +120,43 @@ namespace SL {
 			_ScreenCaptureManagerImpl->stop();
 			_ScreenCaptureManagerImpl = std::make_unique<ScreenCaptureManagerImpl>();
 		}
+		std::shared_ptr<Monitor> CreateMonitor(int id, int h, int w, int ox, int oy, const std::string & n)
+		{
+			auto ret = std::make_shared<Monitor>();
+			ret->Height = h;
+			ret->Id = id;
+			ret->Name = n;
+			ret->OffsetX = ox;
+			ret->OffsetY = oy;
+			ret->Width = w;
+			return ret;
+		}
+		std::shared_ptr<Image> CreateImage(const ImageRect& b, int ps, int rp, char* d) {
+			auto ret = std::make_shared<Image>();
+			ret->Bounds = b;
+			ret->Data = d;
+			ret->Pixelstride = ps;
+			ret->RowPadding = rp;
+			return ret;
+		}		
+		int Id(const Monitor& mointor) { return mointor.Id; }
+		int OffsetX(const Monitor& mointor) { return mointor.OffsetX; }
+		int OffsetY(const Monitor& mointor) { return mointor.OffsetY; }
+		const std::string& Name(const Monitor& mointor) { return mointor.Name; }
+		int Height(const Monitor& mointor) { return mointor.Height; }
+		int Width(const Monitor& mointor) { return mointor.Width; }
+		int Height(const ImageRect& rect) { return rect.bottom - rect.top; }
+		int Width(const ImageRect& rect) { return rect.right - rect.left; }
+		int Height(const Image& img) { return Height(img.Bounds); }
+		int Width(const Image& img) { return Width(img.Bounds); }
+		const ImageRect& Rect(const Image& img) { return img.Bounds; }
+
+		//number of bytes per row, NOT including the Rowpadding
+		int RowStride(const Image& img) { return img.Pixelstride* Width(img); }
+		//number of bytes per row of padding
+		int RowPadding(const Image& img) { return img.RowPadding; }
+		const char* StartSrc(const Image& img) { return img.Data; }
+
 	}
 }
 

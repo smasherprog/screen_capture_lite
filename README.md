@@ -11,11 +11,14 @@ Platforms supported:
 
 
 <h2>USAGE</h2>
+```
+SL::Screen_Capture::ScreenCaptureManager framgrabber;
+auto monitors = SL::Screen_Capture::GetMonitors();
+framgrabber.Set_CaptureMonitors(monitors);
 
-SL::Screen_Capture::ScreenCaptureManager framgrabber;<br/>
-auto monitors = SL::Screen_Capture::GetMonitors();<br/>
-framgrabber.Set_CaptureMonitors(monitors);<br/>
+framgrabber.Set_CaptureDifCallback(diffunc);
+framgrabber.Set_CaptureEntireCallback(wholefunc);
+framgrabber.StartCapturing(100);
 
-framgrabber.Set_CaptureDifCallback(diffunc);<br/>
-framgrabber.Set_CaptureEntireCallback(wholefunc);<br/>
-framgrabber.StartCapturing(100);<br/>
+
+```

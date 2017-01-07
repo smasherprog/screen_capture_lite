@@ -11,12 +11,12 @@ Platforms supported:
 
 
 <h2>USAGE</h2>
-auto diffunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-
-}
-auto wholefunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-
-}
+auto diffunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {<br/>
+<br/>
+}<br/>
+auto wholefunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {<br/>
+<br/>
+}<br/>
 SL::Screen_Capture::ScreenCaptureManager framgrabber;<br/>
 auto monitors = SL::Screen_Capture::GetMonitors();<br/>
 framgrabber.Set_CaptureMonitors(monitors);<br/>

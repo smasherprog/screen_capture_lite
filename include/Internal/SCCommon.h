@@ -30,5 +30,7 @@ namespace SL {
 		const int PixelStride = 4;
 		std::shared_ptr<Monitor> CreateMonitor(int id, int h, int w, int ox, int oy, const std::string& n);
 		std::shared_ptr<Image> CreateImage(const ImageRect& b, int ps, int rp, char* d);
+		std::vector<ImageRect> GetDifs(const Image & oldimg, const Image & newimg);
+
 	}
 }

@@ -3,6 +3,7 @@
 #include <functional>
 #include <vector>
 #include <string>
+#include <ostream>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -18,7 +19,10 @@ namespace SL {
 				return left <= a.left && right >= a.right && top <= a.top && bottom >= a.bottom;
 			}
 		};
-
+		inline std::ostream& operator<<(std::ostream &os, const ImageRect& p)
+		{
+			return os << "left=" << p.left << " top=" << p.top << " right=" << p.right << " bottom=" << p.bottom;
+		}
 		struct Image;
 
 		//unique identifier

@@ -10,4 +10,17 @@ Platforms supported:
 </ul>
 
 
+<h2>USAGE</h2>
+auto diffunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
+}
+auto wholefunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+
+}
+SL::Screen_Capture::ScreenCaptureManager framgrabber;<br/>
+auto monitors = SL::Screen_Capture::GetMonitors();<br/>
+framgrabber.Set_CaptureMonitors(monitors);<br/>
+
+framgrabber.Set_CaptureDifCallback(diffunc);<br/>
+framgrabber.Set_CaptureEntireCallback(wholefunc);<br/>
+framgrabber.StartCapturing(100);<br/>

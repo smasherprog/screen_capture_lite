@@ -46,7 +46,7 @@ namespace SL {
             auto width = CGImageGetWidth(imageRef);
             auto height = CGImageGetHeight(imageRef);
             auto colorSpace = CGColorSpaceCreateDeviceRGB();
-            auto rawData = _CGFrameProcessorImpl->ImageBufferSize.get();
+            auto rawData = _CGFrameProcessorImpl->NewImageBuffer.get();
             auto bytesPerPixel = 4;
             auto bytesPerRow = bytesPerPixel * width;
             auto bitsPerComponent = 8;
@@ -58,19 +58,19 @@ namespace SL {
             CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
             CGContextRelease(context);
             CGImageRelease(imageRef);
-            
+            ImageRect imgrect;
+            imgrect.left =  imgrect.top=0;
+            imgrect.right =width;
+            imgrect.bottom = height;
             if(_CGFrameProcessorImpl->Data->CaptureEntireMonitor){
-                ImageRect imgrect;
-                imgrect.left =  imgrect.top=0;
-                imgrect.right =width;
-                imgrect.bottom = height;
-                auto img = CreateImage(imgrect, PixelStride, 0,_CGFrameProcessorImpl->ImageBufferSize.get());
+           
+                auto img = CreateImage(imgrect, PixelStride, 0,_CGFrameProcessorImpl->NewImageBuffer.get());
                 _CGFrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_CGFrameProcessorImpl->Data->SelectedMonitor);
             }
 			if (_CGFrameProcessorImpl->Data->CaptureDifMonitor) {
 					//user wants difs, lets do it!
-					auto newimg = CreateImage(ret, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.get());
-					auto oldimg = CreateImage(ret, PixelStride, 0, _CGFrameProcessorImpl->OldImageBuffer.get());
+					auto newimg = CreateImage(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.get());
+					auto oldimg = CreateImage(imgrect, PixelStride, 0, _CGFrameProcessorImpl->OldImageBuffer.get());
 					auto imgdifs = GetDifs(*oldimg, *newimg);
 
 					for (auto& r : imgdifs) {

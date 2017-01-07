@@ -1,12 +1,13 @@
 #include "ScreenCapture.h"
+#include "SCCommon.h"
 #include <ApplicationServices/ApplicationServices.h>
 
 
 namespace SL{
     namespace Screen_Capture{
         
-        std::vector<Monitor> GetMonitors() {
-            std::vector<Monitor> ret;
+        std::vector<std::shared_ptr<Monitor>> GetMonitors() {
+            std::vector<std::shared_ptr<Monitor>> ret;
             std::vector<CGDirectDisplayID> displays;
             CGDisplayCount count=0;
             //get count
@@ -16,14 +17,9 @@ namespace SL{
             CGGetActiveDisplayList(count, displays.data(), &count);
             for(auto  i = 0; i < count; i++) {
                 auto r = CGDisplayBounds(displays[i]);
-                Monitor tmp;
-                tmp.Id=displays[i];
-                tmp.OffsetY=int(r.origin.y);
-                tmp.OffsetX=int(r.origin.x);
-                tmp.Width=int(r.size.width);
-                tmp.Height=int(r.size.height);
-                tmp.Name = std::string("Monitor ") + std::to_string(tmp.Id);
-                ret.push_back(tmp);
+    
+                auto name = std::string("Monitor ") + std::to_string(displays[i]);
+                ret.push_back(CreateMonitor(displays[i], int(r.size.height),int(r.size.width), int(r.origin.x), int(r.origin.y), name ));
             }
             return ret;
 

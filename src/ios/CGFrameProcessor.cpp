@@ -25,7 +25,7 @@ namespace SL {
 		DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
             _CGFrameProcessorImpl->Data = data;
-            _CGFrameProcessorImpl->ImageBufferSize  = data->SelectedMonitor.Height*data->SelectedMonitor.Width*PixelStride;
+            _CGFrameProcessorImpl->ImageBufferSize  = Height(*data->SelectedMonitor)*Width(*data->SelectedMonitor)*PixelStride;
             _CGFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_CGFrameProcessorImpl->ImageBufferSize);
             
             
@@ -37,7 +37,7 @@ namespace SL {
 		DUPL_RETURN CGFrameProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
-            auto imageRef = CGDisplayCreateImage(_CGFrameProcessorImpl->Data->SelectedMonitor.Id);
+            auto imageRef = CGDisplayCreateImage(Id(*_CGFrameProcessorImpl->Data->SelectedMonitor));
         
             auto width = CGImageGetWidth(imageRef);
             auto height = CGImageGetHeight(imageRef);
@@ -54,8 +54,14 @@ namespace SL {
             CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
             CGContextRelease(context);
             CGImageRelease(imageRef);
+            
             if(_CGFrameProcessorImpl->Data->CaptureEntireMonitor){
-                _CGFrameProcessorImpl->Data->CaptureEntireMonitor(_CGFrameProcessorImpl->ImageBuffer.get(), PixelStride,_CGFrameProcessorImpl->Data->SelectedMonitor);
+                ImageRect imgrect;
+                imgrect.left =  imgrect.top=0;
+                imgrect.right =width;
+                imgrect.bottom = height;
+                auto img = CreateImage(imgrect, PixelStride, 0,_CGFrameProcessorImpl->ImageBuffer.get());
+                _CGFrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_CGFrameProcessorImpl->Data->SelectedMonitor);
             }
 			return Ret;
 		}

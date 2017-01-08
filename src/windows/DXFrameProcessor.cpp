@@ -2,9 +2,40 @@
 #include <memory>
 #include <atomic>
 #include <mutex>
+#include <string>
+#include <iostream>
+
+#if (_MSC_VER >= 1700) && defined(_USING_V110_SDK71_)
+namespace SL {
+	namespace Screen_Capture {
+
+		struct DXFrameProcessorImpl {
+
+		};
+
+
+		DXFrameProcessor::DXFrameProcessor()
+		{
+
+		}
+
+		DXFrameProcessor::~DXFrameProcessor()
+		{
+
+		}
+		DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
+			return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
+		}
+		DUPL_RETURN DXFrameProcessor::ProcessFrame() {
+			return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
+		}
+
+	}
+}
+#else
+
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
-
 #include <windows.h>
 #include <d3d11.h>
 #include <dxgi1_2.h>
@@ -12,8 +43,7 @@
 
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"d3d11.lib")
-#include <string>
-#include <iostream>
+
 
 namespace SL {
 	namespace Screen_Capture {
@@ -491,3 +521,6 @@ namespace SL {
 
 	}
 }
+
+#endif
+

@@ -19,7 +19,7 @@ namespace SL{
                 auto r = CGDisplayBounds(displays[i]);
     
                 auto name = std::string("Monitor ") + std::to_string(displays[i]);
-                ret.push_back(CreateMonitor(displays[i], int(r.size.height),int(r.size.width), int(r.origin.x), int(r.origin.y), name ));
+                ret.push_back(CreateMonitor(i, displays[i], int(r.size.height),int(r.size.width), int(r.origin.x), int(r.origin.y), name ));
             }
             return ret;
 

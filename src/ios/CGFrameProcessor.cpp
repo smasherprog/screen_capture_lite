@@ -72,8 +72,8 @@ namespace SL {
 			if (_CGFrameProcessorImpl->Data->CaptureDifMonitor) {
 				if (_CGFrameProcessorImpl->FirstRun) {
 						//first time through, just send the whole image
-						auto wholeimgfirst = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
-						_CGFrameProcessorImpl->Data->CaptureEntireMonitor(*wholeimgfirst, *_GDIFrameProcessorImpl->Data->SelectedMonitor);
+						auto wholeimgfirst = CreateImage(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.get());
+						_CGFrameProcessorImpl->Data->CaptureDifMonitor(*wholeimgfirst, *_CGFrameProcessorImpl->Data->SelectedMonitor);
 						_CGFrameProcessorImpl->FirstRun = false;
 				} else {		
 				

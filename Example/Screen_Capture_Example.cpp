@@ -11,7 +11,8 @@
 int main()
 {
 
-	std::atomic<int> realcounter = 0;
+    std::atomic<int> realcounter;
+    realcounter= 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;
 	auto monitors = SL::Screen_Capture::GetMonitors();
 	std::vector<std::unique_ptr<char[]>> images;//this is the actual backing of the image

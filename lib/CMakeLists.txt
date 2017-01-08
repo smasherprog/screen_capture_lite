@@ -26,8 +26,17 @@ elseif(APPLE)
         ${Screen_Capture_SOURCE_DIR}/include/ios
         ${Screen_Capture_SOURCE_DIR}/src/ios
     )
-elseif(UNIX)
-
+else()
+  set(SCREEN_CAPTURE_PLATFORM_SRC
+        ${Screen_Capture_SOURCE_DIR}/include/linux/X11FrameProcessor.h
+        ${Screen_Capture_SOURCE_DIR}/src/linux/X11FrameProcessor.cpp
+        ${Screen_Capture_SOURCE_DIR}/src/linux/GetMonitors.cpp
+        ${Screen_Capture_SOURCE_DIR}/src/linux/ThreadRunner.cpp
+    )
+    set(SCREEN_CAPTURE_PLATFORM_INC
+        ${Screen_Capture_SOURCE_DIR}/include/linux
+        ${Screen_Capture_SOURCE_DIR}/src/linux
+    )
 endif()
 
 set(SCREEN_CAPTURE_COMMON_SRC 

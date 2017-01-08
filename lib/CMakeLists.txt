@@ -33,10 +33,22 @@ else()
         ${Screen_Capture_SOURCE_DIR}/src/linux/GetMonitors.cpp
         ${Screen_Capture_SOURCE_DIR}/src/linux/ThreadRunner.cpp
     )
-    set(SCREEN_CAPTURE_PLATFORM_INC
+  
+	find_package(X11 REQUIRED)
+	if(!X11_XTest_FOUND)
+ 		message(FATAL_ERROR "X11 extensions are required, but not found!")
+	endif()
+  set(SCREEN_CAPTURE_PLATFORM_INC
         ${Screen_Capture_SOURCE_DIR}/include/linux
         ${Screen_Capture_SOURCE_DIR}/src/linux
+	${X11_INCLUDE_DIR}
     )
+find_package(Threads REQUIRED)
+	set(SCREEN_CAPTURE_PLATFORM_LIBS
+		${X11_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	)
+	
 endif()
 
 set(SCREEN_CAPTURE_COMMON_SRC 
@@ -57,7 +69,7 @@ set(SCREEN_CAPTURE_COMMON_INC
 include_directories(${SCREEN_CAPTURE_COMMON_INC} ${SCREEN_CAPTURE_PLATFORM_INC})
 
 add_library(${PROJECT_NAME} ${SCREEN_CAPTURE_COMMON_SRC} ${SCREEN_CAPTURE_PLATFORM_SRC})
-
+target_link_libraries(${PROJECT_NAME} ${SCREEN_CAPTURE_PLATFORM_LIBS})
 
 install(TARGETS ${PROJECT_NAME} 
         LIBRARY DESTINATION lib

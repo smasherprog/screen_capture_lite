@@ -11,6 +11,7 @@ namespace SL {
 
 		struct Monitor {
 			int Id;
+			int Index;
 			int Height;
 			int Width;
 			//Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.
@@ -55,7 +56,7 @@ namespace SL {
 					auto expected = std::make_shared<std::atomic_bool>(false);
 					auto unexpected = std::make_shared<std::atomic_bool>(false);
 					_TerminateThread = std::make_shared<std::atomic_bool>(false);
-		
+
 					ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime, Monitors);
 
 					while (!*_TerminateThread) {
@@ -101,7 +102,7 @@ namespace SL {
 		void ScreenCaptureManager::Set_CaptureMonitors(const std::vector<std::shared_ptr<Monitor>>& monitorstocapture)
 		{
 			_ScreenCaptureManagerImpl->Monitors = monitorstocapture;
-		}		
+		}
 
 		void ScreenCaptureManager::Set_CaptureEntireCallback(CaptureCallback img_cb) {
 			_ScreenCaptureManagerImpl->CaptureEntireMonitor = img_cb;
@@ -120,9 +121,10 @@ namespace SL {
 			_ScreenCaptureManagerImpl->stop();
 			_ScreenCaptureManagerImpl = std::make_unique<ScreenCaptureManagerImpl>();
 		}
-		std::shared_ptr<Monitor> CreateMonitor(int id, int h, int w, int ox, int oy, const std::string & n)
+		std::shared_ptr<Monitor> CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string & n)
 		{
 			auto ret = std::make_shared<Monitor>();
+			ret->Index = index;
 			ret->Height = h;
 			ret->Id = id;
 			ret->Name = n;
@@ -138,7 +140,9 @@ namespace SL {
 			ret->Pixelstride = ps;
 			ret->RowPadding = rp;
 			return ret;
-		}		
+		}
+
+		int Index(const Monitor& mointor) { return mointor.Index; }
 		int Id(const Monitor& mointor) { return mointor.Id; }
 		int OffsetX(const Monitor& mointor) { return mointor.OffsetX; }
 		int OffsetY(const Monitor& mointor) { return mointor.OffsetY; }
@@ -155,8 +159,27 @@ namespace SL {
 		int RowStride(const Image& img) { return img.Pixelstride* Width(img); }
 		//number of bytes per row of padding
 		int RowPadding(const Image& img) { return img.RowPadding; }
-		const char* StartSrc(const Image& img) { return img.Data; }
+		char* StartSrc(const Image& img) { return img.Data; }
+		void Copy(const Image& dst, const Image& src) {
+			//make sure the copy is going to be valid!
+			assert(dst.Bounds.Contains(src.Bounds));
 
+			auto startdst = StartSrc(dst) + (src.Bounds.top *(RowStride(dst) + RowPadding(dst))) + (src.Bounds.left * dst.Pixelstride);
+			auto startsrc = StartSrc(src);
+			if (src.Bounds == dst.Bounds && RowStride(src) == RowStride(dst) && RowPadding(src) == RowPadding(dst)) {
+				//if the bounds and rowstride and padding are the same, the entire copy can be a single memcpy
+				memcpy(startdst, startsrc, RowStride(src)*Height(src));
+			}
+			else {
+				for (auto i = 0; i < Height(src); i++) {
+					//memset(startdst, 0, RowStride(src));
+					memcpy(startdst, startsrc, RowStride(src));
+
+					startdst += RowStride(dst) + RowPadding(dst);//advance to the next row
+					startsrc += RowStride(src) + RowPadding(src);//advance to the next row
+				}
+			}
+		}
 	}
 }
 

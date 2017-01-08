@@ -4,77 +4,64 @@
 #include <atomic>
 #include <thread>
 #include <string>
+#include <vector>
 #define TJE_IMPLEMENTATION
 #include "tiny_jpeg.h"
 
 int main()
 {
 
-	std::atomic<int> realcounter;
-	realcounter = 0;
+	std::atomic<int> realcounter = 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;
+	auto monitors = SL::Screen_Capture::GetMonitors();
+	std::vector<std::unique_ptr<char[]>> images;//this is the actual backing of the image
+	std::vector<std::shared_ptr<SL::Screen_Capture::Image>> imagewrapper;//this is a wrapper for convience. This is not required, I use it because it helps with copying data
+
+	//you could set the program to only capture on a single monitor as well
+
+	decltype(monitors) firstmonitor;
+	firstmonitor.push_back(monitors[0]);
+	framgrabber.Set_CaptureMonitors(monitors);
+
+	images.resize(monitors.size());
+	imagewrapper.resize(monitors.size());
+
 	auto diffunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
 		auto r = realcounter.fetch_add(1);
-		//std::cout << " r " << r << "  Diff ScreenId" << Id(monitor) << " right " << Rect(img).right << ", bottom " << Rect(img).bottom << " top " << Rect(img).top << ", left " << Rect(img).left << std::endl;
 		auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
 
-		auto imgdata = std::make_unique<char[]>(RowStride(img)*Height(img));
-
-		auto startdst = imgdata.get();
-		auto startsrc = StartSrc(img);
-
-		if (RowPadding(img) == 0) {//if there is no row padding, just do a single memcpy call instead of multple
-			memcpy(startdst, startsrc, RowStride(img)*Height(img));
+		if (!images[Index(monitor)]) {
+			//make sure to create a buffer first time through
+			//the first time through the system will send the entire image, so this is the full size of the image. Next difs will be within the bounds of the first
+			images[Index(monitor)] = std::make_unique<char[]>(RowStride(img)*Height(img));
+			imagewrapper[Index(monitor)] = SL::Screen_Capture::CreateImage(Rect(img), 4, 0, images[Index(monitor)].get());
 		}
-		else {
-			for (auto i = 0; i < Height(img); i++) {
-				memcpy(startdst, startsrc, RowStride(img));
-				startdst += RowStride(img);//advance to the next row
-				startsrc += RowStride(img) + RowPadding(img);//advance to the next row
-			}
-		}
+		//copy the data in 
+		Copy(*imagewrapper[Index(monitor)], img);
 
-
-		if (!tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgdata.get())) {
+		/*if (!tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get())) {
 			std::cout << "Could not write JPEG\n";
-		}
+		}*/
 	};
 	auto wholefunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
-		//std::cout << "Entire ScreenId " << monitor.Id << " Width " << monitor.Width << ", Height " << monitor.Height << std::endl;
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
 
-		auto imgdata = std::make_unique<char[]>(RowStride(img)*Height(img));
-
-		auto startdst = imgdata.get();
-		auto startsrc = StartSrc(img);
-
-		if (RowPadding(img) == 0) {//if there is no row padding, just do a single memcpy call instead of multple
-			memcpy(startdst, startsrc, RowStride(img)*Height(img));
+		if (!images[Index(monitor)]) {
+			//make sure to create a buffer first time through
+			images[Index(monitor)] = std::make_unique<char[]>(RowStride(img)*Height(img));
+			imagewrapper[Index(monitor)] = SL::Screen_Capture::CreateImage(Rect(img), 4, 0, images[Index(monitor)].get());
 		}
-		else {
-			for (auto i = 0; i < Height(img); i++) {
-				memcpy(startdst, startsrc, RowStride(img));
-				startdst += RowStride(img);//advance to the next row
-				startsrc += RowStride(img) + RowPadding(img);//advance to the next row
-			}
-		}
+		Copy(*imagewrapper[Index(monitor)], img);
 
-		/*	if (!tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgdata.get())) {
-				std::cout << "Could not write JPEG\n";
-			}*/
+		//if (!tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get())) {
+		//	std::cout << "Could not write JPEG\n";
+		//}
 
 	};
 
-	auto monitors = SL::Screen_Capture::GetMonitors();
-
-	//you could set the program to only capture on a single monitor as well
-	decltype(monitors) firstmonitor;
-	firstmonitor.push_back(monitors[0]);
-
-	framgrabber.Set_CaptureMonitors(firstmonitor);
 
 	framgrabber.Set_CaptureDifCallback(diffunc);
 	//framgrabber.Set_CaptureEntireCallback(wholefunc);

@@ -20,7 +20,7 @@ namespace SL {
 					devMode.dmSize = sizeof(devMode);
 					EnumDisplaySettingsA(dd.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);
 					std::string name = dd.DeviceName;
-					ret.push_back(CreateMonitor(i, devMode.dmPelsHeight, devMode.dmPelsWidth, devMode.dmPosition.x, devMode.dmPosition.y, name));
+					ret.push_back(CreateMonitor(i, i, devMode.dmPelsHeight, devMode.dmPelsWidth, devMode.dmPosition.x, devMode.dmPosition.y, name));
 				}
 			}
 			return ret;

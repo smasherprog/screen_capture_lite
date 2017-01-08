@@ -53,7 +53,6 @@ namespace SL {
 				*data->ExpectedErrorEvent = true;
 				return ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
 			}
-			//TryCapture<GDIFrameProcessor>(data);
 			std::cout << "Starting to Capture on Monitor " << Name(*data->SelectedMonitor) << std::endl;
 			std::cout << "Trying DirectX Desktop Duplication " << std::endl;
 			//TryCapture<GDIFrameProcessor>(data);

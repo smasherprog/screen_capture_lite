@@ -28,8 +28,8 @@ namespace SL {
 			DUPL_RETURN_ERROR_UNEXPECTED = 2
 		};
 		const int PixelStride = 4;
-		std::shared_ptr<Monitor> CreateMonitor(int id, int h, int w, int ox, int oy, const std::string& n);
-		std::shared_ptr<Image> CreateImage(const ImageRect& b, int ps, int rp, char* d);
+		std::shared_ptr<Monitor> CreateMonitor(int index,int id, int h, int w, int ox, int oy, const std::string& n);
+	
 		std::vector<ImageRect> GetDifs(const Image & oldimg, const Image & newimg);
 
 	}

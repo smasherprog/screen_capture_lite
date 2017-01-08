@@ -7,8 +7,9 @@ namespace SL {
         struct CGFrameProcessorImpl {
 
 			std::shared_ptr<THREAD_DATA> Data;
-					std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
+			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
 			size_t ImageBufferSize;
+			bool FirstRun;
 		};
 
 
@@ -16,6 +17,7 @@ namespace SL {
 		{
 			_CGFrameProcessorImpl = std::make_unique<CGFrameProcessorImpl>();
 			_CGFrameProcessorImpl->ImageBufferSize = 0;
+			_CGFrameProcessorImpl->FirstRun = true;
 		}
 
 		CGFrameProcessor::~CGFrameProcessor()
@@ -68,6 +70,14 @@ namespace SL {
                 _CGFrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_CGFrameProcessorImpl->Data->SelectedMonitor);
             }
 			if (_CGFrameProcessorImpl->Data->CaptureDifMonitor) {
+				if (_CGFrameProcessorImpl->FirstRun) {
+						//first time through, just send the whole image
+						auto wholeimgfirst = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
+						_CGFrameProcessorImpl->Data->CaptureEntireMonitor(*wholeimgfirst, *_GDIFrameProcessorImpl->Data->SelectedMonitor);
+						_CGFrameProcessorImpl->FirstRun = false;
+				} else {		
+				
+				
 					//user wants difs, lets do it!
 					auto newimg = CreateImage(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.get());
 					auto oldimg = CreateImage(imgrect, PixelStride, 0, _CGFrameProcessorImpl->OldImageBuffer.get());
@@ -82,6 +92,7 @@ namespace SL {
 						_CGFrameProcessorImpl->Data->CaptureDifMonitor(*difimg, *_CGFrameProcessorImpl->Data->SelectedMonitor);
 
 					}
+				}
 					std::swap(_CGFrameProcessorImpl->NewImageBuffer, _CGFrameProcessorImpl->OldImageBuffer);
 				}
 			return Ret;

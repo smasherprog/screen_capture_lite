@@ -41,9 +41,9 @@ int main()
 		//copy the data in 
 		Copy(*imagewrapper[Index(monitor)], img);
 
-		if (!tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get())) {
-			std::cout << "Could not write JPEG\n";
-		}
+		//if (!tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get())) {
+		//	std::cout << "Could not write JPEG\n";
+		//}
 	};
 	auto wholefunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 

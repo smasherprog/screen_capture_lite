@@ -8,6 +8,7 @@
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/Xfixes.h>
 #include <X11/extensions/XShm.h>
+#include <assert.h>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -18,19 +19,36 @@ namespace SL {
 			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
 			size_t ImageBufferSize;
 			bool FirstRun;
+            Display* SelectedDisplay;
+            Window RootWindow;
+            XImage* Image;
+            std::unique_ptr<XShmSegmentInfo> ShmInfo;
+         
 		};
-
-
+        
 		X11FrameProcessor::X11FrameProcessor()
 		{
 			_X11FrameProcessorImpl = std::make_unique<X11FrameProcessorImpl>();
 			_X11FrameProcessorImpl->ImageBufferSize = 0;
 			_X11FrameProcessorImpl->FirstRun = true;
+            _X11FrameProcessorImpl->SelectedDisplay = nullptr;
+            _X11FrameProcessorImpl->Image = nullptr;
 		}
 
 		X11FrameProcessor::~X11FrameProcessor()
 		{
-
+            
+            if(_X11FrameProcessorImpl->ShmInfo){
+                shmdt(_X11FrameProcessorImpl->ShmInfo->shmaddr);
+                shmctl(_X11FrameProcessorImpl->ShmInfo->shmid, IPC_RMID, 0);
+                XShmDetach(_X11FrameProcessorImpl->SelectedDisplay, _X11FrameProcessorImpl->ShmInfo.get());
+            }
+             if(_X11FrameProcessorImpl->Image){
+                XDestroyImage(_X11FrameProcessorImpl->Image);
+            }
+            if(_X11FrameProcessorImpl->SelectedDisplay){
+                XCloseDisplay(_X11FrameProcessorImpl->SelectedDisplay);
+            }
 		}
 		DUPL_RETURN X11FrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
@@ -40,8 +58,29 @@ namespace SL {
 				_X11FrameProcessorImpl->OldImageBuffer = std::make_unique<char[]>(_X11FrameProcessorImpl->ImageBufferSize);
 			}
 			_X11FrameProcessorImpl->NewImageBuffer = std::make_unique<char[]>(_X11FrameProcessorImpl->ImageBufferSize);
-		
+			_X11FrameProcessorImpl->SelectedDisplay = XOpenDisplay(NULL);
+            if(!_X11FrameProcessorImpl->SelectedDisplay){
+                return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
+            }
             
+            
+            _X11FrameProcessorImpl->RootWindow = XRootWindow(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
+             if(!_X11FrameProcessorImpl->RootWindow){
+                        return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
+                    }
+            auto visual = DefaultVisual(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
+            auto depth = DefaultDepth(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
+
+            _X11FrameProcessorImpl->ShmInfo = std::make_unique<XShmSegmentInfo>();
+            
+            _X11FrameProcessorImpl->Image = XShmCreateImage(_X11FrameProcessorImpl->SelectedDisplay, visual, depth, ZPixmap, NULL, _X11FrameProcessorImpl->ShmInfo.get(), Width(*_X11FrameProcessorImpl->Data->SelectedMonitor), Height(*_X11FrameProcessorImpl->Data->SelectedMonitor));
+            _X11FrameProcessorImpl->ShmInfo->shmid = shmget(IPC_PRIVATE, _X11FrameProcessorImpl->Image->bytes_per_line * _X11FrameProcessorImpl->Image->height, IPC_CREAT | 0777);
+
+            _X11FrameProcessorImpl->ShmInfo->readOnly = False;
+            _X11FrameProcessorImpl->ShmInfo->shmaddr = _X11FrameProcessorImpl->Image->data = (char*)shmat(_X11FrameProcessorImpl->ShmInfo->shmid, 0, 0);
+
+            XShmAttach(_X11FrameProcessorImpl->SelectedDisplay, _X11FrameProcessorImpl->ShmInfo.get());
+
             
 			return ret;
 		}
@@ -51,44 +90,16 @@ namespace SL {
 		DUPL_RETURN X11FrameProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
-            
-            
-	auto display = XOpenDisplay(NULL);
-	auto root = DefaultRootWindow(display);
-	auto screen = XDefaultScreen(display);
-	auto visual = DefaultVisual(display, screen);
-	auto depth = DefaultDepth(display, screen);
-
-	XWindowAttributes gwa;
-	XGetWindowAttributes(display, root, &gwa);
-	auto width = gwa.width;
-	auto height = gwa.height;
-
-	XShmSegmentInfo shminfo;
-	auto image = XShmCreateImage(display, visual, depth, ZPixmap, NULL, &shminfo, width, height);
-	shminfo.shmid = shmget(IPC_PRIVATE, image->bytes_per_line * image->height, IPC_CREAT | 0777);
-
-	shminfo.readOnly = False;
-	shminfo.shmaddr = image->data = (char*)shmat(shminfo.shmid, 0, 0);
-
-	XShmAttach(display, &shminfo);
-
-	XShmGetImage(display, root, image, 0, 0, AllPlanes);
-
-	XShmDetach(display, &shminfo);
-
-	//auto px = Image::CreateImage(height, width, (char*)shminfo.shmaddr, image->bits_per_pixel / 8);
-	//assert(image->bits_per_pixel == 32); //this should always be true... Ill write a case where it isnt, but for now it should be
-
-	XDestroyImage(image);
-	shmdt(shminfo.shmaddr);
-	shmctl(shminfo.shmid, IPC_RMID, 0);
-	XCloseDisplay(display);
-
             ImageRect imgrect;
             imgrect.left =  imgrect.top=0;
-            imgrect.right =width;
-            imgrect.bottom = height;
+            imgrect.right =Width(*_X11FrameProcessorImpl->Data->SelectedMonitor);
+            imgrect.bottom = Height(*_X11FrameProcessorImpl->Data->SelectedMonitor);
+            
+
+            XShmGetImage(_X11FrameProcessorImpl->SelectedDisplay, _X11FrameProcessorImpl->RootWindow, _X11FrameProcessorImpl->Image, 0, 0, AllPlanes);
+            memcpy(_X11FrameProcessorImpl->NewImageBuffer.get(), _X11FrameProcessorImpl->Image->data, PixelStride*imgrect.right*imgrect.bottom);
+            
+       
             if(_X11FrameProcessorImpl->Data->CaptureEntireMonitor){
            
                 auto img = CreateImage(imgrect, PixelStride, 0,_X11FrameProcessorImpl->NewImageBuffer.get());

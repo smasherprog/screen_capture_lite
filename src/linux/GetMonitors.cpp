@@ -8,6 +8,7 @@ namespace SL{
         std::vector<std::shared_ptr<Monitor>> GetMonitors() {
             std::vector<std::shared_ptr<Monitor>> ret;
             auto d = XOpenDisplay(0);
+            XSync(d, False);
             auto num_screens = ScreenCount(d);
             for (auto i = 0; i < num_screens; i++) {
                 auto name = std::string("Display ") + std::to_string(i);

@@ -31,7 +31,7 @@ void SL::Screen_Capture::ThreadManager::Init(const Base_Thread_Data& data,  cons
 	}
 	if (settings.CaptureMouse) {
 		auto mousedata = std::make_shared<Mouse_Thread_Data>();
-		//m_ThreadHandles.back() = std::thread(&SL::Screen_Capture::RunCapture, mousedata);
+		m_ThreadHandles.back() = std::thread(&SL::Screen_Capture::RunCaptureMouse, mousedata);
 	}
 }
 

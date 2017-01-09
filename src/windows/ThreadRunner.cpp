@@ -1,6 +1,7 @@
 #include "ScreenCapture.h"
 #include "DXFrameProcessor.h"
 #include "GDIFrameProcessor.h"
+#include "GDIMouseProcessor.h"
 #include "ThreadManager.h"
 
 #define NOMINMAX
@@ -15,7 +16,7 @@ namespace SL {
 	namespace Screen_Capture {
 
 
-		void ProcessExit(DUPL_RETURN Ret, Monitor_Thread_Data* TData) {
+		template<class T>void ProcessExit(DUPL_RETURN Ret, T* TData) {
 			if (Ret != DUPL_RETURN_SUCCESS)
 			{
 				if (Ret == DUPL_RETURN_ERROR_EXPECTED)
@@ -30,17 +31,15 @@ namespace SL {
 				}
 			}
 		}
-
-
-		void RunCapture(std::shared_ptr<Monitor_Thread_Data> data) {
-			//need to switch to the input desktop for capturing...
+		template<class T>bool SwitchToInputDesktop(const std::shared_ptr<T> data) {
 			HDESK CurrentDesktop = nullptr;
 			CurrentDesktop = OpenInputDesktop(0, FALSE, GENERIC_ALL);
 			if (!CurrentDesktop)
 			{
 				// We do not have access to the desktop so request a retry
 				*data->ExpectedErrorEvent = true;
-				return ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
+				ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
+				return false;
 			}
 
 			// Attach desktop to this thread
@@ -51,8 +50,18 @@ namespace SL {
 			{
 				// We do not have access to the desktop so request a retry
 				*data->ExpectedErrorEvent = true;
-				return ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
+				ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
+				return false;
 			}
+			return true;
+		}
+		void RunCaptureMouse(std::shared_ptr<Mouse_Thread_Data> data) {
+			if (!SwitchToInputDesktop(data)) return;
+			TryCapture<GDIMouseProcessor>(data);
+		}
+		void RunCapture(std::shared_ptr<Monitor_Thread_Data> data) {
+			//need to switch to the input desktop for capturing...
+			if (!SwitchToInputDesktop(data)) return;
 			std::cout << "Starting to Capture on Monitor " << Name(*data->SelectedMonitor) << std::endl;
 			std::cout << "Trying DirectX Desktop Duplication " << std::endl;
 			//TryCapture<GDIFrameProcessor>(data);

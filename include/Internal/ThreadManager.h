@@ -36,10 +36,8 @@ namespace SL {
 				}
                 auto mspassed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count();
                 
-
 				std::string msg = "took ";
 				msg += std::to_string(mspassed) + "ms for output ";
-				msg += std::to_string(Id(*data->SelectedMonitor)) + "\n";
 				std::cout << msg << std::endl;
 
 				auto timetowait = data->CaptureInterval - mspassed;
@@ -82,5 +80,6 @@ namespace SL {
 	
 
 		void RunCapture(std::shared_ptr<Monitor_Thread_Data> data);
+		void RunCaptureMouse(std::shared_ptr<Mouse_Thread_Data> data);
 	}
 }

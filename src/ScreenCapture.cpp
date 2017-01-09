@@ -47,7 +47,7 @@ namespace SL {
 				//users must set the monitors to capture before calling start
 				assert(!Settings.Monitors.empty());
 				//users must set at least one callback before starting
-				assert(Settings.CaptureEntireMonitor || Settings.CaptureDifMonitor);
+				assert(Settings.CaptureEntireMonitor || Settings.CaptureDifMonitor || Settings.CaptureMouse);
 
 				stop();
 				_Thread = std::thread([&]() {

@@ -6,7 +6,7 @@ Platforms supported:
 <ul>
 <li>Windows XP and Up</li>
 <li>MacOS: Done</li>
-<li>Linux: In Progress</li>
+<li>Linux: Done</li>
 </ul>
 
 

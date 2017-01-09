@@ -1,173 +1,82 @@
-#include "X11FrameProcessor.h"
+#include "X11MouseProcessor.h"
+
 #include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xlibint.h>
-#include <X11/keysym.h>
-#include <X11/Xutil.h>
-#include <sys/shm.h>
-#include <X11/extensions/XTest.h>
 #include <X11/extensions/Xfixes.h>
-#include <X11/extensions/XShm.h>
 #include <assert.h>
+#include <cstring>
 
 namespace SL {
 	namespace Screen_Capture {
 		
-std::shared_ptr<Utilities::Image> CaptureMouseImage()
-			{
-				auto display = XOpenDisplay(NULL);
-				auto img = XFixesGetCursorImage(display);
+		struct X11MouseProcessorImpl {
 
-				if (sizeof(img->pixels[0]) == 8) {
-					auto pixels = (int *)img->pixels;
-					for (auto i = 0; i < img->width * img->height; ++i) {
-						pixels[i] = pixels[i * 2];
-					}
-				}
-
-				auto i = Utilities::Image::CreateImage(img->height, img->width, (char*)img->pixels, 4);
-
-				XFree(img);
-				XCloseDisplay(display);
-				return i;
-			}
-
-			Utilities::Point GetCursorPos()
-			{
-				auto display = XOpenDisplay(NULL);
-				auto root = DefaultRootWindow(display);
-				auto img = XFixesGetCursorImage(display);
-
-				// Get the mouse cursor position
-				int x, y, root_x, root_y = 0;
-				unsigned int mask = 0;
-				Window child_win, root_win;
-				XQueryPointer(display, root, &child_win, &root_win, &root_x, &root_y, &x, &y, &mask);
-				x -= img->xhot;
-				y -= img->yhot;
-				XFree(img);
-				XCloseDisplay(display);
-
-				return Utilities::Point(x, y);
-			}
-		struct X11FrameProcessorImpl {
-
-			std::shared_ptr<THREAD_DATA> Data;
-			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
-			size_t ImageBufferSize;
-			bool FirstRun;
+			std::shared_ptr<Mouse_Thread_Data> Data;
 			Display* SelectedDisplay;
 			Window RootWindow;
-			XImage* Image;
-			std::unique_ptr<XShmSegmentInfo> ShmInfo;
-
 		};
 
-		X11FrameProcessor::X11FrameProcessor()
+		X11MouseProcessor::X11MouseProcessor()
 		{
-			_X11FrameProcessorImpl = std::make_unique<X11FrameProcessorImpl>();
-			_X11FrameProcessorImpl->ImageBufferSize = 0;
-			_X11FrameProcessorImpl->FirstRun = true;
-			_X11FrameProcessorImpl->SelectedDisplay = nullptr;
-			_X11FrameProcessorImpl->Image = nullptr;
+			_X11MouseProcessorImpl = std::make_unique<X11MouseProcessorImpl>();
+			_X11MouseProcessorImpl->SelectedDisplay = nullptr;
 		}
 
-		X11FrameProcessor::~X11FrameProcessor()
+		X11MouseProcessor::~X11MouseProcessor()
 		{
-
-			if (_X11FrameProcessorImpl->ShmInfo) {
-				shmdt(_X11FrameProcessorImpl->ShmInfo->shmaddr);
-				shmctl(_X11FrameProcessorImpl->ShmInfo->shmid, IPC_RMID, 0);
-				XShmDetach(_X11FrameProcessorImpl->SelectedDisplay, _X11FrameProcessorImpl->ShmInfo.get());
-			}
-			if (_X11FrameProcessorImpl->Image) {
-				XDestroyImage(_X11FrameProcessorImpl->Image);
-			}
-			if (_X11FrameProcessorImpl->SelectedDisplay) {
-				XCloseDisplay(_X11FrameProcessorImpl->SelectedDisplay);
+			if (_X11MouseProcessorImpl->SelectedDisplay) {
+				XCloseDisplay(_X11MouseProcessorImpl->SelectedDisplay);
 			}
 		}
-		DUPL_RETURN X11FrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
+		DUPL_RETURN X11MouseProcessor::Init(std::shared_ptr<Mouse_Thread_Data> data) {
 			auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
-			_X11FrameProcessorImpl->Data = data;
-			_X11FrameProcessorImpl->ImageBufferSize = Height(*data->SelectedMonitor)*Width(*data->SelectedMonitor)*PixelStride;
-			if (_X11FrameProcessorImpl->Data->CaptureDifMonitor) {//only need the old buffer if difs are needed. If no dif is needed, then the image is always new
-				_X11FrameProcessorImpl->OldImageBuffer = std::make_unique<char[]>(_X11FrameProcessorImpl->ImageBufferSize);
-			}
-			_X11FrameProcessorImpl->NewImageBuffer = std::make_unique<char[]>(_X11FrameProcessorImpl->ImageBufferSize);
-			_X11FrameProcessorImpl->SelectedDisplay = XOpenDisplay(NULL);
-			if (!_X11FrameProcessorImpl->SelectedDisplay) {
+			_X11MouseProcessorImpl->Data = data;
+			_X11MouseProcessorImpl->SelectedDisplay = XOpenDisplay(NULL);
+			if (!_X11MouseProcessorImpl->SelectedDisplay) {
 				return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
 			}
-
-
-			_X11FrameProcessorImpl->RootWindow = XRootWindow(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
-			if (!_X11FrameProcessorImpl->RootWindow) {
+			_X11MouseProcessorImpl->RootWindow = DefaultRootWindow(_X11MouseProcessorImpl->SelectedDisplay);
+			if (!_X11MouseProcessorImpl->RootWindow) {
 				return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
 			}
-			auto visual = DefaultVisual(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
-			auto depth = DefaultDepth(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
-
-			_X11FrameProcessorImpl->ShmInfo = std::make_unique<XShmSegmentInfo>();
-
-			_X11FrameProcessorImpl->Image = XShmCreateImage(_X11FrameProcessorImpl->SelectedDisplay, visual, depth, ZPixmap, NULL, _X11FrameProcessorImpl->ShmInfo.get(), Width(*_X11FrameProcessorImpl->Data->SelectedMonitor), Height(*_X11FrameProcessorImpl->Data->SelectedMonitor));
-			_X11FrameProcessorImpl->ShmInfo->shmid = shmget(IPC_PRIVATE, _X11FrameProcessorImpl->Image->bytes_per_line * _X11FrameProcessorImpl->Image->height, IPC_CREAT | 0777);
-
-			_X11FrameProcessorImpl->ShmInfo->readOnly = False;
-			_X11FrameProcessorImpl->ShmInfo->shmaddr = _X11FrameProcessorImpl->Image->data = (char*)shmat(_X11FrameProcessorImpl->ShmInfo->shmid, 0, 0);
-
-			XShmAttach(_X11FrameProcessorImpl->SelectedDisplay, _X11FrameProcessorImpl->ShmInfo.get());
-
-
 			return ret;
 		}
 		//
 		// Process a given frame and its metadata
 		//
-		DUPL_RETURN X11FrameProcessor::ProcessFrame()
+		DUPL_RETURN X11MouseProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
-			ImageRect imgrect;
+	
+            auto img = XFixesGetCursorImage(_X11MouseProcessorImpl->SelectedDisplay);
+            auto pixels = (int *)img->pixels;
+            if (sizeof(img->pixels[0]) == 8) {//if the pixelstride is 64 bits.. scale down to 32bits
+                auto pixels = (int *)img->pixels;
+                for (auto i = 0; i < img->width * img->height; ++i) {
+                    pixels[i] = pixels[i * 2];
+                }
+            }
+            ImageRect imgrect;
 			imgrect.left = imgrect.top = 0;
-			imgrect.right = Width(*_X11FrameProcessorImpl->Data->SelectedMonitor);
-			imgrect.bottom = Height(*_X11FrameProcessorImpl->Data->SelectedMonitor);
+			imgrect.right = img->width;
+			imgrect.bottom = img->height;
+            auto imgdata = std::make_unique<char[]>(PixelStride*imgrect.right*imgrect.bottom);
+        	memcpy(imgdata.get(), img->pixels, PixelStride*imgrect.right*imgrect.bottom);
+
+				// Get the mouse cursor position
+            int x, y, root_x, root_y = 0;
+            unsigned int mask = 0;
+            Window child_win, root_win;
+            XQueryPointer(_X11MouseProcessorImpl->SelectedDisplay, _X11MouseProcessorImpl->RootWindow, &child_win, &root_win, &root_x, &root_y, &x, &y, &mask);
+            x -= img->xhot;
+            y -= img->yhot;
+                
+            XFree(img);
 
 
-			XShmGetImage(_X11FrameProcessorImpl->SelectedDisplay, _X11FrameProcessorImpl->RootWindow, _X11FrameProcessorImpl->Image, 0, 0, AllPlanes);
-			memcpy(_X11FrameProcessorImpl->NewImageBuffer.get(), _X11FrameProcessorImpl->Image->data, PixelStride*imgrect.right*imgrect.bottom);
+			if (_X11MouseProcessorImpl->Data->CaptureCallback) {
 
-
-			if (_X11FrameProcessorImpl->Data->CaptureEntireMonitor) {
-
-				auto img = CreateImage(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.get());
-				_X11FrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_X11FrameProcessorImpl->Data->SelectedMonitor);
-			}
-			if (_X11FrameProcessorImpl->Data->CaptureDifMonitor) {
-				if (_X11FrameProcessorImpl->FirstRun) {
-					//first time through, just send the whole image
-					auto wholeimgfirst = CreateImage(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.get());
-					_X11FrameProcessorImpl->Data->CaptureDifMonitor(*wholeimgfirst, *_X11FrameProcessorImpl->Data->SelectedMonitor);
-					_X11FrameProcessorImpl->FirstRun = false;
-				}
-				else {
-
-
-					//user wants difs, lets do it!
-					auto newimg = CreateImage(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.get());
-					auto oldimg = CreateImage(imgrect, PixelStride, 0, _X11FrameProcessorImpl->OldImageBuffer.get());
-					auto imgdifs = GetDifs(*oldimg, *newimg);
-
-					for (auto& r : imgdifs) {
-						auto padding = (r.left *PixelStride) + ((Width(*newimg) - r.right)*PixelStride);
-						auto startsrc = _X11FrameProcessorImpl->NewImageBuffer.get();
-						startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(*newimg));
-
-						auto difimg = CreateImage(r, PixelStride, padding, startsrc);
-						_X11FrameProcessorImpl->Data->CaptureDifMonitor(*difimg, *_X11FrameProcessorImpl->Data->SelectedMonitor);
-
-					}
-				}
-				std::swap(_X11FrameProcessorImpl->NewImageBuffer, _X11FrameProcessorImpl->OldImageBuffer);
+				auto img = CreateImage(imgrect, PixelStride, 0, imgdata.get());
+				_X11MouseProcessorImpl->Data->CaptureCallback(*img, x, y);
 			}
 			return Ret;
 		}

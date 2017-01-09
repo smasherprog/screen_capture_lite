@@ -65,7 +65,7 @@ int main()
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" M") + std::string(".png");
 		//std::cout << "x= " << x << " y= " << y << std::endl;
-		lodepng::encode(s,(const unsigned char*) StartSrc(img), Width(img), Height(img));
+		//lodepng::encode(s,(const unsigned char*) StartSrc(img), Width(img), Height(img));
 	
 	};
 

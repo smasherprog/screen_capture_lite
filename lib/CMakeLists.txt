@@ -31,6 +31,8 @@ elseif(APPLE)
     )
 else()
   set(SCREEN_CAPTURE_PLATFORM_SRC
+		${Screen_Capture_SOURCE_DIR}/include/linux/X11MouseProcessor.h
+        ${Screen_Capture_SOURCE_DIR}/src/linux/X11MouseProcessor.cpp
         ${Screen_Capture_SOURCE_DIR}/include/linux/X11FrameProcessor.h
         ${Screen_Capture_SOURCE_DIR}/src/linux/X11FrameProcessor.cpp
         ${Screen_Capture_SOURCE_DIR}/src/linux/GetMonitors.cpp
@@ -41,15 +43,15 @@ else()
 	if(!X11_XTest_FOUND)
  		message(FATAL_ERROR "X11 extensions are required, but not found!")
 	endif()
-  set(SCREEN_CAPTURE_PLATFORM_INC
+	set(SCREEN_CAPTURE_PLATFORM_INC
         ${Screen_Capture_SOURCE_DIR}/include/linux
         ${Screen_Capture_SOURCE_DIR}/src/linux
-	${X11_INCLUDE_DIR}
+		${X11_INCLUDE_DIR}
     )
-find_package(Threads REQUIRED)
+	find_package(Threads REQUIRED)
 	set(SCREEN_CAPTURE_PLATFORM_LIBS
 		${X11_LIBRARIES}
-	${CMAKE_THREAD_LIBS_INIT}
+		${CMAKE_THREAD_LIBS_INIT}
 	)
 	
 endif()

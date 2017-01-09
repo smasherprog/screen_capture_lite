@@ -23,7 +23,7 @@ namespace SL {
 		{
 
 		}
-		DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
+		DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
 			return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
 		}
 		DUPL_RETURN DXFrameProcessor::ProcessFrame() {
@@ -351,7 +351,7 @@ namespace SL {
 			UINT Output;
 			std::vector<BYTE> MetaDataBuffer;
 
-			std::shared_ptr<THREAD_DATA> Data;
+			std::shared_ptr<Monitor_Thread_Data> Data;
 			std::unique_ptr<char[]> ImageBuffer;
 			size_t ImageBufferSize;
 		};
@@ -367,7 +367,7 @@ namespace SL {
 		{
 
 		}
-		DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
+		DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
 			DX_RESOURCES res;
 			auto ret = Initialize(res);
 			if (ret != DUPL_RETURN_SUCCESS) {

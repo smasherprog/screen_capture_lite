@@ -14,23 +14,17 @@ namespace SL {
 		class ThreadManager {
 
 			std::vector<std::thread> m_ThreadHandles;
-			std::vector<std::shared_ptr<THREAD_DATA>> m_ThreadData;
+			std::vector<std::shared_ptr<Monitor_Thread_Data>> m_ThreadData;
 
 		public:
 			ThreadManager();
 			~ThreadManager();
-			void Init(std::shared_ptr<std::atomic_bool>& unexpected, 
-				std::shared_ptr<std::atomic_bool>& expected, 
-				std::shared_ptr<std::atomic_bool>& terminate, 
-				CaptureCallback& captureentiremonitor,
-				CaptureCallback& capturedifmonitor,
-				int mininterval,
-				const std::vector<std::shared_ptr<Monitor>>& monitorstocapture);
+			void Init(const Base_Thread_Data& data, const ScreenCapture_Settings& settings);
 			void Join();
 			void Reset();
 		};
 			
-		template<class T>DUPL_RETURN RunThread(std::shared_ptr<THREAD_DATA> data, T& frameprocessor) {
+		template<class T, class F>DUPL_RETURN RunThread(std::shared_ptr<F> data, T& frameprocessor) {
 			while (!*data->TerminateThreadsEvent)
 			{
 				auto start = std::chrono::high_resolution_clock::now();
@@ -56,7 +50,7 @@ namespace SL {
 			return DUPL_RETURN_SUCCESS;
 		}
 
-		template<class T>bool TryCapture(std::shared_ptr<THREAD_DATA> data) {
+		template<class T, class F >bool TryCapture(std::shared_ptr<F> data) {
 			T frameprocessor;
 
 			// Make duplication manager
@@ -87,6 +81,6 @@ namespace SL {
 		}
 	
 
-		void RunCapture(std::shared_ptr<THREAD_DATA> data);
+		void RunCapture(std::shared_ptr<Monitor_Thread_Data> data);
 	}
 }

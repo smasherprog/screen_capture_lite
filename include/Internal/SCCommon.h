@@ -6,8 +6,7 @@
 // this is internal stuff.. 
 namespace SL {
 	namespace Screen_Capture {
-	
-		struct THREAD_DATA
+		struct Base_Thread_Data
 		{
 			// Used to indicate abnormal error condition
 			std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent;
@@ -15,12 +14,24 @@ namespace SL {
 			std::shared_ptr<std::atomic_bool> ExpectedErrorEvent;
 			// Used to signal to threads to exit
 			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
+		};
+
+		struct Monitor_Thread_Data: Base_Thread_Data
+		{
+	
 			std::shared_ptr<Monitor> SelectedMonitor;
+
 			int CaptureInterval; //in milliseconds	
 			CaptureCallback CaptureEntireMonitor;
 			CaptureCallback CaptureDifMonitor;
 		};
 
+		struct Mouse_Thread_Data : Base_Thread_Data
+		{
+
+			int CaptureInterval; //in milliseconds	
+			MouseCallback CaptureCallback;
+		};
 		enum DUPL_RETURN
 		{
 			DUPL_RETURN_SUCCESS = 0,

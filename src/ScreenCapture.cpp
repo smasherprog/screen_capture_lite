@@ -31,13 +31,11 @@ namespace SL {
 		class ScreenCaptureManagerImpl {
 		public:
 
-			int SleepTime = 100;//in ms
-			CaptureCallback CaptureEntireMonitor;
-			CaptureCallback CaptureDifMonitor;
+			ScreenCapture_Settings Settings;
 
 			std::thread _Thread;
 			std::shared_ptr<std::atomic_bool> _TerminateThread;
-			std::vector<std::shared_ptr<Monitor>> Monitors;
+			
 
 			ScreenCaptureManagerImpl() {
 
@@ -47,33 +45,34 @@ namespace SL {
 			}
 			void start() {
 				//users must set the monitors to capture before calling start
-				assert(!Monitors.empty());
+				assert(!Settings.Monitors.empty());
 				//users must set at least one callback before starting
-				assert(CaptureEntireMonitor || CaptureDifMonitor);
+				assert(Settings.CaptureEntireMonitor || Settings.CaptureDifMonitor);
 
 				stop();
 				_Thread = std::thread([&]() {
 					ThreadManager ThreadMgr;
-					auto expected = std::make_shared<std::atomic_bool>(false);
-					auto unexpected = std::make_shared<std::atomic_bool>(false);
-					_TerminateThread = std::make_shared<std::atomic_bool>(false);
+					Base_Thread_Data data;
+					data.ExpectedErrorEvent = std::make_shared<std::atomic_bool>(false);
+					data.UnexpectedErrorEvent = std::make_shared<std::atomic_bool>(false);
+					data.TerminateThreadsEvent = _TerminateThread = std::make_shared<std::atomic_bool>(false);
 
-					ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime, Monitors);
+					ThreadMgr.Init(data, Settings);
 
 					while (!*_TerminateThread) {
 
-						if (*expected)
+						if (*data.ExpectedErrorEvent)
 						{
 
 							// Terminate other threads
 							*_TerminateThread = true;
 							ThreadMgr.Join();
-							*expected = *unexpected = *_TerminateThread = false;
+							*data.ExpectedErrorEvent = *data.UnexpectedErrorEvent = *_TerminateThread = false;
 							// Clean up
 							ThreadMgr.Reset();
 							std::this_thread::sleep_for(std::chrono::milliseconds(1000));//sleep for 1 second since an error occcured
 
-							ThreadMgr.Init(unexpected, expected, _TerminateThread, CaptureEntireMonitor, CaptureDifMonitor, SleepTime, Monitors);
+							ThreadMgr.Init(data, Settings);
 						}
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
 					}
@@ -100,21 +99,10 @@ namespace SL {
 		{
 			_ScreenCaptureManagerImpl->stop();
 		}
-		void ScreenCaptureManager::Set_CaptureMonitors(const std::vector<std::shared_ptr<Monitor>>& monitorstocapture)
-		{
-			_ScreenCaptureManagerImpl->Monitors = monitorstocapture;
-		}
 
-		void ScreenCaptureManager::Set_CaptureEntireCallback(CaptureCallback img_cb) {
-			_ScreenCaptureManagerImpl->CaptureEntireMonitor = img_cb;
-		}
-		void ScreenCaptureManager::Set_CaptureDifCallback(CaptureCallback img_cb) {
-			_ScreenCaptureManagerImpl->CaptureDifMonitor = img_cb;
-		}
-
-		void ScreenCaptureManager::StartCapturing(int min_interval)
+		void ScreenCaptureManager::StartCapturing(const ScreenCapture_Settings& s)
 		{
-			_ScreenCaptureManagerImpl->SleepTime = min_interval;
+			_ScreenCaptureManagerImpl->Settings = s;
 			_ScreenCaptureManagerImpl->start();
 		}
 		void ScreenCaptureManager::StopCapturing()

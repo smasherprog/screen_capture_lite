@@ -60,7 +60,22 @@ namespace SL {
 		std::vector<std::shared_ptr<Monitor>> GetMonitors();
 
 		typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
+		typedef std::function<void(const SL::Screen_Capture::Image& img, int x, int y)> MouseCallback;
 
+		struct ScreenCapture_Settings {
+			//min interval between frames that are captured
+			int Monitor_Capture_Interval;
+			//the monitors that are captured each interval
+			std::vector<std::shared_ptr<Monitor>> Monitors;
+			//set this if you want to capture the entire monitor each interval
+			CaptureCallback CaptureEntireMonitor;
+			//set this if you want to receive difs each interval on what has changed
+			CaptureCallback CaptureDifMonitor;
+			//min interval between mouse captures
+			int Mouse_Capture_Interval;
+			//the function to be called on each mouse interval
+			MouseCallback CaptureMouse;
+		};
 		class ScreenCaptureManagerImpl;
 		class ScreenCaptureManager {
 			std::unique_ptr<ScreenCaptureManagerImpl> _ScreenCaptureManagerImpl;
@@ -68,16 +83,8 @@ namespace SL {
 		public:
 			ScreenCaptureManager();
 			~ScreenCaptureManager();
-			//Set which monitors should be captured. This allows users to capture only a specific monitor, or all
-			void Set_CaptureMonitors(const std::vector<std::shared_ptr<Monitor>>& monitorstocapture);
-			//set this callback if you want to capture the entire Montitor each new frame
-			//Each monitor will always have the same thread execute its callback. 
-			void Set_CaptureEntireCallback(CaptureCallback img_cb);
-			//set this callback if you want to capture just differences between the frames. 
-			//Each monitor will always have the same thread execute its callback. 
-			void Set_CaptureDifCallback(CaptureCallback img_cb);
 
-			void StartCapturing(int min_interval);
+			void StartCapturing(const ScreenCapture_Settings& s);
 			void StopCapturing();
 		};
 	

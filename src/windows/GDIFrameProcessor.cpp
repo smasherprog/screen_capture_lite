@@ -24,7 +24,7 @@ namespace SL {
 			HDCWrapper MonitorDC;
 			HDCWrapper CaptureDC;
 			HBITMAPWrapper CaptureBMP;
-			std::shared_ptr<THREAD_DATA> Data;
+			std::shared_ptr<Monitor_Thread_Data> Data;
 			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
 			size_t ImageBufferSize;
 			bool FirstRun;
@@ -42,7 +42,7 @@ namespace SL {
 		{
 
 		}
-		DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
+		DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
 			auto Ret = DUPL_RETURN_SUCCESS;
 			auto name = Name(*data->SelectedMonitor);
 			_GDIFrameProcessorImpl->MonitorDC.DC = CreateDCA(name.c_str(), NULL, NULL, NULL);

@@ -14,18 +14,16 @@ int main()
     std::atomic<int> realcounter;
     realcounter= 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;
-	auto monitors = SL::Screen_Capture::GetMonitors();
+	SL::Screen_Capture::ScreenCapture_Settings settings;
+	settings.Monitors = SL::Screen_Capture::GetMonitors();
+
 	std::vector<std::unique_ptr<char[]>> images;//this is the actual backing of the image
 	std::vector<std::shared_ptr<SL::Screen_Capture::Image>> imagewrapper;//this is a wrapper for convience. This is not required, I use it because it helps with copying data
 
 	//you could set the program to only capture on a single monitor as well
 
-	decltype(monitors) firstmonitor;
-	firstmonitor.push_back(monitors[0]);
-	framgrabber.Set_CaptureMonitors(monitors);
-
-	images.resize(monitors.size());
-	imagewrapper.resize(monitors.size());
+	images.resize(settings.Monitors.size());
+	imagewrapper.resize(settings.Monitors.size());
 
 	auto diffunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
@@ -62,12 +60,9 @@ int main()
 		//}
 
 	};
-
-
-	framgrabber.Set_CaptureDifCallback(diffunc);
-	//framgrabber.Set_CaptureEntireCallback(wholefunc);
-
-	framgrabber.StartCapturing(100);
+	settings.Monitor_Capture_Interval = 100;//100 ms 
+	settings.CaptureDifMonitor = diffunc;
+	framgrabber.StartCapturing(settings);
 
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));

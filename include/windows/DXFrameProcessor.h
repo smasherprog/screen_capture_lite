@@ -10,7 +10,7 @@ namespace SL {
 		public:
 			DXFrameProcessor();
 			~DXFrameProcessor();
-			DUPL_RETURN Init(std::shared_ptr<THREAD_DATA> data);
+			DUPL_RETURN Init(std::shared_ptr<Monitor_Thread_Data> data);
 			DUPL_RETURN ProcessFrame();
 
 		};

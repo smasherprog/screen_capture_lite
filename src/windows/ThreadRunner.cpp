@@ -15,7 +15,7 @@ namespace SL {
 	namespace Screen_Capture {
 
 
-		void ProcessExit(DUPL_RETURN Ret, THREAD_DATA* TData) {
+		void ProcessExit(DUPL_RETURN Ret, Monitor_Thread_Data* TData) {
 			if (Ret != DUPL_RETURN_SUCCESS)
 			{
 				if (Ret == DUPL_RETURN_ERROR_EXPECTED)
@@ -32,7 +32,7 @@ namespace SL {
 		}
 
 
-		void RunCapture(std::shared_ptr<THREAD_DATA> data) {
+		void RunCapture(std::shared_ptr<Monitor_Thread_Data> data) {
 			//need to switch to the input desktop for capturing...
 			HDESK CurrentDesktop = nullptr;
 			CurrentDesktop = OpenInputDesktop(0, FALSE, GENERIC_ALL);

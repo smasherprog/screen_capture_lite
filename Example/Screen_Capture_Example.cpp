@@ -7,6 +7,9 @@
 #include <vector>
 #define TJE_IMPLEMENTATION
 #include "tiny_jpeg.h"
+#define LODEPNG_COMPILE_PNG
+#define LODEPNG_COMPILE_DISK
+#include "lodepng.h"
 
 int main()
 {
@@ -39,9 +42,8 @@ int main()
 		//copy the data in 
 		Copy(*imagewrapper[Index(monitor)], img);
 
-		//if (!tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get())) {
-		//	std::cout << "Could not write JPEG\n";
-		//}
+		//tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get());
+
 	};
 	auto wholefunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
@@ -55,13 +57,22 @@ int main()
 		}
 		Copy(*imagewrapper[Index(monitor)], img);
 
-		//if (!tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get())) {
-		//	std::cout << "Could not write JPEG\n";
-		//}
+		//tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get());
 
 	};
-	settings.Monitor_Capture_Interval = 100;//100 ms 
-	settings.CaptureDifMonitor = diffunc;
+	auto mousefunc = [&](const SL::Screen_Capture::Image& img, int x, int y) {
+
+		auto r = realcounter.fetch_add(1);
+		auto s = std::to_string(r) + std::string(" M") + std::string(".png");
+		//std::cout << "x= " << x << " y= " << y << std::endl;
+		lodepng::encode(s,(const unsigned char*) StartSrc(img), Width(img), Height(img));
+	
+	};
+
+	//settings.Monitor_Capture_Interval = 100;//100 ms 
+	//settings.CaptureDifMonitor = diffunc;
+	settings.CaptureMouse = mousefunc;
+	settings.Mouse_Capture_Interval = 100;
 	framgrabber.StartCapturing(settings);
 
 	while (true) {

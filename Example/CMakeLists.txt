@@ -17,7 +17,7 @@ endif()
 
 include_directories(${Screen_Capture_SOURCE_DIR}/include)
 
-add_executable(${PROJECT_NAME} tiny_jpeg.h Screen_Capture_Example.cpp)
+add_executable(${PROJECT_NAME} tiny_jpeg.h lodepng.h lodepng.cpp Screen_Capture_Example.cpp)
 target_link_libraries(${PROJECT_NAME} Screen_Capturelib)
 target_link_libraries(${PROJECT_NAME} ${SYSTEM_LIBS})
 

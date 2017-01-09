@@ -9,7 +9,9 @@ namespace SL {
 		struct GDIMouseProcessorImpl;
 		class GDIMouseProcessor {
 			std::unique_ptr<GDIMouseProcessorImpl> _GDIMouseProcessorImpl;
+
 		public:
+
 			GDIMouseProcessor();
 			~GDIMouseProcessor();
 			DUPL_RETURN Init(std::shared_ptr<Mouse_Thread_Data> data);

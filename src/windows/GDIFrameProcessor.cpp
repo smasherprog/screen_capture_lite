@@ -1,23 +1,8 @@
 #include "GDIFrameProcessor.h"
-
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "GDIHelpers.h"
 
 namespace SL {
 	namespace Screen_Capture {
-		class HDCWrapper {
-		public:
-			HDCWrapper() : DC(nullptr) {}
-			~HDCWrapper() { if (DC != nullptr) { DeleteDC(DC); } }
-			HDC DC;
-		};
-		class HBITMAPWrapper {
-		public:
-			HBITMAPWrapper() : Bitmap(nullptr) {}
-			~HBITMAPWrapper() { if (Bitmap != nullptr) { DeleteObject(Bitmap); } }
-			HBITMAP Bitmap;
-		};
 
 		struct GDIFrameProcessorImpl {
 
@@ -50,7 +35,7 @@ namespace SL {
 			_GDIFrameProcessorImpl->CaptureBMP.Bitmap = CreateCompatibleBitmap(_GDIFrameProcessorImpl->MonitorDC.DC, Width(*data->SelectedMonitor), Height(*data->SelectedMonitor));
 
 			if (!_GDIFrameProcessorImpl->MonitorDC.DC || !_GDIFrameProcessorImpl->CaptureDC.DC || !_GDIFrameProcessorImpl->CaptureBMP.Bitmap) {
-				Ret = DUPL_RETURN::DUPL_RETURN_ERROR_UNEXPECTED;
+				return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
 			}
 			_GDIFrameProcessorImpl->Data = data;
 			_GDIFrameProcessorImpl->ImageBufferSize = Width(*data->SelectedMonitor)* Height(*data->SelectedMonitor)* PixelStride;
@@ -109,7 +94,8 @@ namespace SL {
 						auto wholeimgfirst = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
 						_GDIFrameProcessorImpl->Data->CaptureDifMonitor(*wholeimgfirst, *_GDIFrameProcessorImpl->Data->SelectedMonitor);
 						_GDIFrameProcessorImpl->FirstRun = false;
-					} else {
+					}
+					else {
 						//user wants difs, lets do it!
 						auto newimg = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
 						auto oldimg = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->OldImageBuffer.get());

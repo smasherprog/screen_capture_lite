@@ -12,7 +12,44 @@
 
 namespace SL {
 	namespace Screen_Capture {
+		
+std::shared_ptr<Utilities::Image> CaptureMouseImage()
+			{
+				auto display = XOpenDisplay(NULL);
+				auto img = XFixesGetCursorImage(display);
 
+				if (sizeof(img->pixels[0]) == 8) {
+					auto pixels = (int *)img->pixels;
+					for (auto i = 0; i < img->width * img->height; ++i) {
+						pixels[i] = pixels[i * 2];
+					}
+				}
+
+				auto i = Utilities::Image::CreateImage(img->height, img->width, (char*)img->pixels, 4);
+
+				XFree(img);
+				XCloseDisplay(display);
+				return i;
+			}
+
+			Utilities::Point GetCursorPos()
+			{
+				auto display = XOpenDisplay(NULL);
+				auto root = DefaultRootWindow(display);
+				auto img = XFixesGetCursorImage(display);
+
+				// Get the mouse cursor position
+				int x, y, root_x, root_y = 0;
+				unsigned int mask = 0;
+				Window child_win, root_win;
+				XQueryPointer(display, root, &child_win, &root_win, &root_x, &root_y, &x, &y, &mask);
+				x -= img->xhot;
+				y -= img->yhot;
+				XFree(img);
+				XCloseDisplay(display);
+
+				return Utilities::Point(x, y);
+			}
 		struct X11FrameProcessorImpl {
 
 			std::shared_ptr<THREAD_DATA> Data;

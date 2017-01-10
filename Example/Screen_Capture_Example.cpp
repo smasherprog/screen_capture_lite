@@ -13,7 +13,7 @@
 
 int main()
 {
-
+    std::cout<<"Starting Capture Demo"<<std::endl;
     std::atomic<int> realcounter;
     realcounter= 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;

@@ -5,16 +5,16 @@ if(WIN32)
     set(SYSTEM_LIBS)
 elseif(APPLE)
 
-find_library(corefoundation_lib CoreFoundation)
-find_library(cocoa_lib Cocoa)
+    find_library(corefoundation_lib CoreFoundation)
+    find_library(cocoa_lib Cocoa)
     set(SYSTEM_LIBS ${corefoundation_lib} ${cocoa_lib})
 
-elseif(UNIX)
+elseif()
     set(SYSTEM_LIBS)
 endif()
 
 
-set(EXAMPLE_SRC 
+set(Screen_Capture_EXAMPLE_SRC 
 	tiny_jpeg.h 
 	lodepng.h 
 	lodepng.cpp
@@ -23,7 +23,7 @@ set(EXAMPLE_SRC
 
 include_directories(${Screen_Capture_SOURCE_DIR}/include)
 
-add_executable(${PROJECT_NAME} ${EXAMPLE_SRC})
+add_executable(${PROJECT_NAME} ${Screen_Capture_EXAMPLE_SRC})
 target_link_libraries(${PROJECT_NAME} Screen_Capturelib)
 target_link_libraries(${PROJECT_NAME} ${SYSTEM_LIBS})
 

@@ -20,6 +20,9 @@ if(WIN32)
 
 elseif(APPLE)
     set(SCREEN_CAPTURE_PLATFORM_SRC
+
+        ${Screen_Capture_SOURCE_DIR}/include/ios/CGMouseProcessor.h
+        ${Screen_Capture_SOURCE_DIR}/src/ios/CGMouseProcessor.cpp
         ${Screen_Capture_SOURCE_DIR}/include/ios/CGFrameProcessor.h
         ${Screen_Capture_SOURCE_DIR}/src/ios/CGFrameProcessor.cpp
         ${Screen_Capture_SOURCE_DIR}/src/ios/GetMonitors.cpp

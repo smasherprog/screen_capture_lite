@@ -2,15 +2,16 @@ project(Screen_Capture_Example)
 
 
 if(WIN32)
-    set(SYSTEM_LIBS)
+    
 elseif(APPLE)
 
     find_library(corefoundation_lib CoreFoundation)
     find_library(cocoa_lib Cocoa)
     set(SYSTEM_LIBS ${corefoundation_lib} ${cocoa_lib})
 
-elseif()
-    set(SYSTEM_LIBS)
+else()
+    
+
 endif()
 
 

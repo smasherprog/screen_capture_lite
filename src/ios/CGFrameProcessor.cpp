@@ -6,7 +6,7 @@ namespace SL {
 	namespace Screen_Capture {
         struct CGFrameProcessorImpl {
 
-			std::shared_ptr<THREAD_DATA> Data;
+			std::shared_ptr<Monitor_Thread_Data> Data;
 			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
 			size_t ImageBufferSize;
 			bool FirstRun;
@@ -24,7 +24,7 @@ namespace SL {
 		{
 
 		}
-		DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<THREAD_DATA> data) {
+		DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
             _CGFrameProcessorImpl->Data = data;
             _CGFrameProcessorImpl->ImageBufferSize  = Height(*data->SelectedMonitor)*Width(*data->SelectedMonitor)*PixelStride;

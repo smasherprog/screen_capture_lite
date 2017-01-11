@@ -1,28 +1,28 @@
-#include "CGMouseProcessor.h"
+#include "NSMouseProcessor.h"
 #include "TargetConditionals.h"
 #include <ApplicationServices/ApplicationServices.h>
 
 namespace SL {
 	namespace Screen_Capture {
-        struct CGMouseProcessorImpl {
+        struct NSMouseProcessorImpl {
 
 			std::shared_ptr<Mouse_Thread_Data> Data;
     
 		};
 
 
-		CGMouseProcessor::CGMouseProcessor()
+		NSMouseProcessor::NSMouseProcessor()
 		{
-			_CGMouseProcessorImpl = std::make_unique<CGMouseProcessorImpl>();
+			_NSMouseProcessorImpl = std::make_unique<NSMouseProcessorImpl>();
 		}
 
-		CGMouseProcessor::~CGMouseProcessor()
+		NSMouseProcessor::~NSMouseProcessor()
 		{
 
 		}
-		DUPL_RETURN CGMouseProcessor::Init(std::shared_ptr<Mouse_Thread_Data> data) {
+		DUPL_RETURN NSMouseProcessor::Init(std::shared_ptr<Mouse_Thread_Data> data) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
-            _CGMouseProcessorImpl->Data = data;
+            _NSMouseProcessorImpl->Data = data;
         
             
 			return ret;
@@ -30,7 +30,7 @@ namespace SL {
 		//
 		// Process a given frame and its metadata
 		//
-		DUPL_RETURN CGMouseProcessor::ProcessFrame()
+		DUPL_RETURN NSMouseProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
             auto mouseev = CGEventCreate(NULL);

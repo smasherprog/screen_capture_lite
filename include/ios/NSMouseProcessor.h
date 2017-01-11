@@ -4,12 +4,12 @@
 
 namespace SL {
 	namespace Screen_Capture {
-		struct CGMouseProcessorImpl;
-		class CGMouseProcessor {
-			std::unique_ptr<CGMouseProcessorImpl> _CGMouseProcessorImpl;
+		struct NSMouseProcessorImpl;
+		class NSMouseProcessor {
+			std::unique_ptr<NSMouseProcessorImpl> _NSMouseProcessorImpl;
 		public:
-			CGMouseProcessor();
-			~CGMouseProcessor();
+			NSMouseProcessor();
+			~NSMouseProcessor();
 			DUPL_RETURN Init(std::shared_ptr<Mouse_Thread_Data> data);
 			DUPL_RETURN ProcessFrame();
 

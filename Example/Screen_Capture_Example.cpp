@@ -68,7 +68,10 @@ int main()
 		//lodepng::encode(s,(const unsigned char*) StartSrc(img), Width(img), Height(img));
 	
 	};
-
+    
+    settings.Monitor_Capture_Interval = 100;//100 ms
+    settings.CaptureEntireMonitor = wholefunc;
+    
 	//settings.Monitor_Capture_Interval = 100;//100 ms 
 	//settings.CaptureDifMonitor = diffunc;
 	settings.CaptureMouse = mousefunc;

@@ -49,8 +49,8 @@ namespace SL {
             auto height = CGImageGetHeight(imageRef);
             auto colorSpace = CGColorSpaceCreateDeviceRGB();
             auto rawData = _CGFrameProcessorImpl->NewImageBuffer.get();
-            auto bytesPerPixel = 4;
-            auto bytesPerRow = bytesPerPixel * width;
+           
+            auto bytesPerRow = PixelStride * width;
             auto bitsPerComponent = 8;
             auto context = CGBitmapContextCreate(rawData, width, height,
                                                          bitsPerComponent, bytesPerRow, colorSpace,

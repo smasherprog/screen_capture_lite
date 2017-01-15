@@ -15,7 +15,7 @@ void SL::Screen_Capture::ThreadManager::Init(const Base_Thread_Data& data, const
 {
 	Reset();
 	auto monitorcapturing = settings.CaptureDifMonitor || settings.CaptureEntireMonitor;
-	auto numthreads = (settings.CaptureMouse ? 1 : 0);
+	size_t numthreads = (settings.CaptureMouse ? 1 : 0);
 	numthreads += monitorcapturing ? settings.Monitors.size() : 0;
 	m_ThreadHandles.resize(numthreads);// add another thread for mouse capturing
 

@@ -8,7 +8,7 @@ project(Screen_Capture)
 
 option(BUILD_EXAMPLE "Build example" On)
 
- add_subdirectory(lib)
+ add_subdirectory(src)
 
 if(BUILD_EXAMPLE)
   add_subdirectory(Example)

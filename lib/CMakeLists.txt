@@ -19,6 +19,11 @@ if(WIN32)
     )
 
 elseif(APPLE)
+
+	find_library(corefoundation_lib CoreFoundation)
+    find_library(cocoa_lib Cocoa)
+    set(SYSTEM_LIBS ${corefoundation_lib} ${cocoa_lib})
+
     set(SCREEN_CAPTURE_PLATFORM_SRC
         ${Screen_Capturelib_SOURCE_DIR}/../include/ios/NSMouseCapture.h
         ${Screen_Capturelib_SOURCE_DIR}/../src/ios/NSMouseCapture.m

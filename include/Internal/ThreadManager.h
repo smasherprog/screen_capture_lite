@@ -38,7 +38,7 @@ namespace SL {
                 
 				std::string msg = "took ";
 				msg += std::to_string(mspassed) + "ms for output ";
-				std::cout << msg << std::endl;
+				//std::cout << msg << std::endl;
 
 				auto timetowait = data->CaptureInterval - mspassed;
 				if (timetowait > 0) {

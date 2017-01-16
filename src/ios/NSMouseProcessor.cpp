@@ -7,11 +7,8 @@
 namespace SL {
 	namespace Screen_Capture {
         struct NSMouseProcessorImpl {
-            const int MaxCursurorSize = 48;
 			std::shared_ptr<Mouse_Thread_Data> Data;
-            std::unique_ptr<char[]> NewImageBuffer, LastImageBuffer;
-            size_t ImageBufferSize;
-            bool FirstRun;
+            std::vector<char> NewImageBuffer, LastImageBuffer;
             int Last_x, Last_y;
 		};
 
@@ -19,8 +16,6 @@ namespace SL {
 		NSMouseProcessor::NSMouseProcessor()
 		{
 			_NSMouseProcessorImpl = std::make_unique<NSMouseProcessorImpl>();
-            _NSMouseProcessorImpl->ImageBufferSize = 0;
-            _NSMouseProcessorImpl->FirstRun = true;
             _NSMouseProcessorImpl->Last_x = _NSMouseProcessorImpl->Last_y = 0;
 		}
 
@@ -32,9 +27,6 @@ namespace SL {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
             _NSMouseProcessorImpl->Data = data;
             SLScreen_Capture_InitMouseCapture();
-            _NSMouseProcessorImpl->ImageBufferSize = _NSMouseProcessorImpl->MaxCursurorSize* _NSMouseProcessorImpl->MaxCursurorSize* PixelStride;
-            _NSMouseProcessorImpl->NewImageBuffer = std::make_unique<char[]>(_NSMouseProcessorImpl->ImageBufferSize);
-            _NSMouseProcessorImpl->LastImageBuffer = std::make_unique<char[]>(_NSMouseProcessorImpl->ImageBufferSize);
 			return ret;
 		}
 		//
@@ -60,7 +52,9 @@ namespace SL {
                 auto rawdatas= CGDataProviderCopyData(prov);
                 auto buf = CFDataGetBytePtr(rawdatas);
                 auto datalen = CFDataGetLength(rawdatas);
-                memcpy(_NSMouseProcessorImpl->NewImageBuffer.get(),buf, datalen);
+                _NSMouseProcessorImpl->NewImageBuffer.resize(datalen);
+                _NSMouseProcessorImpl->LastImageBuffer.resize(datalen);
+                memcpy(_NSMouseProcessorImpl->NewImageBuffer.data(),buf, datalen);
                 CFRelease(rawdatas);
                
                //this is not needed. It is freed when the image is released
@@ -72,15 +66,15 @@ namespace SL {
                 imgrect.left =  imgrect.top=0;
                 imgrect.right =width;
                 imgrect.bottom = height;
-                auto wholeimgfirst = CreateImage(imgrect, PixelStride, 0, _NSMouseProcessorImpl->NewImageBuffer.get());
+                auto wholeimgfirst = CreateImage(imgrect, PixelStride, 0, _NSMouseProcessorImpl->NewImageBuffer.data());
                 
               
                 auto lastx =loc.x;
                 auto lasty = loc.y;
                     //if the mouse image is different, send the new image and swap the data
-                                if (memcmp(_NSMouseProcessorImpl->NewImageBuffer.get(), _NSMouseProcessorImpl->LastImageBuffer.get(), datalen) != 0) {
+                if (memcmp(_NSMouseProcessorImpl->NewImageBuffer.data(), _NSMouseProcessorImpl->LastImageBuffer.data(), datalen) != 0) {
                     _NSMouseProcessorImpl->Data->CaptureCallback(wholeimgfirst.get(), lastx, lasty);
-                    std::swap(_NSMouseProcessorImpl->NewImageBuffer,_NSMouseProcessorImpl->LastImageBuffer );
+                    _NSMouseProcessorImpl->NewImageBuffer.swap(_NSMouseProcessorImpl->LastImageBuffer);
         
                 }
                 else if(_NSMouseProcessorImpl->Last_x != lastx || _NSMouseProcessorImpl->Last_y != lasty){

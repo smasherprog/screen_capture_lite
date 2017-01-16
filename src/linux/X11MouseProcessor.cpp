@@ -85,7 +85,7 @@ namespace SL {
 				//if the mouse image is different, send the new image and swap the data 
 				if (memcmp(_X11MouseProcessorImpl->NewImageBuffer.data(), _X11MouseProcessorImpl->LastImageBuffer.data(), _X11MouseProcessorImpl->NewImageBuffer.size()) != 0) {
 					_X11MouseProcessorImpl->Data->CaptureCallback(wholeimg.get(), x, y);
-					std::swap(_X11MouseProcessorImpl->NewImageBuffer, _X11MouseProcessorImpl->LastImageBuffer);
+					_X11MouseProcessorImpl->NewImageBuffer.swap(_X11MouseProcessorImpl->LastImageBuffer);
 				}
 				else if(_X11MouseProcessorImpl->Last_x != x || _X11MouseProcessorImpl->Last_y != y){
 					_X11MouseProcessorImpl->Data->CaptureCallback(nullptr, x, y);

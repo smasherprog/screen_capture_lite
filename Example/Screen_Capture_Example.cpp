@@ -70,7 +70,7 @@ int main()
 		}
 		else {
 			//new coords 
-			//std::cout << "x= " << x << " y= " << y << std::endl;
+			std::cout << "x= " << x << " y= " << y << std::endl;
 		}
 		//std::cout << "x= " << x << " y= " << y << std::endl;
 		//lodepng::encode(s,(const unsigned char*) StartSrc(img), Width(img), Height(img));

@@ -73,7 +73,7 @@ namespace SL {
 			CaptureCallback CaptureDifMonitor;
 			//min interval between mouse captures
 			int Mouse_Capture_Interval;
-			//the function to be called on each mouse interval
+			//the function to be called on each mouse interval. If a the mouse image has changed, img will not be null, otherwise, the only change is new mouse coords
 			MouseCallback CaptureMouse;
 		};
 		class ScreenCaptureManagerImpl;

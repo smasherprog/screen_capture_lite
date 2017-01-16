@@ -59,7 +59,7 @@ int main()
         
 		Copy(*imagewrapper[Index(monitor)], img);
 
-		tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get());
+		//tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get());
 
 	};
 	auto mousefunc = [&](const SL::Screen_Capture::Image* img, int x, int y) {

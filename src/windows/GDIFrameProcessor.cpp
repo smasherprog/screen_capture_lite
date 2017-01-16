@@ -13,6 +13,7 @@ namespace SL {
 			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
 			size_t ImageBufferSize;
 			bool FirstRun;
+			std::string MonitorName;
 		};
 
 
@@ -29,8 +30,8 @@ namespace SL {
 		}
 		DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
 			auto Ret = DUPL_RETURN_SUCCESS;
-			auto name = Name(*data->SelectedMonitor);
-			_GDIFrameProcessorImpl->MonitorDC.DC = CreateDCA(name.c_str(), NULL, NULL, NULL);
+			_GDIFrameProcessorImpl->MonitorName = Name(*data->SelectedMonitor);
+			_GDIFrameProcessorImpl->MonitorDC.DC = CreateDCA(_GDIFrameProcessorImpl->MonitorName.c_str(), NULL, NULL, NULL);
 			_GDIFrameProcessorImpl->CaptureDC.DC = CreateCompatibleDC(_GDIFrameProcessorImpl->MonitorDC.DC);
 			_GDIFrameProcessorImpl->CaptureBMP.Bitmap = CreateCompatibleBitmap(_GDIFrameProcessorImpl->MonitorDC.DC, Width(*data->SelectedMonitor), Height(*data->SelectedMonitor));
 
@@ -58,13 +59,21 @@ namespace SL {
 			ret.bottom = Height(*_GDIFrameProcessorImpl->Data->SelectedMonitor);
 			ret.right = Width(*_GDIFrameProcessorImpl->Data->SelectedMonitor);
 
+			DEVMODEA devMode;
+			devMode.dmSize = sizeof(devMode);
+			if(EnumDisplaySettingsA(_GDIFrameProcessorImpl->MonitorName.c_str(), ENUM_CURRENT_SETTINGS, &devMode)==TRUE){
+				if (devMode.dmPelsHeight != ret.bottom || devMode.dmPelsWidth != ret.right) {
+					return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
+				}
+			}
+
 			// Selecting an object into the specified DC
 			auto originalBmp = SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, _GDIFrameProcessorImpl->CaptureBMP.Bitmap);
 
 			if (BitBlt(_GDIFrameProcessorImpl->CaptureDC.DC, 0, 0, ret.right, ret.bottom, _GDIFrameProcessorImpl->MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
 				//if the screen cannot be captured, return
 				SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, originalBmp);
-				Ret = DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
+				return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
 			}
 			else {
 

@@ -60,7 +60,7 @@ namespace SL {
 		std::vector<std::shared_ptr<Monitor>> GetMonitors();
 
 		typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
-		typedef std::function<void(const SL::Screen_Capture::Image& img, int x, int y)> MouseCallback;
+		typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
 
 		struct ScreenCapture_Settings {
 			//min interval between frames that are captured

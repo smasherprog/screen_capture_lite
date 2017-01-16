@@ -6,6 +6,7 @@
 #include <memory>
 #include <assert.h>
 #include <cstring>
+#include <iostream>
 
 namespace SL {
 	namespace Screen_Capture {
@@ -63,7 +64,7 @@ namespace SL {
 
 						if (*data.ExpectedErrorEvent)
 						{
-
+                           // std::cout<<"Expected Error, Restarting Thread Manager"<<std::endl;
 							// Terminate other threads
 							*_TerminateThread = true;
 							ThreadMgr.Join();
@@ -72,6 +73,18 @@ namespace SL {
 							ThreadMgr.Reset();
 							std::this_thread::sleep_for(std::chrono::milliseconds(1000));//sleep for 1 second since an error occcured
 
+                            //try and get the new monitors
+                            auto mons = GetMonitors();
+                      
+                            for(size_t i=0; i< Settings.Monitors.size(); i++){
+                                for(auto& nm: mons){
+                                    if(Settings.Monitors[i]->Id == nm->Id){
+                                        Settings.Monitors[i] = nm;
+                                        break;
+                                    }
+                                }
+                            }
+                            
 							ThreadMgr.Init(data, Settings);
 						}
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));

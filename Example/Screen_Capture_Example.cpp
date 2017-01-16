@@ -33,8 +33,9 @@ int main()
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
 
-		if (!images[Index(monitor)]) {
-			//make sure to create a buffer first time through
+        //if the image has not been created, OR if my backing is not big enough
+        if (!images[Index(monitor)] || (Height(*imagewrapper[Index(monitor)]) < Height(img)  ||  Width(*imagewrapper[Index(monitor)]) < Width(img) )) {
+            //make sure to create a buffer first time through
 			//the first time through the system will send the entire image, so this is the full size of the image. Next difs will be within the bounds of the first
 			images[Index(monitor)] = std::make_unique<char[]>(RowStride(img)*Height(img));
 			imagewrapper[Index(monitor)] = SL::Screen_Capture::CreateImage(Rect(img), 4, 0, images[Index(monitor)].get());
@@ -49,15 +50,16 @@ int main()
 
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
-
-		if (!images[Index(monitor)]) {
+        //if the image has not been created, OR the image has changed in size. This can happen when the display resolution is now different
+		if (!images[Index(monitor)] || (Height(*imagewrapper[Index(monitor)]) != Height(img)  ||  Width(*imagewrapper[Index(monitor)]) != Width(img) )) {
 			//make sure to create a buffer first time through
 			images[Index(monitor)] = std::make_unique<char[]>(RowStride(img)*Height(img));
 			imagewrapper[Index(monitor)] = SL::Screen_Capture::CreateImage(Rect(img), 4, 0, images[Index(monitor)].get());
 		}
+        
 		Copy(*imagewrapper[Index(monitor)], img);
 
-		//tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get());
+		tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get());
 
 	};
 	auto mousefunc = [&](const SL::Screen_Capture::Image* img, int x, int y) {
@@ -65,23 +67,23 @@ int main()
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" M") + std::string(".png");
 		if (img) {
-			std::cout << "New Mouse Image" << std::endl;
+			//std::cout << "New Mouse Image" << std::endl;
 			//lodepng::encode(s, (const unsigned char*)StartSrc(*img), Width(*img), Height(*img));
 		}
 		else {
 			//new coords 
-			std::cout << "x= " << x << " y= " << y << std::endl;
+			//std::cout << "x= " << x << " y= " << y << std::endl;
 		}
 		//std::cout << "x= " << x << " y= " << y << std::endl;
 		//lodepng::encode(s,(const unsigned char*) StartSrc(img), Width(img), Height(img));
 	
 	};
     
-    //settings.Monitor_Capture_Interval = 100;//100 ms
-    //settings.CaptureEntireMonitor = wholefunc;
+    settings.Monitor_Capture_Interval = 100;//100 ms
+    settings.CaptureEntireMonitor = wholefunc;
     
-	//settings.Monitor_Capture_Interval = 100;//100 ms 
-	//settings.CaptureDifMonitor = diffunc;
+	settings.Monitor_Capture_Interval = 100;//100 ms
+	settings.CaptureDifMonitor = diffunc;
 	settings.CaptureMouse = mousefunc;
 	settings.Mouse_Capture_Interval = 100;
 	framgrabber.StartCapturing(settings);

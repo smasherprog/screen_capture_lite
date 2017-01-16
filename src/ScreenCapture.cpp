@@ -36,13 +36,13 @@ namespace SL {
 
 			std::thread _Thread;
 			std::shared_ptr<std::atomic_bool> _TerminateThread;
-			
+
 
 			ScreenCaptureManagerImpl() {
 
 			}
 			~ScreenCaptureManagerImpl() {
-				stop();
+				stop(true);
 			}
 			void start() {
 				//users must set the monitors to capture before calling start
@@ -64,8 +64,8 @@ namespace SL {
 
 						if (*data.ExpectedErrorEvent)
 						{
-                           // std::cout<<"Expected Error, Restarting Thread Manager"<<std::endl;
-							// Terminate other threads
+							// std::cout<<"Expected Error, Restarting Thread Manager"<<std::endl;
+							 // Terminate other threads
 							*_TerminateThread = true;
 							ThreadMgr.Join();
 							*data.ExpectedErrorEvent = *data.UnexpectedErrorEvent = *_TerminateThread = false;
@@ -73,18 +73,18 @@ namespace SL {
 							ThreadMgr.Reset();
 							std::this_thread::sleep_for(std::chrono::milliseconds(1000));//sleep for 1 second since an error occcured
 
-                            //try and get the new monitors
-                            auto mons = GetMonitors();
-                      
-                            for(size_t i=0; i< Settings.Monitors.size(); i++){
-                                for(auto& nm: mons){
-                                    if(Settings.Monitors[i]->Id == nm->Id){
-                                        Settings.Monitors[i] = nm;
-                                        break;
-                                    }
-                                }
-                            }
-                            
+							//try and get the new monitors
+							auto mons = GetMonitors();
+
+							for (size_t i = 0; i < Settings.Monitors.size(); i++) {
+								for (auto& nm : mons) {
+									if (Settings.Monitors[i]->Id == nm->Id) {
+										Settings.Monitors[i] = nm;
+										break;
+									}
+								}
+							}
+
 							ThreadMgr.Init(data, Settings);
 						}
 						std::this_thread::sleep_for(std::chrono::milliseconds(50));
@@ -93,13 +93,16 @@ namespace SL {
 					ThreadMgr.Join();
 				});
 			}
-			void stop() {
+			void stop(bool block) {
 				if (_TerminateThread) {
 					*_TerminateThread = false;
 				}
-				if (_Thread.joinable()) {
-					_Thread.join();
+				if (block) {
+					if (_Thread.joinable()) {
+						_Thread.join();
+					}
 				}
+
 			}
 		};
 
@@ -110,37 +113,36 @@ namespace SL {
 
 		ScreenCaptureManager::~ScreenCaptureManager()
 		{
-			_ScreenCaptureManagerImpl->stop();
+			_ScreenCaptureManagerImpl->stop(true);
 		}
 
-		void ScreenCaptureManager::StartCapturing(const ScreenCapture_Settings& s)
+		void ScreenCaptureManager::Start()
 		{
 			_ScreenCaptureManagerImpl->Settings = s;
 			_ScreenCaptureManagerImpl->start();
 		}
-		void ScreenCaptureManager::StopCapturing()
+		void ScreenCaptureManager::Stop()
 		{
-			_ScreenCaptureManagerImpl->stop();
-			_ScreenCaptureManagerImpl = std::make_unique<ScreenCaptureManagerImpl>();
+			_ScreenCaptureManagerImpl->stop(false);
 		}
-		std::shared_ptr<Monitor> CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string & n)
+		Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string & n)
 		{
-			auto ret = std::make_shared<Monitor>();
-			ret->Index = index;
-			ret->Height = h;
-			ret->Id = id;
-			ret->Name = n;
-			ret->OffsetX = ox;
-			ret->OffsetY = oy;
-			ret->Width = w;
+			Monitor ret;
+			ret.Index = index;
+			ret.Height = h;
+			ret.Id = id;
+			ret.Name = n;
+			ret.OffsetX = ox;
+			ret.OffsetY = oy;
+			ret.Width = w;
 			return ret;
 		}
-		std::shared_ptr<Image> CreateImage(const ImageRect& b, int ps, int rp, char* d) {
-			auto ret = std::make_shared<Image>();
-			ret->Bounds = b;
-			ret->Data = d;
-			ret->Pixelstride = ps;
-			ret->RowPadding = rp;
+		Image CreateImage(const ImageRect& b, int ps, int rp, char* d) {
+			Image ret;
+			ret.Bounds = b;
+			ret.Data = d;
+			ret.Pixelstride = ps;
+			ret.RowPadding = rp;
 			return ret;
 		}
 

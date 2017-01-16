@@ -6,6 +6,23 @@
 // this is internal stuff.. 
 namespace SL {
 	namespace Screen_Capture {
+
+		struct ScreenCapture_Settings {
+			//min interval between frames that are captured
+			int Monitor_Capture_Interval;
+			//the monitors that are captured each interval
+			std::vector<Monitor> Monitors;
+			//set this if you want to capture the entire monitor each interval
+			CaptureCallback CaptureEntireMonitor;
+			//set this if you want to receive difs each interval on what has changed
+			CaptureCallback CaptureDifMonitor;
+			//min interval between mouse captures
+			int Mouse_Capture_Interval;
+			//the function to be called on each mouse interval. If a the mouse image has changed, img will not be null, otherwise, the only change is new mouse coords
+			MouseCallback CaptureMouse;
+
+		};
+
 		struct Base_Thread_Data
 		{
 			// Used to indicate abnormal error condition
@@ -19,7 +36,7 @@ namespace SL {
 		struct Monitor_Thread_Data: Base_Thread_Data
 		{
 	
-			std::shared_ptr<Monitor> SelectedMonitor;
+			Monitor SelectedMonitor;
 
 			int CaptureInterval; //in milliseconds	
 			CaptureCallback CaptureEntireMonitor;
@@ -39,7 +56,7 @@ namespace SL {
 			DUPL_RETURN_ERROR_UNEXPECTED = 2
 		};
 		const int PixelStride = 4;
-		std::shared_ptr<Monitor> CreateMonitor(int index,int id, int h, int w, int ox, int oy, const std::string& n);
+		Monitor CreateMonitor(int index,int id, int h, int w, int ox, int oy, const std::string& n);
 	
 		std::vector<ImageRect> GetDifs(const Image & oldimg, const Image & newimg);
 

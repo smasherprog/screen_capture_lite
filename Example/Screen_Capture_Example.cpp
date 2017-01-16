@@ -5,11 +5,15 @@
 #include <thread>
 #include <string>
 #include <vector>
+
+
+//THESE LIBRARIES ARE HERE FOR CONVINIENCE!! They are SLOW and ONLY USED FOR HOW THE LIBRARY WORKS!
 #define TJE_IMPLEMENTATION
 #include "tiny_jpeg.h"
 #define LODEPNG_COMPILE_PNG
 #define LODEPNG_COMPILE_DISK
 #include "lodepng.h"
+/////////////////////////////////////////////////////////////////////////
 
 int main()
 {
@@ -18,7 +22,7 @@ int main()
     realcounter= 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;
 	SL::Screen_Capture::ScreenCapture_Settings settings;
-	settings.Monitors = SL::Screen_Capture::GetMonitors();
+	settings.Monitors = SL::Screen_Capture::GetMonitors();//specify which monitors you are interested in
 
 	std::vector<std::unique_ptr<char[]>> images;//this is the actual backing of the image
 	std::vector<std::shared_ptr<SL::Screen_Capture::Image>> imagewrapper;//this is a wrapper for convience. This is not required, I use it because it helps with copying data
@@ -27,6 +31,8 @@ int main()
 
 	images.resize(settings.Monitors.size());
 	imagewrapper.resize(settings.Monitors.size());
+
+
 
 	auto diffunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 

@@ -169,6 +169,33 @@ namespace SL {
 				}
 			}
 		}
+		std::shared_ptr<char> Extract(const Image& img) {
+			auto totalsize = RowStride(img)*Height(img);
+			auto dstimg = std::shared_ptr<char>(new char[totalsize], [](char* p) { delete[] p; });
+			Extract(img, dstimg.get(), totalsize);
+			return dstimg;
+		}
+		void Extract(const Image& img, char* dst, size_t dst_size) {
+			auto totalsize = RowStride(img)*Height(img);
+			assert(dst_size >= totalsize);
+
+			auto startdst = dst;
+			auto startsrc = StartSrc(img);
+			if (RowPadding(img) == 0) {
+				//no padding, the entire copy can be a single memcpy call
+				memcpy(startdst, startsrc, RowStride(img)*Height(img));
+			}
+			else {
+				for (auto i = 0; i < Height(img); i++) {
+					//memset(startdst, 0, RowStride(src));
+					memcpy(startdst, startsrc, RowStride(img));
+
+					startdst += RowStride(img);//advance to the next row
+					startsrc += RowStride(img) + RowPadding(img);//advance to the next row
+				}
+			}
+			
+		}
 	}
 }
 

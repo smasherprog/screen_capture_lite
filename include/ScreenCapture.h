@@ -33,6 +33,8 @@ namespace SL {
 		std::shared_ptr<Image> CreateImage(const ImageRect& rect, int pixelstride, int rowpadding, char* data);
 		//this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
 		void Copy(const Image& dst, const Image& src);
+		std::shared_ptr<char> Extract(const Image& img);
+		void Extract(const Image& img, char* dst, size_t dst_size);
 
 		//index to self in the GetMonitors() function
 		int Index(const Monitor& mointor);

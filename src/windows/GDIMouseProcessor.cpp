@@ -9,9 +9,11 @@ namespace SL {
 			HDCWrapper MonitorDC;
 			HDCWrapper CaptureDC;
 			std::shared_ptr<Mouse_Thread_Data> Data;
-			std::unique_ptr<char[]> NewImageBuffer;
+			std::unique_ptr<char[]> NewImageBuffer, LastImageBuffer;
 			size_t ImageBufferSize;
 			bool FirstRun;
+			int Last_x, Last_y;
+
 		};
 
 
@@ -20,6 +22,7 @@ namespace SL {
 			_GDIMouseProcessorImpl = std::make_unique<GDIMouseProcessorImpl>();
 			_GDIMouseProcessorImpl->ImageBufferSize = 0;
 			_GDIMouseProcessorImpl->FirstRun = true;
+			_GDIMouseProcessorImpl->Last_x = _GDIMouseProcessorImpl->Last_y = 0;
 		}
 
 		GDIMouseProcessor::~GDIMouseProcessor()
@@ -37,7 +40,7 @@ namespace SL {
 			_GDIMouseProcessorImpl->Data = data;
 			_GDIMouseProcessorImpl->ImageBufferSize = _GDIMouseProcessorImpl->MaxCursurorSize* _GDIMouseProcessorImpl->MaxCursurorSize* PixelStride;
 			_GDIMouseProcessorImpl->NewImageBuffer = std::make_unique<char[]>(_GDIMouseProcessorImpl->ImageBufferSize);
-
+			_GDIMouseProcessorImpl->LastImageBuffer = std::make_unique<char[]>(_GDIMouseProcessorImpl->ImageBufferSize);
 			return Ret;
 		}
 		//
@@ -116,7 +119,18 @@ namespace SL {
 			//}
 
 			if (_GDIMouseProcessorImpl->Data->CaptureCallback) {
-				_GDIMouseProcessorImpl->Data->CaptureCallback(*wholeimg, cursorInfo.ptScreenPos.x - ii.xHotspot, cursorInfo.ptScreenPos.y - ii.yHotspot);
+				auto lastx = cursorInfo.ptScreenPos.x - ii.xHotspot;
+				auto lasty = cursorInfo.ptScreenPos.y - ii.yHotspot;
+				//if the mouse image is different, send the new image and swap the data 
+				if (memcmp(_GDIMouseProcessorImpl->NewImageBuffer.get(), _GDIMouseProcessorImpl->LastImageBuffer.get(), bi.biSizeImage) != 0) {
+					_GDIMouseProcessorImpl->Data->CaptureCallback(wholeimg.get(), lastx, lasty);
+					std::swap(_GDIMouseProcessorImpl->NewImageBuffer, _GDIMouseProcessorImpl->LastImageBuffer);
+				}
+				else if(_GDIMouseProcessorImpl->Last_x != lastx || _GDIMouseProcessorImpl->Last_y != lasty){
+					_GDIMouseProcessorImpl->Data->CaptureCallback(nullptr, lastx, lasty);
+				}
+				_GDIMouseProcessorImpl->Last_x = lastx;
+				_GDIMouseProcessorImpl->Last_y = lasty;
 			}
 			return Ret;
 		}

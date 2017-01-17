@@ -14,7 +14,7 @@ namespace SL {
 		class ThreadManager {
 
 			std::vector<std::thread> m_ThreadHandles;
-			std::vector<std::shared_ptr<Monitor_Thread_Data>> m_ThreadData;
+			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
 
 		public:
 			ThreadManager();

@@ -17,58 +17,37 @@
 
 int main()
 {
-    std::cout<<"Starting Capture Demo"<<std::endl;
-    std::atomic<int> realcounter;
-    realcounter= 0;
+	std::cout << "Starting Capture Demo" << std::endl;
+	std::atomic<int> realcounter;
+	realcounter = 0;
 	SL::Screen_Capture::ScreenCaptureManager framgrabber;
-	SL::Screen_Capture::ScreenCapture_Settings settings;
-	settings.Monitors = SL::Screen_Capture::GetMonitors();//specify which monitors you are interested in
 
-	std::vector<std::unique_ptr<char[]>> images;//this is the actual backing of the image
-	std::vector<std::shared_ptr<SL::Screen_Capture::Image>> imagewrapper;//this is a wrapper for convience. This is not required, I use it because it helps with copying data
-
-	//you could set the program to only capture on a single monitor as well
-
-	images.resize(settings.Monitors.size());
-	imagewrapper.resize(settings.Monitors.size());
-
-
-
-	auto diffunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+	framgrabber.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
+		auto size = RowStride(img)*Height(img);
 
-        //if the image has not been created, OR if my backing is not big enough
-        if (!images[Index(monitor)] || (Height(*imagewrapper[Index(monitor)]) < Height(img)  ||  Width(*imagewrapper[Index(monitor)]) < Width(img) )) {
-            //make sure to create a buffer first time through
-			//the first time through the system will send the entire image, so this is the full size of the image. Next difs will be within the bounds of the first
-			images[Index(monitor)] = std::make_unique<char[]>(RowStride(img)*Height(img));
-			imagewrapper[Index(monitor)] = SL::Screen_Capture::CreateImage(Rect(img), 4, 0, images[Index(monitor)].get());
-		}
-		//copy the data in 
-		Copy(*imagewrapper[Index(monitor)], img);
+		auto imgbuffer(std::make_unique<char[]>(size));
+		Extract(img, imgbuffer.get(), size);
 
-		//tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get());
+		//tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
 
-	};
-	auto wholefunc = [&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+	});
+
+	framgrabber.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
-        //if the image has not been created, OR the image has changed in size. This can happen when the display resolution is now different
-		if (!images[Index(monitor)] || (Height(*imagewrapper[Index(monitor)]) != Height(img)  ||  Width(*imagewrapper[Index(monitor)]) != Width(img) )) {
-			//make sure to create a buffer first time through
-			images[Index(monitor)] = std::make_unique<char[]>(RowStride(img)*Height(img));
-			imagewrapper[Index(monitor)] = SL::Screen_Capture::CreateImage(Rect(img), 4, 0, images[Index(monitor)].get());
-		}
-        
-		Copy(*imagewrapper[Index(monitor)], img);
 
-		//tje_encode_to_file(s.c_str(), Width(*imagewrapper[Index(monitor)]), Height(*imagewrapper[Index(monitor)]), 4, (const unsigned char*)images[Index(monitor)].get());
+		auto size = RowStride(img)*Height(img);
+		auto imgbuffer(std::make_unique<char[]>(size));
+		Extract(img, imgbuffer.get(), size);
 
-	};
-	auto mousefunc = [&](const SL::Screen_Capture::Image* img, int x, int y) {
+		//tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+
+	});
+	framgrabber.onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
 
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" M") + std::string(".png");
@@ -80,25 +59,23 @@ int main()
 			//new coords 
 			//std::cout << "x= " << x << " y= " << y << std::endl;
 		}
-		//std::cout << "x= " << x << " y= " << y << std::endl;
-		//lodepng::encode(s,(const unsigned char*) StartSrc(img), Width(img), Height(img));
 	
-	};
-    
-    settings.Monitor_Capture_Interval = 100;//100 ms
-    settings.CaptureEntireMonitor = wholefunc;
-    
-	settings.Monitor_Capture_Interval = 100;//100 ms
-	settings.CaptureDifMonitor = diffunc;
-	settings.CaptureMouse = mousefunc;
-	settings.Mouse_Capture_Interval = 100;
-	framgrabber.StartCapturing(settings);
+	});
+
+	framgrabber.setMonitorsToCapture([] {
+		return SL::Screen_Capture::GetMonitors();//specify which monitors you are interested in
+	});
+
+	framgrabber.setFrameChangeInterval(100);//100 ms
+	framgrabber.setMouseChangeInterval(100);//100 ms
+
+	framgrabber.Start();
 
 	while (true) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 
-	framgrabber.StopCapturing();
+	framgrabber.Stop();
 	return 0;
 }
 

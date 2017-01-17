@@ -29,11 +29,6 @@ namespace SL {
 		}
 		//the Image Struct does NOT OWN any of the data it holds. It Describes an image and provides helpful functions. 
 		struct Image;
-		//data is not owned by the Image Struct. It could point to an area within an exisiting image. 
-		Image CreateImage(const ImageRect& rect, int pixelstride, int rowpadding, char* data);
-		//this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
-		void Copy(const Image& dst, const Image& src);
-		std::shared_ptr<char> Extract(const Image& img);
 		void Extract(const Image& img, char* dst, size_t dst_size);
 
 		//index to self in the GetMonitors() function
@@ -59,10 +54,11 @@ namespace SL {
 		int RowPadding(const Image& img);
 		char* StartSrc(const Image& img);
 
-		std::vector<Monitor> GetMonitors();
+		std::vector<std::shared_ptr<Monitor>> GetMonitors();
 
 		typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
 		typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
+		typedef std::function<std::vector<std::shared_ptr<Monitor>>()> MonitorCallback;
 
 		class ScreenCaptureManagerImpl;
 		class ScreenCaptureManager {
@@ -72,13 +68,25 @@ namespace SL {
 			ScreenCaptureManager();
 			~ScreenCaptureManager();
 
-			void setMonitorsToWatch(std::vector<Monitor>& monitors);
-
+			//Used by the library to determine which monitors to watch
+			void setMonitorsToCapture(MonitorCallback& cb);
+			//Used by the library to determine which monitors to watch
+			void setMonitorsToCapture(const MonitorCallback& cb);
+			//Used by the library to determine the callback frequency
 			void setFrameChangeInterval(int interval);
+			//When a new frame is available the callback is invoked
 			void onNewFrame(CaptureCallback& cb);
+			//When a new frame is available the callback is invoked
+			void onNewFrame(const CaptureCallback& cb);
+			//When a change in a frame is detected, the callback is invoked
 			void onFrameChanged(CaptureCallback& cb);
-
+			//When a change in a frame is detected, the callback is invoked
+			void onFrameChanged(const CaptureCallback& cb);
+			//When a mouse image changes or the mouse changes position, the callback is invoked.
 			void onMouseChanged(MouseCallback& cb);
+			//When a mouse image changes or the mouse changes position, the callback is invoked.
+			void onMouseChanged(const MouseCallback& cb);
+			//Used by the library to determine the callback frequency
 			void setMouseChangeInterval(int interval);
 
 			void Start();

@@ -98,12 +98,12 @@ namespace SL {
 
 			SelectObject(_GDIMouseProcessorImpl->CaptureDC.DC, originalBmp);
 
-			auto wholeimg = CreateImage(ret, PixelStride, 0, _GDIMouseProcessorImpl->NewImageBuffer.get());
+			auto wholeimg = Create(ret, PixelStride, 0, _GDIMouseProcessorImpl->NewImageBuffer.get());
 
 			//need to make sure the alpha channel is correct
 			if (ii.wResID == 32513) { // when its just the i beam
 				auto ptr = (unsigned int*)_GDIMouseProcessorImpl->NewImageBuffer.get();
-				for (auto i = 0; i < RowStride(*wholeimg) *Height(*wholeimg) / 4; i++) {
+				for (auto i = 0; i < RowStride(wholeimg) *Height(wholeimg) / 4; i++) {
 					if (ptr[i] != 0) {
 						ptr[i] = 0xff000000;
 					}
@@ -123,7 +123,7 @@ namespace SL {
 				auto lasty = cursorInfo.ptScreenPos.y - ii.yHotspot;
 				//if the mouse image is different, send the new image and swap the data 
 				if (memcmp(_GDIMouseProcessorImpl->NewImageBuffer.get(), _GDIMouseProcessorImpl->LastImageBuffer.get(), bi.biSizeImage) != 0) {
-					_GDIMouseProcessorImpl->Data->CaptureCallback(wholeimg.get(), lastx, lasty);
+					_GDIMouseProcessorImpl->Data->CaptureCallback(&wholeimg, lastx, lasty);
 					std::swap(_GDIMouseProcessorImpl->NewImageBuffer, _GDIMouseProcessorImpl->LastImageBuffer);
 				}
 				else if(_GDIMouseProcessorImpl->Last_x != lastx || _GDIMouseProcessorImpl->Last_y != lasty){

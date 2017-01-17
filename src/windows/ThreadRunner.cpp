@@ -62,7 +62,7 @@ namespace SL {
 		void RunCapture(std::shared_ptr<Monitor_Thread_Data> data) {
 			//need to switch to the input desktop for capturing...
 			if (!SwitchToInputDesktop(data)) return;
-			std::cout << "Starting to Capture on Monitor " << Name(*data->SelectedMonitor) << std::endl;
+			std::cout << "Starting to Capture on Monitor " << Name(data->SelectedMonitor) << std::endl;
 			std::cout << "Trying DirectX Desktop Duplication " << std::endl;
 			//TryCapture<GDIFrameProcessor>(data);
 			if (!TryCapture<DXFrameProcessor>(data)) {//if DX is not supported, fallback to GDI capture

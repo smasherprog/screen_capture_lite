@@ -119,8 +119,8 @@ namespace SL {
 			//}
 
 			if (_GDIMouseProcessorImpl->Data->CaptureCallback) {
-				auto lastx = cursorInfo.ptScreenPos.x - ii.xHotspot;
-				auto lasty = cursorInfo.ptScreenPos.y - ii.yHotspot;
+				int lastx = static_cast<int>(cursorInfo.ptScreenPos.x - ii.xHotspot);
+				int lasty = static_cast<int>(cursorInfo.ptScreenPos.y - ii.yHotspot);
 				//if the mouse image is different, send the new image and swap the data 
 				if (memcmp(_GDIMouseProcessorImpl->NewImageBuffer.get(), _GDIMouseProcessorImpl->LastImageBuffer.get(), bi.biSizeImage) != 0) {
 					_GDIMouseProcessorImpl->Data->CaptureCallback(&wholeimg, lastx, lasty);

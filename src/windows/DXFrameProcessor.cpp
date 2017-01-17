@@ -480,7 +480,7 @@ namespace SL {
 			auto startsrc = (char*)MappingDesc.pData;
 			auto startdst = _DXFrameProcessorImpl->ImageBuffer.get();
 			auto rowstride = PixelStride*Width(_DXFrameProcessorImpl->Data->SelectedMonitor);
-			if (rowstride == MappingDesc.RowPitch) {//no need for multiple calls, there is no padding here
+			if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
 				memcpy(startdst, startsrc, rowstride*Height(_DXFrameProcessorImpl->Data->SelectedMonitor));
 			}
 			else {

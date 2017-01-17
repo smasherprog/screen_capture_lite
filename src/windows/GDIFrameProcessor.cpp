@@ -62,7 +62,7 @@ namespace SL {
 			DEVMODEA devMode;
 			devMode.dmSize = sizeof(devMode);
 			if(EnumDisplaySettingsA(_GDIFrameProcessorImpl->MonitorName.c_str(), ENUM_CURRENT_SETTINGS, &devMode)==TRUE){
-				if (devMode.dmPelsHeight != ret.bottom || devMode.dmPelsWidth != ret.right) {
+				if (static_cast<int>(devMode.dmPelsHeight) != ret.bottom || static_cast<int>(devMode.dmPelsWidth) != ret.right) {
 					return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
 				}
 			}

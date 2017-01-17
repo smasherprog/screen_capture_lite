@@ -61,16 +61,16 @@ namespace SL {
 			}
 
 
-			_X11FrameProcessorImpl->RootWindow = XRootWindow(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
+			_X11FrameProcessorImpl->RootWindow = XRootWindow(_X11FrameProcessorImpl->SelectedDisplay, Index(_X11FrameProcessorImpl->Data->SelectedMonitor));
 			if (!_X11FrameProcessorImpl->RootWindow) {
 				return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
 			}
-			auto visual = DefaultVisual(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
-			auto depth = DefaultDepth(_X11FrameProcessorImpl->SelectedDisplay, Index(*_X11FrameProcessorImpl->Data->SelectedMonitor));
+			auto visual = DefaultVisual(_X11FrameProcessorImpl->SelectedDisplay, Index(_X11FrameProcessorImpl->Data->SelectedMonitor));
+			auto depth = DefaultDepth(_X11FrameProcessorImpl->SelectedDisplay, Index(_X11FrameProcessorImpl->Data->SelectedMonitor));
 
 			_X11FrameProcessorImpl->ShmInfo = std::make_unique<XShmSegmentInfo>();
 
-			_X11FrameProcessorImpl->Image = XShmCreateImage(_X11FrameProcessorImpl->SelectedDisplay, visual, depth, ZPixmap, NULL, _X11FrameProcessorImpl->ShmInfo.get(), Width(*_X11FrameProcessorImpl->Data->SelectedMonitor), Height(*_X11FrameProcessorImpl->Data->SelectedMonitor));
+			_X11FrameProcessorImpl->Image = XShmCreateImage(_X11FrameProcessorImpl->SelectedDisplay, visual, depth, ZPixmap, NULL, _X11FrameProcessorImpl->ShmInfo.get(), Width(_X11FrameProcessorImpl->Data->SelectedMonitor), Height(_X11FrameProcessorImpl->Data->SelectedMonitor));
 			_X11FrameProcessorImpl->ShmInfo->shmid = shmget(IPC_PRIVATE, _X11FrameProcessorImpl->Image->bytes_per_line * _X11FrameProcessorImpl->Image->height, IPC_CREAT | 0777);
 
 			_X11FrameProcessorImpl->ShmInfo->readOnly = False;
@@ -89,13 +89,13 @@ namespace SL {
 			auto Ret = DUPL_RETURN_SUCCESS;
 			ImageRect imgrect;
 			imgrect.left = imgrect.top = 0;
-			imgrect.right = Width(*_X11FrameProcessorImpl->Data->SelectedMonitor);
-			imgrect.bottom = Height(*_X11FrameProcessorImpl->Data->SelectedMonitor);
+			imgrect.right = Width(_X11FrameProcessorImpl->Data->SelectedMonitor);
+			imgrect.bottom = Height(_X11FrameProcessorImpl->Data->SelectedMonitor);
             
             //check to see if the display has changed
             auto t = XOpenDisplay(NULL);
-            auto monh = DisplayHeight(t, Id(*_X11FrameProcessorImpl->Data->SelectedMonitor));
-            auto monw = DisplayWidth(t, Id(*_X11FrameProcessorImpl->Data->SelectedMonitor));
+            auto monh = DisplayHeight(t, Id(_X11FrameProcessorImpl->Data->SelectedMonitor));
+            auto monw = DisplayWidth(t, Id(_X11FrameProcessorImpl->Data->SelectedMonitor));
             XCloseDisplay(t);
             
             if( monh!= imgrect.bottom || monw!= imgrect.right){
@@ -108,35 +108,28 @@ namespace SL {
             _X11FrameProcessorImpl->NewImageBuffer.resize(PixelStride*imgrect.right*imgrect.bottom);
             _X11FrameProcessorImpl->OldImageBuffer.resize(PixelStride*imgrect.right*imgrect.bottom);
 			memcpy(_X11FrameProcessorImpl->NewImageBuffer.data(), _X11FrameProcessorImpl->Image->data, PixelStride*imgrect.right*imgrect.bottom);
-
-
 			if (_X11FrameProcessorImpl->Data->CaptureEntireMonitor) {
-
-				auto img = CreateImage(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
-				_X11FrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_X11FrameProcessorImpl->Data->SelectedMonitor);
+				auto img = Create(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
+				_X11FrameProcessorImpl->Data->CaptureEntireMonitor(img, _X11FrameProcessorImpl->Data->SelectedMonitor);
 			}
 			if (_X11FrameProcessorImpl->Data->CaptureDifMonitor) {
 				if (_X11FrameProcessorImpl->FirstRun) {
 					//first time through, just send the whole image
-					auto wholeimgfirst = CreateImage(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
-					_X11FrameProcessorImpl->Data->CaptureDifMonitor(*wholeimgfirst, *_X11FrameProcessorImpl->Data->SelectedMonitor);
+					auto wholeimgfirst = Create(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
+					_X11FrameProcessorImpl->Data->CaptureDifMonitor(wholeimgfirst, _X11FrameProcessorImpl->Data->SelectedMonitor);
 					_X11FrameProcessorImpl->FirstRun = false;
 				}
 				else {
-
-
 					//user wants difs, lets do it!
-					auto newimg = CreateImage(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
-					auto oldimg = CreateImage(imgrect, PixelStride, 0, _X11FrameProcessorImpl->OldImageBuffer.data());
-					auto imgdifs = GetDifs(*oldimg, *newimg);
-
+					auto newimg = Create(imgrect, PixelStride, 0, _X11FrameProcessorImpl->NewImageBuffer.data());
+					auto oldimg = Create(imgrect, PixelStride, 0, _X11FrameProcessorImpl->OldImageBuffer.data());
+					auto imgdifs = GetDifs(oldimg, newimg);
 					for (auto& r : imgdifs) {
-						auto padding = (r.left *PixelStride) + ((Width(*newimg) - r.right)*PixelStride);
+						auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
 						auto startsrc = _X11FrameProcessorImpl->NewImageBuffer.data();
-						startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(*newimg));
-
-						auto difimg = CreateImage(r, PixelStride, padding, startsrc);
-						_X11FrameProcessorImpl->Data->CaptureDifMonitor(*difimg, *_X11FrameProcessorImpl->Data->SelectedMonitor);
+						startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
+						auto difimg = Create(r, PixelStride, padding, startsrc);
+						_X11FrameProcessorImpl->Data->CaptureDifMonitor(difimg, _X11FrameProcessorImpl->Data->SelectedMonitor);
 
 					}
 				}

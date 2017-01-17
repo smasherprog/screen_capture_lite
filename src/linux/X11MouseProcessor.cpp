@@ -80,11 +80,11 @@ namespace SL {
 
 			if (_X11MouseProcessorImpl->Data->CaptureCallback) {
 
-				auto wholeimg = CreateImage(imgrect, PixelStride, 0, _X11MouseProcessorImpl->LastImageBuffer.data());
+				auto wholeimg = Create(imgrect, PixelStride, 0, _X11MouseProcessorImpl->LastImageBuffer.data());
 	                
 				//if the mouse image is different, send the new image and swap the data 
 				if (memcmp(_X11MouseProcessorImpl->NewImageBuffer.data(), _X11MouseProcessorImpl->LastImageBuffer.data(), _X11MouseProcessorImpl->NewImageBuffer.size()) != 0) {
-					_X11MouseProcessorImpl->Data->CaptureCallback(wholeimg.get(), x, y);
+					_X11MouseProcessorImpl->Data->CaptureCallback(&wholeimg, x, y);
 					_X11MouseProcessorImpl->NewImageBuffer.swap(_X11MouseProcessorImpl->LastImageBuffer);
 				}
 				else if(_X11MouseProcessorImpl->Last_x != x || _X11MouseProcessorImpl->Last_y != y){

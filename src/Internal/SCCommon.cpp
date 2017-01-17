@@ -3,6 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <assert.h>
+#include <string.h>
 
 namespace SL {
 	namespace Screen_Capture {

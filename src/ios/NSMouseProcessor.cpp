@@ -54,6 +54,7 @@ namespace SL {
                 auto datalen = CFDataGetLength(rawdatas);
                 _NSMouseProcessorImpl->NewImageBuffer.resize(datalen);
                 _NSMouseProcessorImpl->LastImageBuffer.resize(datalen);
+                
                 memcpy(_NSMouseProcessorImpl->NewImageBuffer.data(),buf, datalen);
                 CFRelease(rawdatas);
                
@@ -66,14 +67,14 @@ namespace SL {
                 imgrect.left =  imgrect.top=0;
                 imgrect.right =width;
                 imgrect.bottom = height;
-                auto wholeimgfirst = CreateImage(imgrect, PixelStride, 0, _NSMouseProcessorImpl->NewImageBuffer.data());
+                auto wholeimgfirst = Create(imgrect, PixelStride, 0, _NSMouseProcessorImpl->NewImageBuffer.data());
                 
               
                 auto lastx =loc.x;
                 auto lasty = loc.y;
                     //if the mouse image is different, send the new image and swap the data
                 if (memcmp(_NSMouseProcessorImpl->NewImageBuffer.data(), _NSMouseProcessorImpl->LastImageBuffer.data(), datalen) != 0) {
-                    _NSMouseProcessorImpl->Data->CaptureCallback(wholeimgfirst.get(), lastx, lasty);
+                    _NSMouseProcessorImpl->Data->CaptureCallback(&wholeimgfirst, lastx, lasty);
                     _NSMouseProcessorImpl->NewImageBuffer.swap(_NSMouseProcessorImpl->LastImageBuffer);
         
                 }

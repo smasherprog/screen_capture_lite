@@ -86,7 +86,6 @@ set(SCREEN_CAPTURE_COMMON_INC
 )
 
 if(MSVC)
-
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")

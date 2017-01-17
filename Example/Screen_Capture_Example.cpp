@@ -52,7 +52,7 @@ int main()
 		auto r = realcounter.fetch_add(1);
 		auto s = std::to_string(r) + std::string(" M") + std::string(".png");
 		if (img) {
-			//std::cout << "New Mouse Image" << std::endl;
+            //std::cout << "New Mouse Image  x= " << x << " y= " << y << std::endl;
 			//lodepng::encode(s, (const unsigned char*)StartSrc(*img), Width(*img), Height(*img));
 		}
 		else {

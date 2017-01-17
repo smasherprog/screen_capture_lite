@@ -36,12 +36,12 @@ namespace SL {
 		DUPL_RETURN CGFrameProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
-            auto imageRef = CGDisplayCreateImage(Id(*_CGFrameProcessorImpl->Data->SelectedMonitor));
+            auto imageRef = CGDisplayCreateImage(Id(_CGFrameProcessorImpl->Data->SelectedMonitor));
             if(!imageRef) return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
             
             auto width = CGImageGetWidth(imageRef);
             auto height = CGImageGetHeight(imageRef);
-            if(width!= Width(*_CGFrameProcessorImpl->Data->SelectedMonitor) || height!= Height(*_CGFrameProcessorImpl->Data->SelectedMonitor)){
+            if(width!= Width(_CGFrameProcessorImpl->Data->SelectedMonitor) || height!= Height(_CGFrameProcessorImpl->Data->SelectedMonitor)){
                  CGImageRelease(imageRef);
                 return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
             }
@@ -74,30 +74,30 @@ namespace SL {
             imgrect.bottom = height;
             if(_CGFrameProcessorImpl->Data->CaptureEntireMonitor){
            
-                auto img = CreateImage(imgrect, PixelStride, 0,_CGFrameProcessorImpl->NewImageBuffer.data());
-                _CGFrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_CGFrameProcessorImpl->Data->SelectedMonitor);
+                auto img = Create(imgrect, PixelStride, 0,_CGFrameProcessorImpl->NewImageBuffer.data());
+                _CGFrameProcessorImpl->Data->CaptureEntireMonitor(img, _CGFrameProcessorImpl->Data->SelectedMonitor);
             }
 			if (_CGFrameProcessorImpl->Data->CaptureDifMonitor) {
 				if (_CGFrameProcessorImpl->FirstRun) {
 						//first time through, just send the whole image
-						auto wholeimgfirst = CreateImage(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.data());
-						_CGFrameProcessorImpl->Data->CaptureDifMonitor(*wholeimgfirst, *_CGFrameProcessorImpl->Data->SelectedMonitor);
+						auto wholeimgfirst = Create(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.data());
+						_CGFrameProcessorImpl->Data->CaptureDifMonitor(wholeimgfirst, _CGFrameProcessorImpl->Data->SelectedMonitor);
 						_CGFrameProcessorImpl->FirstRun = false;
 				} else {		
 				
 				
 					//user wants difs, lets do it!
-					auto newimg = CreateImage(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.data());
-					auto oldimg = CreateImage(imgrect, PixelStride, 0, _CGFrameProcessorImpl->OldImageBuffer.data());
-					auto imgdifs = GetDifs(*oldimg, *newimg);
+					auto newimg = Create(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.data());
+					auto oldimg = Create(imgrect, PixelStride, 0, _CGFrameProcessorImpl->OldImageBuffer.data());
+					auto imgdifs = GetDifs(oldimg, newimg);
 
 					for (auto& r : imgdifs) {
-						auto padding = (r.left *PixelStride) + ((Width(*newimg) - r.right)*PixelStride);
+						auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
 						auto startsrc = _CGFrameProcessorImpl->NewImageBuffer.data();
-						startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(*newimg));
+						startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
 
-						auto difimg = CreateImage(r, PixelStride, padding, startsrc);
-						_CGFrameProcessorImpl->Data->CaptureDifMonitor(*difimg, *_CGFrameProcessorImpl->Data->SelectedMonitor);
+						auto difimg = Create(r, PixelStride, padding, startsrc);
+						_CGFrameProcessorImpl->Data->CaptureDifMonitor(difimg, _CGFrameProcessorImpl->Data->SelectedMonitor);
 
 					}
 				}

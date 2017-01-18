@@ -3,9 +3,43 @@
 #include <thread>
 #include <atomic>
 
-// this is internal stuff.. 
+// this is INTERNAL DO NOT USE!
 namespace SL {
 	namespace Screen_Capture {
+
+		struct Monitor {
+			int Id;
+			int Index;
+			int Height;
+			int Width;
+			//Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.
+			int OffsetX;
+			int OffsetY;
+			std::string Name;
+		};
+		struct Image {
+			ImageRect Bounds;
+			int Pixelstride;
+			int RowPadding;
+			char* Data = nullptr;
+		};
+
+		struct ScreenCapture_Settings {
+			//min interval between frames that are captured
+			int Monitor_Capture_Interval;
+			//set this if you want to capture the entire monitor each interval
+			CaptureCallback CaptureEntireMonitor;
+			//set this if you want to receive difs each interval on what has changed
+			CaptureCallback CaptureDifMonitor;
+			//min interval between mouse captures
+			int Mouse_Capture_Interval;
+			//the function to be called on each mouse interval. If a the mouse image has changed, img will not be null, otherwise, the only change is new mouse coords
+			MouseCallback CaptureMouse;
+			//get monitors to watch
+			MonitorCallback MonitorsChanged;
+
+		};
+
 		struct Base_Thread_Data
 		{
 			// Used to indicate abnormal error condition
@@ -19,7 +53,7 @@ namespace SL {
 		struct Monitor_Thread_Data: Base_Thread_Data
 		{
 	
-			std::shared_ptr<Monitor> SelectedMonitor;
+			Monitor SelectedMonitor;
 
 			int CaptureInterval; //in milliseconds	
 			CaptureCallback CaptureEntireMonitor;
@@ -40,7 +74,11 @@ namespace SL {
 		};
 		const int PixelStride = 4;
 		std::shared_ptr<Monitor> CreateMonitor(int index,int id, int h, int w, int ox, int oy, const std::string& n);
-	
+
+		Image Create(const ImageRect& b, int ps, int rp, char* d);
+		//this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
+		void Copy(const Image& dst, const Image& src);
+
 		std::vector<ImageRect> GetDifs(const Image & oldimg, const Image & newimg);
 
 	}

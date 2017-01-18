@@ -14,7 +14,7 @@ namespace SL {
 		class ThreadManager {
 
 			std::vector<std::thread> m_ThreadHandles;
-			std::vector<std::shared_ptr<Monitor_Thread_Data>> m_ThreadData;
+			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
 
 		public:
 			ThreadManager();
@@ -38,7 +38,7 @@ namespace SL {
                 
 				std::string msg = "took ";
 				msg += std::to_string(mspassed) + "ms for output ";
-				std::cout << msg << std::endl;
+				//std::cout << msg << std::endl;
 
 				auto timetowait = data->CaptureInterval - mspassed;
 				if (timetowait > 0) {

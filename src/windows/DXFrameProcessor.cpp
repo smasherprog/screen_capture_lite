@@ -374,7 +374,7 @@ namespace SL {
 				return ret;
 			}
 			DUPLE_RESOURCES dupl;
-			ret = Initialize(dupl, res.Device.Get(), Id(*data->SelectedMonitor));
+			ret = Initialize(dupl, res.Device.Get(), Id(data->SelectedMonitor));
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}
@@ -385,7 +385,7 @@ namespace SL {
 			_DXFrameProcessorImpl->Output = dupl.Output;
 
 			_DXFrameProcessorImpl->Data = data;
-			_DXFrameProcessorImpl->ImageBufferSize = Width(*data->SelectedMonitor)* Height(*data->SelectedMonitor)* PixelStride;
+			_DXFrameProcessorImpl->ImageBufferSize = Width(data->SelectedMonitor)* Height(data->SelectedMonitor)* PixelStride;
 			_DXFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_DXFrameProcessorImpl->ImageBufferSize);
 			return ret;
 		}
@@ -479,12 +479,12 @@ namespace SL {
 			}
 			auto startsrc = (char*)MappingDesc.pData;
 			auto startdst = _DXFrameProcessorImpl->ImageBuffer.get();
-			auto rowstride = PixelStride*Width(*_DXFrameProcessorImpl->Data->SelectedMonitor);
-			if (rowstride == MappingDesc.RowPitch) {//no need for multiple calls, there is no padding here
-				memcpy(startdst, startsrc, rowstride*Height(*_DXFrameProcessorImpl->Data->SelectedMonitor));
+			auto rowstride = PixelStride*Width(_DXFrameProcessorImpl->Data->SelectedMonitor);
+			if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
+				memcpy(startdst, startsrc, rowstride*Height(_DXFrameProcessorImpl->Data->SelectedMonitor));
 			}
 			else {
-				for (auto i = 0; i < Height(*_DXFrameProcessorImpl->Data->SelectedMonitor); i++) {
+				for (auto i = 0; i < Height(_DXFrameProcessorImpl->Data->SelectedMonitor); i++) {
 					memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
 				}
 			}
@@ -501,20 +501,20 @@ namespace SL {
 					ret.bottom = dirtyrects[i].bottom;
 					ret.right = dirtyrects[i].right;
 					//pad is the number of bytes to advance to the next starting point of data. this is NOT the padding to the rightmost side of the image
-					auto pad = (dirtyrects[i].left *PixelStride) + ((Width(*_DXFrameProcessorImpl->Data->SelectedMonitor) - dirtyrects[i].right) *PixelStride);
+					auto pad = (dirtyrects[i].left *PixelStride) + ((Width(_DXFrameProcessorImpl->Data->SelectedMonitor) - dirtyrects[i].right) *PixelStride);
 
-					auto startdata = _DXFrameProcessorImpl->ImageBuffer.get() + (Width(*_DXFrameProcessorImpl->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left);
-					auto img = CreateImage(ret, PixelStride, pad, startdata);
-					_DXFrameProcessorImpl->Data->CaptureDifMonitor(*img, *_DXFrameProcessorImpl->Data->SelectedMonitor);
+					auto startdata = _DXFrameProcessorImpl->ImageBuffer.get() + (Width(_DXFrameProcessorImpl->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left);
+					auto img = Create(ret, PixelStride, pad, startdata);
+					_DXFrameProcessorImpl->Data->CaptureDifMonitor(img, _DXFrameProcessorImpl->Data->SelectedMonitor);
 				}
 
 			}
 			if (_DXFrameProcessorImpl->Data->CaptureEntireMonitor) {
 				ret.left = ret.top = 0;
-				ret.bottom = Height(*_DXFrameProcessorImpl->Data->SelectedMonitor);
-				ret.right = Width(*_DXFrameProcessorImpl->Data->SelectedMonitor);
-				auto img = CreateImage(ret, PixelStride, 0, _DXFrameProcessorImpl->ImageBuffer.get());
-				_DXFrameProcessorImpl->Data->CaptureEntireMonitor(*img, *_DXFrameProcessorImpl->Data->SelectedMonitor);
+				ret.bottom = Height(_DXFrameProcessorImpl->Data->SelectedMonitor);
+				ret.right = Width(_DXFrameProcessorImpl->Data->SelectedMonitor);
+				auto img = Create(ret, PixelStride, 0, _DXFrameProcessorImpl->ImageBuffer.get());
+				_DXFrameProcessorImpl->Data->CaptureEntireMonitor(img, _DXFrameProcessorImpl->Data->SelectedMonitor);
 			}
 			return Ret;
 		}

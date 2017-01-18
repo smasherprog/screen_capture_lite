@@ -18,7 +18,7 @@ CGImageRef SLScreen_Capture_GetCurrentMouseImage(){
  
     @autoreleasepool {
         NSCursor *cur = [NSCursor currentSystemCursor];
-           if(cur==nil) return img;
+        if(cur==nil) return img;
         NSImage *overlay    =  [cur image];
         CGImageSourceRef source = CGImageSourceCreateWithData((CFDataRef)[overlay TIFFRepresentation], NULL);
         img = CGImageSourceCreateImageAtIndex(source, 0, NULL);

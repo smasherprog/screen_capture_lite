@@ -13,12 +13,15 @@ namespace SL {
 			std::shared_ptr<Mouse_Thread_Data> Data;
 			Display* SelectedDisplay;
 			Window RootWindow;
+            std::vector<char> NewImageBuffer, LastImageBuffer;
+			int Last_x, Last_y;
 		};
 
 		X11MouseProcessor::X11MouseProcessor()
 		{
 			_X11MouseProcessorImpl = std::make_unique<X11MouseProcessorImpl>();
 			_X11MouseProcessorImpl->SelectedDisplay = nullptr;
+			_X11MouseProcessorImpl->Last_x = _X11MouseProcessorImpl->Last_y = 0;
 		}
 
 		X11MouseProcessor::~X11MouseProcessor()
@@ -59,8 +62,10 @@ namespace SL {
 			imgrect.left = imgrect.top = 0;
 			imgrect.right = img->width;
 			imgrect.bottom = img->height;
-            auto imgdata = std::make_unique<char[]>(PixelStride*imgrect.right*imgrect.bottom);
-        	memcpy(imgdata.get(), img->pixels, PixelStride*imgrect.right*imgrect.bottom);
+            
+            _X11MouseProcessorImpl->NewImageBuffer.resize(PixelStride*imgrect.right*imgrect.bottom);
+            _X11MouseProcessorImpl->LastImageBuffer.resize(PixelStride*imgrect.right*imgrect.bottom);
+        	memcpy(_X11MouseProcessorImpl->NewImageBuffer.data(), img->pixels, _X11MouseProcessorImpl->NewImageBuffer.size());
 
 				// Get the mouse cursor position
             int x, y, root_x, root_y = 0;
@@ -75,8 +80,18 @@ namespace SL {
 
 			if (_X11MouseProcessorImpl->Data->CaptureCallback) {
 
-				auto img = CreateImage(imgrect, PixelStride, 0, imgdata.get());
-				_X11MouseProcessorImpl->Data->CaptureCallback(*img, x, y);
+				auto wholeimg = Create(imgrect, PixelStride, 0, _X11MouseProcessorImpl->LastImageBuffer.data());
+	                
+				//if the mouse image is different, send the new image and swap the data 
+				if (memcmp(_X11MouseProcessorImpl->NewImageBuffer.data(), _X11MouseProcessorImpl->LastImageBuffer.data(), _X11MouseProcessorImpl->NewImageBuffer.size()) != 0) {
+					_X11MouseProcessorImpl->Data->CaptureCallback(&wholeimg, x, y);
+					_X11MouseProcessorImpl->NewImageBuffer.swap(_X11MouseProcessorImpl->LastImageBuffer);
+				}
+				else if(_X11MouseProcessorImpl->Last_x != x || _X11MouseProcessorImpl->Last_y != y){
+					_X11MouseProcessorImpl->Data->CaptureCallback(nullptr, x, y);
+				}
+				_X11MouseProcessorImpl->Last_x = x;
+				_X11MouseProcessorImpl->Last_y = y;
 			}
 			return Ret;
 		}

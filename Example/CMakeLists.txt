@@ -5,10 +5,6 @@ if(WIN32)
     
 elseif(APPLE)
 
-    find_library(corefoundation_lib CoreFoundation)
-    find_library(cocoa_lib Cocoa)
-    set(SYSTEM_LIBS ${corefoundation_lib} ${cocoa_lib})
-
 else()
     
 

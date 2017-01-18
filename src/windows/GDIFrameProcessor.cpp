@@ -13,6 +13,7 @@ namespace SL {
 			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
 			size_t ImageBufferSize;
 			bool FirstRun;
+			std::string MonitorName;
 		};
 
 
@@ -29,16 +30,16 @@ namespace SL {
 		}
 		DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
 			auto Ret = DUPL_RETURN_SUCCESS;
-			auto name = Name(*data->SelectedMonitor);
-			_GDIFrameProcessorImpl->MonitorDC.DC = CreateDCA(name.c_str(), NULL, NULL, NULL);
+			_GDIFrameProcessorImpl->MonitorName = Name(data->SelectedMonitor);
+			_GDIFrameProcessorImpl->MonitorDC.DC = CreateDCA(_GDIFrameProcessorImpl->MonitorName.c_str(), NULL, NULL, NULL);
 			_GDIFrameProcessorImpl->CaptureDC.DC = CreateCompatibleDC(_GDIFrameProcessorImpl->MonitorDC.DC);
-			_GDIFrameProcessorImpl->CaptureBMP.Bitmap = CreateCompatibleBitmap(_GDIFrameProcessorImpl->MonitorDC.DC, Width(*data->SelectedMonitor), Height(*data->SelectedMonitor));
+			_GDIFrameProcessorImpl->CaptureBMP.Bitmap = CreateCompatibleBitmap(_GDIFrameProcessorImpl->MonitorDC.DC, Width(data->SelectedMonitor), Height(data->SelectedMonitor));
 
 			if (!_GDIFrameProcessorImpl->MonitorDC.DC || !_GDIFrameProcessorImpl->CaptureDC.DC || !_GDIFrameProcessorImpl->CaptureBMP.Bitmap) {
 				return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
 			}
 			_GDIFrameProcessorImpl->Data = data;
-			_GDIFrameProcessorImpl->ImageBufferSize = Width(*data->SelectedMonitor)* Height(*data->SelectedMonitor)* PixelStride;
+			_GDIFrameProcessorImpl->ImageBufferSize = Width(data->SelectedMonitor)* Height(data->SelectedMonitor)* PixelStride;
 			if (_GDIFrameProcessorImpl->Data->CaptureDifMonitor) {//only need the old buffer if difs are needed. If no dif is needed, then the image is always new
 				_GDIFrameProcessorImpl->OldImageBuffer = std::make_unique<char[]>(_GDIFrameProcessorImpl->ImageBufferSize);
 			}
@@ -55,8 +56,16 @@ namespace SL {
 
 			ImageRect ret;
 			ret.left = ret.top = 0;
-			ret.bottom = Height(*_GDIFrameProcessorImpl->Data->SelectedMonitor);
-			ret.right = Width(*_GDIFrameProcessorImpl->Data->SelectedMonitor);
+			ret.bottom = Height(_GDIFrameProcessorImpl->Data->SelectedMonitor);
+			ret.right = Width(_GDIFrameProcessorImpl->Data->SelectedMonitor);
+
+			DEVMODEA devMode;
+			devMode.dmSize = sizeof(devMode);
+			if(EnumDisplaySettingsA(_GDIFrameProcessorImpl->MonitorName.c_str(), ENUM_CURRENT_SETTINGS, &devMode)==TRUE){
+				if (static_cast<int>(devMode.dmPelsHeight) != ret.bottom || static_cast<int>(devMode.dmPelsWidth) != ret.right) {
+					return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
+				}
+			}
 
 			// Selecting an object into the specified DC
 			auto originalBmp = SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, _GDIFrameProcessorImpl->CaptureBMP.Bitmap);
@@ -64,7 +73,7 @@ namespace SL {
 			if (BitBlt(_GDIFrameProcessorImpl->CaptureDC.DC, 0, 0, ret.right, ret.bottom, _GDIFrameProcessorImpl->MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
 				//if the screen cannot be captured, return
 				SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, originalBmp);
-				Ret = DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
+				return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
 			}
 			else {
 
@@ -85,29 +94,29 @@ namespace SL {
 				SelectObject(_GDIFrameProcessorImpl->CaptureDC.DC, originalBmp);
 				if (_GDIFrameProcessorImpl->Data->CaptureEntireMonitor) {
 
-					auto wholeimg = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
-					_GDIFrameProcessorImpl->Data->CaptureEntireMonitor(*wholeimg, *_GDIFrameProcessorImpl->Data->SelectedMonitor);
+					auto wholeimg = Create(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
+					_GDIFrameProcessorImpl->Data->CaptureEntireMonitor(wholeimg, _GDIFrameProcessorImpl->Data->SelectedMonitor);
 				}
 				if (_GDIFrameProcessorImpl->Data->CaptureDifMonitor) {
 					if (_GDIFrameProcessorImpl->FirstRun) {
 						//first time through, just send the whole image
-						auto wholeimgfirst = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
-						_GDIFrameProcessorImpl->Data->CaptureDifMonitor(*wholeimgfirst, *_GDIFrameProcessorImpl->Data->SelectedMonitor);
+						auto wholeimgfirst = Create(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
+						_GDIFrameProcessorImpl->Data->CaptureDifMonitor(wholeimgfirst, _GDIFrameProcessorImpl->Data->SelectedMonitor);
 						_GDIFrameProcessorImpl->FirstRun = false;
 					}
 					else {
 						//user wants difs, lets do it!
-						auto newimg = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
-						auto oldimg = CreateImage(ret, PixelStride, 0, _GDIFrameProcessorImpl->OldImageBuffer.get());
-						auto imgdifs = GetDifs(*oldimg, *newimg);
+						auto newimg = Create(ret, PixelStride, 0, _GDIFrameProcessorImpl->NewImageBuffer.get());
+						auto oldimg = Create(ret, PixelStride, 0, _GDIFrameProcessorImpl->OldImageBuffer.get());
+						auto imgdifs = GetDifs(oldimg, newimg);
 
 						for (auto& r : imgdifs) {
-							auto padding = (r.left *PixelStride) + ((Width(*newimg) - r.right)*PixelStride);
+							auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
 							auto startsrc = _GDIFrameProcessorImpl->NewImageBuffer.get();
-							startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(*newimg));
+							startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
 
-							auto difimg = CreateImage(r, PixelStride, padding, startsrc);
-							_GDIFrameProcessorImpl->Data->CaptureDifMonitor(*difimg, *_GDIFrameProcessorImpl->Data->SelectedMonitor);
+							auto difimg = Create(r, PixelStride, padding, startsrc);
+							_GDIFrameProcessorImpl->Data->CaptureDifMonitor(difimg, _GDIFrameProcessorImpl->Data->SelectedMonitor);
 
 						}
 					}

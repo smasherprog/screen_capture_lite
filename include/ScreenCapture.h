@@ -58,10 +58,7 @@ namespace SL {
 
 		typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
 		typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
-<<<<<<< HEAD
-=======
 		typedef std::function<std::vector<std::shared_ptr<Monitor>>()> MonitorCallback;
->>>>>>> c29bce3e0b36681f54bf22c03d96d2d838356bba
 
 		class ScreenCaptureManagerImpl;
 		class ScreenCaptureManager {

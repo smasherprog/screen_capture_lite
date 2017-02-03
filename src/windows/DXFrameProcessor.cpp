@@ -358,7 +358,6 @@ namespace SL {
 		DXFrameProcessor::DXFrameProcessor()
 		{
 			_DXFrameProcessorImpl = std::make_unique<DXFrameProcessorImpl>();
-			_DXFrameProcessorImpl->ImageBufferSize = 0;
 		}
 
 		DXFrameProcessor::~DXFrameProcessor()

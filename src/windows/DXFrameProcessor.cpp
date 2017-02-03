@@ -352,8 +352,6 @@ namespace SL {
 			std::vector<BYTE> MetaDataBuffer;
 
 			std::shared_ptr<Monitor_Thread_Data> Data;
-			std::unique_ptr<char[]> ImageBuffer;
-			size_t ImageBufferSize;
 		};
 
 
@@ -385,8 +383,6 @@ namespace SL {
 			_DXFrameProcessorImpl->Output = dupl.Output;
 
 			_DXFrameProcessorImpl->Data = data;
-			_DXFrameProcessorImpl->ImageBufferSize = Width(data->SelectedMonitor)* Height(data->SelectedMonitor)* PixelStride;
-			_DXFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_DXFrameProcessorImpl->ImageBufferSize);
 			return ret;
 		}
 		//
@@ -478,17 +474,6 @@ namespace SL {
 				return ProcessFailure(_DXFrameProcessorImpl->Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
 			}
 			auto startsrc = (char*)MappingDesc.pData;
-			auto startdst = _DXFrameProcessorImpl->ImageBuffer.get();
-			auto rowstride = PixelStride*Width(_DXFrameProcessorImpl->Data->SelectedMonitor);
-			if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
-				memcpy(startdst, startsrc, rowstride*Height(_DXFrameProcessorImpl->Data->SelectedMonitor));
-			}
-			else {
-				for (auto i = 0; i < Height(_DXFrameProcessorImpl->Data->SelectedMonitor); i++) {
-					memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
-				}
-			}
-
 			ImageRect ret;
 			// Process dirties 
 
@@ -501,9 +486,9 @@ namespace SL {
 					ret.bottom = dirtyrects[i].bottom;
 					ret.right = dirtyrects[i].right;
 					//pad is the number of bytes to advance to the next starting point of data. this is NOT the padding to the rightmost side of the image
-					auto pad = (dirtyrects[i].left *PixelStride) + ((Width(_DXFrameProcessorImpl->Data->SelectedMonitor) - dirtyrects[i].right) *PixelStride);
+					auto pad = MappingDesc.RowPitch - (dirtyrects[i].right *PixelStride) + (dirtyrects[i].left *PixelStride);
 
-					auto startdata = _DXFrameProcessorImpl->ImageBuffer.get() + (Width(_DXFrameProcessorImpl->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left);
+					auto startdata = startsrc + (MappingDesc.RowPitch*ret.top) + (PixelStride*ret.left);
 					auto img = Create(ret, PixelStride, pad, startdata);
 					_DXFrameProcessorImpl->Data->CaptureDifMonitor(img, _DXFrameProcessorImpl->Data->SelectedMonitor);
 				}
@@ -513,7 +498,7 @@ namespace SL {
 				ret.left = ret.top = 0;
 				ret.bottom = Height(_DXFrameProcessorImpl->Data->SelectedMonitor);
 				ret.right = Width(_DXFrameProcessorImpl->Data->SelectedMonitor);
-				auto img = Create(ret, PixelStride, 0, _DXFrameProcessorImpl->ImageBuffer.get());
+				auto img = Create(ret, PixelStride, MappingDesc.RowPitch - (ret.right*PixelStride), startsrc);
 				_DXFrameProcessorImpl->Data->CaptureEntireMonitor(img, _DXFrameProcessorImpl->Data->SelectedMonitor);
 			}
 			return Ret;

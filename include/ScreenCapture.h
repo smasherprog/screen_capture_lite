@@ -5,6 +5,7 @@
 #include <string>
 #include <ostream>
 
+
 namespace SL {
 	namespace Screen_Capture {
 

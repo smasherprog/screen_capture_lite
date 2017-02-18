@@ -8,15 +8,15 @@ endif()
 
 if(WIN32)
     set(SCREEN_CAPTURE_PLATFORM_SRC     
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GetMonitors.cpp
-       ${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/DXFrameProcessor.h
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/DXFrameProcessor.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GetMonitors.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/DXFrameProcessor.h
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/DXFrameProcessor.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/GDIHelpers.h
-       ${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/GDIFrameProcessor.h
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GDIFrameProcessor.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/GDIFrameProcessor.h
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GDIFrameProcessor.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/GDIMouseProcessor.h
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GDIMouseProcessor.cpp
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/ThreadRunner.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GDIMouseProcessor.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/ThreadRunner.cpp
     )
 
     set(SCREEN_CAPTURE_PLATFORM_INC     

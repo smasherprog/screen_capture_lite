@@ -131,7 +131,8 @@ namespace SL {
 			ret->Index = index;
 			ret->Height = h;
 			ret->Id = id;
-			ret->Name = n;
+			assert(n.size() + 1 < sizeof(ret->Name));
+			memcpy(ret->Name, n.c_str(), n.size() + 1);
 			ret->OffsetX = ox;
 			ret->OffsetY = oy;
 			ret->Width = w;

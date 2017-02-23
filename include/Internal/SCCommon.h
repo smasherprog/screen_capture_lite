@@ -15,7 +15,7 @@ namespace SL {
 			//Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.
 			int OffsetX;
 			int OffsetY;
-			std::string Name;
+			char Name[128];
 		};
 		struct Image {
 			ImageRect Bounds;

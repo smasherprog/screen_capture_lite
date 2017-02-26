@@ -151,7 +151,7 @@ namespace SL {
 		int Id(const Monitor& mointor) { return mointor.Id; }
 		int OffsetX(const Monitor& mointor) { return mointor.OffsetX; }
 		int OffsetY(const Monitor& mointor) { return mointor.OffsetY; }
-		const std::string& Name(const Monitor& mointor) { return mointor.Name; }
+		const char* Name(const Monitor& mointor) { return mointor.Name; }
 		int Height(const Monitor& mointor) { return mointor.Height; }
 		int Width(const Monitor& mointor) { return mointor.Width; }
 		int Height(const ImageRect& rect) { return rect.bottom - rect.top; }

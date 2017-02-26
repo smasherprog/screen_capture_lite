@@ -38,7 +38,7 @@ namespace SL {
 		int Id(const Monitor& mointor);
 		int OffsetX(const Monitor& mointor);
 		int OffsetY(const Monitor& mointor);
-		const std::string& Name(const Monitor& mointor);
+		const char* Name(const Monitor& mointor);
 		int Height(const Monitor& mointor);
 		int Width(const Monitor& mointor);
 

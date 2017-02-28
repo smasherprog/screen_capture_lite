@@ -491,7 +491,6 @@ namespace SL {
 					auto img = Create(ret, PixelStride, pad, startdata);
 					_DXFrameProcessorImpl->Data->CaptureDifMonitor(img, _DXFrameProcessorImpl->Data->SelectedMonitor);
 				}
-
 			}
 			if (_DXFrameProcessorImpl->Data->CaptureEntireMonitor) {
 				ret.left = ret.top = 0;

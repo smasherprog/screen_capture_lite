@@ -8,7 +8,7 @@ namespace SL {
 
 		struct GDIMouseProcessorImpl;
 		class GDIMouseProcessor {
-			std::unique_ptr<GDIMouseProcessorImpl> _GDIMouseProcessorImpl;
+			std::unique_ptr<GDIMouseProcessorImpl> GDIMouseProcessorImpl_;
 
 		public:
 

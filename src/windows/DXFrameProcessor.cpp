@@ -352,15 +352,17 @@ namespace SL {
 			std::vector<BYTE> MetaDataBuffer;
 
 			std::shared_ptr<Monitor_Thread_Data> Data;
-			std::unique_ptr<char[]> ImageBuffer;
+
+			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
 			size_t ImageBufferSize;
+			bool FirstRun;
 		};
 
 
 		DXFrameProcessor::DXFrameProcessor()
 		{
-			_DXFrameProcessorImpl = std::make_unique<DXFrameProcessorImpl>();
-			_DXFrameProcessorImpl->ImageBufferSize = 0;
+			DXFrameProcessorImpl_ = std::make_unique<DXFrameProcessorImpl>();
+			DXFrameProcessorImpl_->ImageBufferSize = 0;
 		}
 
 		DXFrameProcessor::~DXFrameProcessor()
@@ -378,27 +380,35 @@ namespace SL {
 			if (ret != DUPL_RETURN_SUCCESS) {
 				return ret;
 			}
-			_DXFrameProcessorImpl->Device = res.Device;
-			_DXFrameProcessorImpl->DeviceContext = res.DeviceContext;
-			_DXFrameProcessorImpl->OutputDuplication = dupl.OutputDuplication;
-			_DXFrameProcessorImpl->OutputDesc = dupl.OutputDesc;
-			_DXFrameProcessorImpl->Output = dupl.Output;
+			DXFrameProcessorImpl_->Device = res.Device;
+			DXFrameProcessorImpl_->DeviceContext = res.DeviceContext;
+			DXFrameProcessorImpl_->OutputDuplication = dupl.OutputDuplication;
+			DXFrameProcessorImpl_->OutputDesc = dupl.OutputDesc;
+			DXFrameProcessorImpl_->Output = dupl.Output;
 
-			_DXFrameProcessorImpl->Data = data;
-			_DXFrameProcessorImpl->ImageBufferSize = Width(data->SelectedMonitor)* Height(data->SelectedMonitor)* PixelStride;
-			_DXFrameProcessorImpl->ImageBuffer = std::make_unique<char[]>(_DXFrameProcessorImpl->ImageBufferSize);
+			DXFrameProcessorImpl_->Data = data;
+			DXFrameProcessorImpl_->ImageBufferSize = Width(data->SelectedMonitor)* Height(data->SelectedMonitor)* PixelStride;
+			if (DXFrameProcessorImpl_->Data->CaptureDifMonitor) {//only need the old buffer if difs are needed. If no dif is needed, then the image is always new
+				DXFrameProcessorImpl_->OldImageBuffer = std::make_unique<char[]>(DXFrameProcessorImpl_->ImageBufferSize);
+			}
+			DXFrameProcessorImpl_->NewImageBuffer = std::make_unique<char[]>(DXFrameProcessorImpl_->ImageBufferSize);
 			return ret;
 		}
+
+
+
+
 		//
 		// Process a given frame and its metadata
 		//
+
 		DUPL_RETURN DXFrameProcessor::ProcessFrame()
 		{
 			auto Ret = DUPL_RETURN_SUCCESS;
 
 			Microsoft::WRL::ComPtr<IDXGIResource> DesktopResource;
 			DXGI_OUTDUPL_FRAME_INFO FrameInfo;
-			AquireFrameRAII frame(_DXFrameProcessorImpl->OutputDuplication.Get());
+			AquireFrameRAII frame(DXFrameProcessorImpl_->OutputDuplication.Get());
 
 			// Get new frame
 			auto hr = frame.AcquireNextFrame(500, &FrameInfo, DesktopResource.GetAddressOf());
@@ -408,7 +418,7 @@ namespace SL {
 			}
 			else if (FAILED(hr))
 			{
-				return ProcessFailure(_DXFrameProcessorImpl->Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
+				return ProcessFailure(DXFrameProcessorImpl_->Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
 			}
 			Microsoft::WRL::ComPtr<ID3D11Texture2D> aquireddesktopimage;
 			// QI for IDXGIResource
@@ -421,7 +431,7 @@ namespace SL {
 			D3D11_TEXTURE2D_DESC ThisDesc;
 			aquireddesktopimage->GetDesc(&ThisDesc);
 
-			if (!_DXFrameProcessorImpl->StagingSurf)
+			if (!DXFrameProcessorImpl_->StagingSurf)
 			{
 				D3D11_TEXTURE2D_DESC StagingDesc;
 				StagingDesc = ThisDesc;
@@ -429,10 +439,10 @@ namespace SL {
 				StagingDesc.Usage = D3D11_USAGE_STAGING;
 				StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 				StagingDesc.MiscFlags = 0;
-				hr = _DXFrameProcessorImpl->Device->CreateTexture2D(&StagingDesc, nullptr, _DXFrameProcessorImpl->StagingSurf.GetAddressOf());
+				hr = DXFrameProcessorImpl_->Device->CreateTexture2D(&StagingDesc, nullptr, DXFrameProcessorImpl_->StagingSurf.GetAddressOf());
 				if (FAILED(hr))
 				{
-					return ProcessFailure(_DXFrameProcessorImpl->Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
+					return ProcessFailure(DXFrameProcessorImpl_->Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
 				}
 			}
 
@@ -442,22 +452,22 @@ namespace SL {
 			// Get metadata
 			if (FrameInfo.TotalMetadataBufferSize > 0)
 			{
-				_DXFrameProcessorImpl->MetaDataBuffer.reserve(FrameInfo.TotalMetadataBufferSize);
+				DXFrameProcessorImpl_->MetaDataBuffer.reserve(FrameInfo.TotalMetadataBufferSize);
 				UINT bufsize = FrameInfo.TotalMetadataBufferSize;
 
 				// Get move rectangles
-				hr = _DXFrameProcessorImpl->OutputDuplication->GetFrameMoveRects(bufsize, reinterpret_cast<DXGI_OUTDUPL_MOVE_RECT*>(_DXFrameProcessorImpl->MetaDataBuffer.data()), &bufsize);
+				hr = DXFrameProcessorImpl_->OutputDuplication->GetFrameMoveRects(bufsize, reinterpret_cast<DXGI_OUTDUPL_MOVE_RECT*>(DXFrameProcessorImpl_->MetaDataBuffer.data()), &bufsize);
 				if (FAILED(hr))
 				{
 					return ProcessFailure(nullptr, L"Failed to get frame move rects in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
 				}
 				movecount = bufsize / sizeof(DXGI_OUTDUPL_MOVE_RECT);
 
-				dirtyrects = reinterpret_cast<RECT*>(_DXFrameProcessorImpl->MetaDataBuffer.data() + bufsize);
+				dirtyrects = reinterpret_cast<RECT*>(DXFrameProcessorImpl_->MetaDataBuffer.data() + bufsize);
 				bufsize = FrameInfo.TotalMetadataBufferSize - bufsize;
 
 				// Get dirty rectangles
-				hr = _DXFrameProcessorImpl->OutputDuplication->GetFrameDirtyRects(bufsize, dirtyrects, &bufsize);
+				hr = DXFrameProcessorImpl_->OutputDuplication->GetFrameDirtyRects(bufsize, dirtyrects, &bufsize);
 				if (FAILED(hr))
 				{
 					return ProcessFailure(nullptr, L"Failed to get frame dirty rects in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
@@ -465,57 +475,83 @@ namespace SL {
 				dirtycount = bufsize / sizeof(RECT);
 				//convert rects to their correct coords
 				for (auto i = 0; i < dirtycount; i++) {
-					dirtyrects[i] = ConvertRect(dirtyrects[i], _DXFrameProcessorImpl->OutputDesc);
+					dirtyrects[i] = ConvertRect(dirtyrects[i], DXFrameProcessorImpl_->OutputDesc);
 				}
 			}
-			_DXFrameProcessorImpl->DeviceContext->CopyResource(_DXFrameProcessorImpl->StagingSurf.Get(), aquireddesktopimage.Get());
+			DXFrameProcessorImpl_->DeviceContext->CopyResource(DXFrameProcessorImpl_->StagingSurf.Get(), aquireddesktopimage.Get());
 
 			D3D11_MAPPED_SUBRESOURCE MappingDesc;
-			MAPPED_SUBRESOURCERAII mappedresrouce(_DXFrameProcessorImpl->DeviceContext.Get());
-			hr = mappedresrouce.Map(_DXFrameProcessorImpl->StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
+			MAPPED_SUBRESOURCERAII mappedresrouce(DXFrameProcessorImpl_->DeviceContext.Get());
+			hr = mappedresrouce.Map(DXFrameProcessorImpl_->StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
 			// Get the data
 			if (MappingDesc.pData == NULL) {
-				return ProcessFailure(_DXFrameProcessorImpl->Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
+				return ProcessFailure(DXFrameProcessorImpl_->Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
 			}
+			ImageRect ret;
+			ret.left = ret.top = 0;
+			ret.bottom = Height(DXFrameProcessorImpl_->Data->SelectedMonitor);
+			ret.right = Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
+
 			auto startsrc = (char*)MappingDesc.pData;
-			auto startdst = _DXFrameProcessorImpl->ImageBuffer.get();
-			auto rowstride = PixelStride*Width(_DXFrameProcessorImpl->Data->SelectedMonitor);
+			auto startdst = DXFrameProcessorImpl_->NewImageBuffer.get();
+			auto rowstride = PixelStride*Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
 			if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
-				memcpy(startdst, startsrc, rowstride*Height(_DXFrameProcessorImpl->Data->SelectedMonitor));
+				memcpy(startdst, MappingDesc.pData, rowstride*Height(DXFrameProcessorImpl_->Data->SelectedMonitor));
 			}
 			else {
-				for (auto i = 0; i < Height(_DXFrameProcessorImpl->Data->SelectedMonitor); i++) {
+				for (auto i = 0; i < Height(DXFrameProcessorImpl_->Data->SelectedMonitor); i++) {
 					memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
 				}
 			}
+			if (DXFrameProcessorImpl_->Data->CaptureEntireMonitor) {
+				auto wholeimg = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->NewImageBuffer.get());
+				DXFrameProcessorImpl_->Data->CaptureEntireMonitor(wholeimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
+			}
+			if (DXFrameProcessorImpl_->Data->CaptureDifMonitor) {
+				if (DXFrameProcessorImpl_->FirstRun) {
+					//first time through, just send the whole image
+					auto wholeimgfirst = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->NewImageBuffer.get());
+					DXFrameProcessorImpl_->Data->CaptureDifMonitor(wholeimgfirst, DXFrameProcessorImpl_->Data->SelectedMonitor);
+					DXFrameProcessorImpl_->FirstRun = false;
+				}
+				else {
+					//user wants difs, lets do it!
 
-			ImageRect ret;
-			// Process dirties 
+					if (dirtycount > 0 && dirtyrects != nullptr && DXFrameProcessorImpl_->Data->CaptureDifMonitor)
+					{
+						for (auto i = 0; i < dirtycount; i++)
+						{
+							ret.left = dirtyrects[i].left;
+							ret.top = dirtyrects[i].top;
+							ret.bottom = dirtyrects[i].bottom;
+							ret.right = dirtyrects[i].right;
+							//pad is the number of bytes to advance to the next starting point of data. this is NOT the padding to the rightmost side of the image
+							auto pad = (dirtyrects[i].left *PixelStride) + ((Width(DXFrameProcessorImpl_->Data->SelectedMonitor) - dirtyrects[i].right) *PixelStride);
 
-			if (dirtycount > 0 && dirtyrects != nullptr && _DXFrameProcessorImpl->Data->CaptureDifMonitor)
-			{
-				for (auto i = 0; i < dirtycount; i++)
-				{
-					ret.left = dirtyrects[i].left;
-					ret.top = dirtyrects[i].top;
-					ret.bottom = dirtyrects[i].bottom;
-					ret.right = dirtyrects[i].right;
-					//pad is the number of bytes to advance to the next starting point of data. this is NOT the padding to the rightmost side of the image
-					auto pad = (dirtyrects[i].left *PixelStride) + ((Width(_DXFrameProcessorImpl->Data->SelectedMonitor) - dirtyrects[i].right) *PixelStride);
+							auto startdataoffset = (Width(DXFrameProcessorImpl_->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left);
+							auto skipped = true;
+							for (auto h = 0; h < Height(ret); h++) {
 
-					auto startdata = _DXFrameProcessorImpl->ImageBuffer.get() + (Width(_DXFrameProcessorImpl->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left);
-					auto img = Create(ret, PixelStride, pad, startdata);
-					_DXFrameProcessorImpl->Data->CaptureDifMonitor(img, _DXFrameProcessorImpl->Data->SelectedMonitor);
+								if (memcmp(DXFrameProcessorImpl_->NewImageBuffer.get() + startdataoffset + (pad*h), DXFrameProcessorImpl_->OldImageBuffer.get() + startdataoffset + (pad*h), PixelStride*Width(ret)) != 0) {
+
+									auto img = Create(ret, PixelStride, pad, DXFrameProcessorImpl_->NewImageBuffer.get() + (Width(DXFrameProcessorImpl_->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left));
+									DXFrameProcessorImpl_->Data->CaptureDifMonitor(img, DXFrameProcessorImpl_->Data->SelectedMonitor);
+									skipped = false;
+									break;
+								}
+							}
+						}
+
+
+
+					}
 				}
 
+
+				std::swap(DXFrameProcessorImpl_->NewImageBuffer, DXFrameProcessorImpl_->OldImageBuffer);
 			}
-			if (_DXFrameProcessorImpl->Data->CaptureEntireMonitor) {
-				ret.left = ret.top = 0;
-				ret.bottom = Height(_DXFrameProcessorImpl->Data->SelectedMonitor);
-				ret.right = Width(_DXFrameProcessorImpl->Data->SelectedMonitor);
-				auto img = Create(ret, PixelStride, 0, _DXFrameProcessorImpl->ImageBuffer.get());
-				_DXFrameProcessorImpl->Data->CaptureEntireMonitor(img, _DXFrameProcessorImpl->Data->SelectedMonitor);
-			}
+
+
 			return Ret;
 		}
 

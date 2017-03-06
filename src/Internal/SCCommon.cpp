@@ -125,6 +125,8 @@ namespace SL {
 			return rects;
 		}
 
+
+
 		std::shared_ptr<Monitor> CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string & n)
 		{
 			auto ret(std::make_shared<Monitor>());

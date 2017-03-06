@@ -8,7 +8,7 @@ namespace SL {
 
 		struct GDIFrameProcessorImpl;
 		class GDIFrameProcessor {
-			std::unique_ptr<GDIFrameProcessorImpl> _GDIFrameProcessorImpl;
+			std::unique_ptr<GDIFrameProcessorImpl> GDIFrameProcessorImpl_;
 		public:
 			GDIFrameProcessor();
 			~GDIFrameProcessor();

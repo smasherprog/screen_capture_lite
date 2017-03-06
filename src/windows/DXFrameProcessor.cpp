@@ -356,13 +356,16 @@ namespace SL {
 			std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
 			size_t ImageBufferSize;
 			bool FirstRun;
+
 		};
 
 
 		DXFrameProcessor::DXFrameProcessor()
 		{
+
 			DXFrameProcessorImpl_ = std::make_unique<DXFrameProcessorImpl>();
 			DXFrameProcessorImpl_->ImageBufferSize = 0;
+
 		}
 
 		DXFrameProcessor::~DXFrameProcessor()
@@ -392,6 +395,7 @@ namespace SL {
 				DXFrameProcessorImpl_->OldImageBuffer = std::make_unique<char[]>(DXFrameProcessorImpl_->ImageBufferSize);
 			}
 			DXFrameProcessorImpl_->NewImageBuffer = std::make_unique<char[]>(DXFrameProcessorImpl_->ImageBufferSize);
+
 			return ret;
 		}
 
@@ -493,6 +497,7 @@ namespace SL {
 			ret.right = Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
 
 			auto startsrc = (char*)MappingDesc.pData;
+
 			auto startdst = DXFrameProcessorImpl_->NewImageBuffer.get();
 			auto rowstride = PixelStride*Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
 			if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
@@ -550,7 +555,6 @@ namespace SL {
 
 				std::swap(DXFrameProcessorImpl_->NewImageBuffer, DXFrameProcessorImpl_->OldImageBuffer);
 			}
-
 
 			return Ret;
 		}

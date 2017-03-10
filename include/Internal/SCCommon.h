@@ -8,19 +8,19 @@ namespace SL {
 	namespace Screen_Capture {
 
 		struct Monitor {
-			int Id;
-			int Index;
-			int Height;
-			int Width;
+			int Id = INT32_MAX;
+			int Index = INT32_MAX;
+			int Height = 0;
+			int Width = 0;
 			//Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.
-			int OffsetX;
-			int OffsetY;
-			char Name[128];
+			int OffsetX = 0;
+			int OffsetY = 0;
+			char Name[128] = { 0 };
 		};
 		struct Image {
 			ImageRect Bounds;
-			int Pixelstride;
-			int RowPadding;
+			int Pixelstride = 4;
+			int RowPadding = 0;
 			char* Data = nullptr;
 		};
 
@@ -50,9 +50,9 @@ namespace SL {
 			std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
 		};
 
-		struct Monitor_Thread_Data: Base_Thread_Data
+		struct Monitor_Thread_Data : Base_Thread_Data
 		{
-	
+
 			Monitor SelectedMonitor;
 
 			int CaptureInterval; //in milliseconds	
@@ -73,7 +73,7 @@ namespace SL {
 			DUPL_RETURN_ERROR_UNEXPECTED = 2
 		};
 		const int PixelStride = 4;
-		std::shared_ptr<Monitor> CreateMonitor(int index,int id, int h, int w, int ox, int oy, const std::string& n);
+		std::shared_ptr<Monitor> CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string& n);
 
 		Image Create(const ImageRect& b, int ps, int rp, char* d);
 		//this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller

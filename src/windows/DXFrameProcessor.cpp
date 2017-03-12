@@ -450,38 +450,6 @@ namespace SL {
 				}
 			}
 
-			auto movecount = 0;
-			auto dirtycount = 0;
-			RECT* dirtyrects = nullptr;
-			// Get metadata
-			if (FrameInfo.TotalMetadataBufferSize > 0)
-			{
-				DXFrameProcessorImpl_->MetaDataBuffer.reserve(FrameInfo.TotalMetadataBufferSize);
-				UINT bufsize = FrameInfo.TotalMetadataBufferSize;
-
-				// Get move rectangles
-				hr = DXFrameProcessorImpl_->OutputDuplication->GetFrameMoveRects(bufsize, reinterpret_cast<DXGI_OUTDUPL_MOVE_RECT*>(DXFrameProcessorImpl_->MetaDataBuffer.data()), &bufsize);
-				if (FAILED(hr))
-				{
-					return ProcessFailure(nullptr, L"Failed to get frame move rects in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
-				}
-				movecount = bufsize / sizeof(DXGI_OUTDUPL_MOVE_RECT);
-
-				dirtyrects = reinterpret_cast<RECT*>(DXFrameProcessorImpl_->MetaDataBuffer.data() + bufsize);
-				bufsize = FrameInfo.TotalMetadataBufferSize - bufsize;
-
-				// Get dirty rectangles
-				hr = DXFrameProcessorImpl_->OutputDuplication->GetFrameDirtyRects(bufsize, dirtyrects, &bufsize);
-				if (FAILED(hr))
-				{
-					return ProcessFailure(nullptr, L"Failed to get frame dirty rects in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
-				}
-				dirtycount = bufsize / sizeof(RECT);
-				//convert rects to their correct coords
-				for (auto i = 0; i < dirtycount; i++) {
-					dirtyrects[i] = ConvertRect(dirtyrects[i], DXFrameProcessorImpl_->OutputDesc);
-				}
-			}
 			DXFrameProcessorImpl_->DeviceContext->CopyResource(DXFrameProcessorImpl_->StagingSurf.Get(), aquireddesktopimage.Get());
 
 			D3D11_MAPPED_SUBRESOURCE MappingDesc;
@@ -521,39 +489,34 @@ namespace SL {
 				}
 				else {
 					//user wants difs, lets do it!
+					if (DXFrameProcessorImpl_->Data->CaptureDifMonitor) {
+						if (DXFrameProcessorImpl_->FirstRun) {
+							//first time through, just send the whole image
+							auto wholeimgfirst = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->NewImageBuffer.get());
+							DXFrameProcessorImpl_->Data->CaptureDifMonitor(wholeimgfirst, DXFrameProcessorImpl_->Data->SelectedMonitor);
+							DXFrameProcessorImpl_->FirstRun = false;
+						}
+						else {
+							//user wants difs, lets do it!
+							auto newimg = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->NewImageBuffer.get());
+							auto oldimg = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->OldImageBuffer.get());
+							auto imgdifs = GetDifs(oldimg, newimg);
 
-					if (dirtycount > 0 && dirtyrects != nullptr && DXFrameProcessorImpl_->Data->CaptureDifMonitor)
-					{
-						for (auto i = 0; i < dirtycount; i++)
-						{
-							ret.left = dirtyrects[i].left;
-							ret.top = dirtyrects[i].top;
-							ret.bottom = dirtyrects[i].bottom;
-							ret.right = dirtyrects[i].right;
-							//pad is the number of bytes to advance to the next starting point of data. this is NOT the padding to the rightmost side of the image
-							auto pad = (dirtyrects[i].left *PixelStride) + ((Width(DXFrameProcessorImpl_->Data->SelectedMonitor) - dirtyrects[i].right) *PixelStride);
+							for (auto& r : imgdifs) {
+								auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
+								auto startsrc = DXFrameProcessorImpl_->NewImageBuffer.get();
+								startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
 
-							auto startdataoffset = (Width(DXFrameProcessorImpl_->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left);
-							auto skipped = true;
-							for (auto h = 0; h < Height(ret); h++) {
+								auto difimg = Create(r, PixelStride, padding, startsrc);
+								DXFrameProcessorImpl_->Data->CaptureDifMonitor(difimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
 
-								if (memcmp(DXFrameProcessorImpl_->NewImageBuffer.get() + startdataoffset + (pad*h), DXFrameProcessorImpl_->OldImageBuffer.get() + startdataoffset + (pad*h), PixelStride*Width(ret)) != 0) {
-
-									auto img = Create(ret, PixelStride, pad, DXFrameProcessorImpl_->NewImageBuffer.get() + (Width(DXFrameProcessorImpl_->Data->SelectedMonitor) *PixelStride *ret.top) + (PixelStride*ret.left));
-									DXFrameProcessorImpl_->Data->CaptureDifMonitor(img, DXFrameProcessorImpl_->Data->SelectedMonitor);
-									skipped = false;
-									break;
-								}
 							}
 						}
-
-
-
+						std::swap(DXFrameProcessorImpl_->NewImageBuffer, DXFrameProcessorImpl_->OldImageBuffer);
 					}
+					
+
 				}
-
-
-				std::swap(DXFrameProcessorImpl_->NewImageBuffer, DXFrameProcessorImpl_->OldImageBuffer);
 			}
 
 			return Ret;

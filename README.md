@@ -9,6 +9,5 @@ Platforms supported:
 <li>Linux: Done</li>
 </ul>
 
-
 <h2>USAGE</h2>
 https://github.com/smasherprog/Screen_Capture/tree/master/Example

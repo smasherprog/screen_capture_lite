@@ -5,9 +5,10 @@ see the Exmaple folder for a demo
 Platforms supported:
 <ul>
 <li>Windows XP and Up</li>
-<li>MacOS: Done</li>
-<li>Linux: Done</li>
+<li>MacOS</li>
+<li>Linux</li>
 </ul>
 
 <h2>USAGE</h2>
+<p>The image format is raw rgba 32 bits per pixel. Alpha is unused! <p>
 https://github.com/smasherprog/Screen_Capture/tree/master/Example

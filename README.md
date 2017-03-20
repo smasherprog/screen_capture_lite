@@ -1,8 +1,9 @@
 # Screen_Capture
-Cross-platform screen capturing library. No extra dependencies ... this is made to be lightweight and fast.
-see the Exmaple folder for a demo
+<p><img src="https://travis-ci.org/smasherprog/Screen_Capture.svg?branch=master" /></p>
+<p>Cross-platform screen capturing library. No extra dependencies ... this is made to be lightweight and fast.
+see the Exmaple folder for a demo</p>
 
-Platforms supported:
+<h4>Platforms supported:</h4>
 <ul>
 <li>Windows XP and Up</li>
 <li>MacOS</li>

@@ -1,0 +1,50 @@
+language : cpp
+
+matrix:
+  include:
+    - os: osx
+    - os: linux
+      env: CLANG_VERSION=3.8 BUILD_TYPE=Release
+      sudo: required
+      addons: &clang38
+        apt:
+          packages:
+            - clang-3.8
+            - libssl-dev
+          sources: &sources
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+      
+before_install:
+  - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+        brew update && brew upgrade cmake || brew install cmake;
+    fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        sudo apt-get install -y libx11-dev libxfixes-dev libxtst-dev;
+    fi  
+    
+install:    
+  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir -p "${DEPS_DIR}" && cd "${DEPS_DIR}"
+ 
+  ############################################################################
+  # Install a recent CMake (unless already installed on OS X)
+  ############################################################################
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      if [[ -z "$(ls -A ${DEPS_DIR}/cmake/bin)" ]]; then
+        CMAKE_URL="https://cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz"
+        mkdir -p cmake && travis_retry wget --no-check-certificate --quiet -O - "${CMAKE_URL}" | tar --strip-components=1 -xz -C cmake
+      fi
+      export PATH="${DEPS_DIR}/cmake/bin:${PATH}"
+    fi
+  - cd ..    
+  
+script:
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+        cmake . && make;
+    fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+       cmake -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
+    fi  

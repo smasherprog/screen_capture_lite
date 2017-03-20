@@ -18,10 +18,10 @@ matrix:
 before_install:
   - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-        brew update && brew outdated boost || brew upgrade boost && brew install fltk openssl libjpeg-turbo && brew upgrade cmake || brew install cmake;
+        brew update && brew upgrade cmake || brew install cmake;
     fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-        sudo apt-get install -y libjpeg-turbo8-dev libboost-all-dev libfltk1.3-dev clang libxext-dev libx11-dev libxfixes-dev gcc libxtst-dev;
+        sudo apt-get install -y libx11-dev libxfixes-dev libxtst-dev;
     fi  
     
 install:    

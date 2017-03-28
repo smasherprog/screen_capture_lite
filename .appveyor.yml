@@ -20,9 +20,9 @@ install:
   - set CMAKE_URL="https://cmake.org/files/v3.8/cmake-3.8.0-rc3-win32-x86.zip"	
   - appveyor DownloadFile %CMAKE_URL% -FileName cmake.zip		
   - 7z x cmake.zip -oC:\projects\deps > nul		
-  - move C:\projects\deps\cmake-* "C:\Program Files (x86)\cmake"	
+  - cd "C:\Program Files (x86)"
+  - move C:\projects\deps\cmake-* cmake\
   - cmake --version
-  - cd "C:\Program Files (x86)\cmake"
   - dir
   - cmake --version
   - echo Running cmake...

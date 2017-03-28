@@ -29,4 +29,7 @@ before_build:
   - mkdir build
   - cd build
   - cmake .. 
+
+  
+build_script:
   - cmake --build .

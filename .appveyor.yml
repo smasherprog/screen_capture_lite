@@ -12,7 +12,8 @@ platform:
 install:
   - mkdir C:\projects\deps
   - cd C:\projects\deps
-  $cmakeUninstallPath = "${env:ProgramFiles(x86)}\CMake\Uninstall.exe"
+  - ps: >-
+    $cmakeUninstallPath = "${env:ProgramFiles(x86)}\CMake\Uninstall.exe"
     if([IO.File]::Exists($cmakeUninstallPath)) {
         Write-Host "Uninstalling previous CMake ..." -ForegroundColor Cyan
         # uninstall existent

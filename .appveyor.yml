@@ -12,10 +12,6 @@ platform:
 install:
   - mkdir C:\projects\deps
   - cd C:\projects\deps
-  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
-        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
-        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
-          throw "There are newer queued builds for this pull request, failing early." }
   
 before_build:
   - echo Running cmake...
@@ -23,8 +19,8 @@ before_build:
   - mkdir build
   - cd build
   - git clone https://github.com/Microsoft/vcpkg
-  - cd vcpkg
-  - git checkout 1a6496b
+  - cd vcpkg     
+  - git checkout 30a8d6e
   - powershell -exec bypass scripts\bootstrap.ps1  
   - vcpkg install openssl
   - cd ..

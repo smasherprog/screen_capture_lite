@@ -29,6 +29,4 @@ before_build:
   - mkdir build
   - cd build
   - cmake .. 
-build:
-  verbosity: detailed
-  project: Screen_Capture.sln 
+  - cmake --build .

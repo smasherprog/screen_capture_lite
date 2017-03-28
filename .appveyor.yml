@@ -10,7 +10,6 @@ platform:
 - x64     
 
 install:
-  - echo %PATH%
   - cd "C:\Program Files (x86)"
   - rd /s /q CMake
   - mkdir C:\projects\deps
@@ -21,9 +20,8 @@ install:
   - cd "C:\Program Files (x86)"
   - move C:\projects\deps\cmake-* cmake
   - cmake --version
-  - dir
-  - cmake --version
   - echo Running cmake...
+  - cd c:\projects\sc
   - mkdir build
   - cd build
   - git clone https://github.com/Microsoft/vcpkg

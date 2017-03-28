@@ -10,10 +10,6 @@ platform:
 - x64     
 
 install:
-  - mkdir C:\projects\deps
-  - cd C:\projects\deps
-  
-before_build:
   - echo Running cmake...
   - cd c:\projects\sc
   - mkdir build
@@ -26,6 +22,5 @@ before_build:
   - cd ..
   - cmake -G "Visual Studio 15 2017" -DCMAKE_TOOLCHAIN_FILE=c:/projects/sc/build/vcpkg/scripts/buildsystems/vcpkg.cmake ..
 
-  
 build_script:
   - cmake --build .

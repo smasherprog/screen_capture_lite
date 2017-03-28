@@ -10,7 +10,7 @@ platform:
 - x64     
 
 install:
-  - ps: "`"${env:ProgramFiles(x86)}\CMake\Uninstall.exe`" /S" | out-file ".\uninstall-cmake.cmd" -Encoding ASCII
+  - ps: "`"c:\Program Files (x86)\CMake\Uninstall.exe`" /S" | out-file ".\uninstall-cmake.cmd" -Encoding ASCII
   - ps: & .\uninstall-cmake.cmd
   - ps: del .\uninstall-cmake.cmd
   - ps: Start-Sleep -s 10

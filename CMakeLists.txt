@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(BUILD_EXAMPLE "Build example" On)
 
 add_subdirectory(src)
+find_package(OpenSSL REQUIRED)
 
 if(BUILD_EXAMPLE)
   add_subdirectory(Example)

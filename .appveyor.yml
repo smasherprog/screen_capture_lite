@@ -28,7 +28,7 @@ install:
   
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects\proj\build\vcpkg
-  - .\vcpkg install openssl:%PLATFORM%-windows-static
+  - .\vcpkg install openssl
   - cd ..
   - cmake .. "-DCMAKE_TOOLCHAIN_FILE=build\vcpkg\scripts\buildsystems\vcpkg.cmake"
 

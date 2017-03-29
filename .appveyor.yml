@@ -7,7 +7,6 @@ clone_folder: c:\projects\proj
 
 platform:
 - x86
-- x64
 
 install:
   - cd "C:\Program Files (x86)"
@@ -26,8 +25,7 @@ install:
   - git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg
   - powershell -exec bypass scripts\bootstrap.ps1
-  - dir
-  - vcpkg.exe install
+  - .\vcpkg install
   
 
 build_script:

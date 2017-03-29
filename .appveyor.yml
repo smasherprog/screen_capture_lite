@@ -26,7 +26,9 @@ install:
   - git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg
   - powershell -exec bypass scripts\bootstrap.ps1
-  - vcpkg
+  - dir
+  - vcpkg.exe install
   
+
 build_script:
   - cmake --build .

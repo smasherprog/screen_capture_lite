@@ -27,8 +27,8 @@ install:
   - git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg 
   - powershell -exec bypass scripts\bootstrap.ps1  
-  - dir
-  - vcpkg.exe
+  - cd c:\projects\proj\build\vcpkg
+  - vcpkg install openssl
   - cd ..
   - cmake .. -DCMAKE_TOOLCHAIN_FILE=c:\projects\proj\build\vcpkg\scripts\buildsystems\vcpkg.cmake
 

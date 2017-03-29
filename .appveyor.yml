@@ -27,7 +27,7 @@ install:
   - powershell -exec bypass vcpkg\scripts\bootstrap.ps1  
   
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
-  - cd c:\projects\proj\build
+  - cd c:\projects\proj\build\vcpkg
   - .\vcpkg install openssl:%PLATFORM%-windows-static
   - cd ..
   - cmake -G "Visual Studio 15 2017%CMAKE_ARCH%" -DCMAKE_TOOLCHAIN_FILE=c:/projects/rat/build/vcpkg/scripts/buildsystems/vcpkg.cmake ..

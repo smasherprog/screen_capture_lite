@@ -26,7 +26,7 @@ install:
   - git clone https://github.com/Microsoft/vcpkg
   - powershell -exec bypass vcpkg\scripts\bootstrap.ps1  
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
-  - cd c:\projects\proj\build\vcpkg
+  - cd vcpkg
   - dir
   - .\vcpkg install openssl
   - cd ..

@@ -23,8 +23,8 @@ install:
   - mkdir build
   - cd build
   - git clone https://github.com/Microsoft/vcpkg
-  - git checkout 53866ef
   - cd vcpkg
+  - git checkout 53866ef
   - powershell -exec bypass scripts\bootstrap.ps1
   - .\vcpkg install
   

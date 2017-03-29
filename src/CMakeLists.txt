@@ -75,6 +75,7 @@ else()
 	)
 	
 endif()
+find_package(OpenSSL REQUIRED)
 
 set(SCREEN_CAPTURE_COMMON_SRC 
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/ScreenCapture.h

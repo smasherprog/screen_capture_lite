@@ -14,7 +14,7 @@ install:
   - rd /s /q CMake
   - mkdir C:\projects\deps
   - cd C:\projects\deps
-  - set CMAKE_URL="https://cmake.org/files/v3.8/cmake-3.8.0-rc3-win32-x86.zip"	
+  - set CMAKE_URL="https://cmake.org/files/v3.8/cmake-3.8.0-rc3-win32-x86.zip"
   - appveyor DownloadFile %CMAKE_URL% -FileName cmake.zip		
   - 7z x cmake.zip -oC:\projects\deps > nul		
   - cd "C:\Program Files (x86)"
@@ -26,7 +26,7 @@ install:
   - git clone https://github.com/Microsoft/vcpkg
   - cd vcpkg
   - powershell -exec bypass scripts\bootstrap.ps1
-  - .\vcpkg install openssl:%PLATFORM%-windows-static
+  - vcpkg install openssl:%PLATFORM%-windows-static
   - cd ..
   - cmake -G "Visual Studio 15 2017" -DCMAKE_TOOLCHAIN_FILE=c:/projects/proj/build/vcpkg/scripts/buildsystems/vcpkg.cmake ..
 

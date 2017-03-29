@@ -27,6 +27,7 @@ install:
   - powershell -exec bypass vcpkg\scripts\bootstrap.ps1  
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects\proj\build\vcpkg
+  - dir
   - .\vcpkg install openssl
   - cd ..
   - cmake .. -DCMAKE_TOOLCHAIN_FILE=c:\projects\proj\build\vcpkg\scripts\buildsystems\vcpkg.cmake

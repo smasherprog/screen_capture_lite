@@ -10,13 +10,7 @@ platform:
 - x64
 
 install:
-- ps: >-
-    If ($env:Platform -Match "x86") {
-      $env:CMAKE_ARCH=""
-    } Else {
-      $env:CMAKE_ARCH=" Win64"
-    }
-    
+  - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects\sc
   - mkdir build
   - cd build

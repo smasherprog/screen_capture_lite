@@ -10,7 +10,6 @@ platform:
 - x64
 
 install:
-  - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd "C:\Program Files (x86)"
   - rd /s /q CMake
   - mkdir C:\projects\deps

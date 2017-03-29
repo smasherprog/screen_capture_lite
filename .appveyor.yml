@@ -30,7 +30,7 @@ install:
   - cd c:\projects\proj\build\vcpkg
   - .\vcpkg install openssl:%PLATFORM%-windows-static
   - cd ..
-  - cmake .. "-DCMAKE_TOOLCHAIN_FILE=c:/projects/proj/build/vcpkg/scripts/buildsystems/vcpkg.cmake"
+  - cmake .. "-DCMAKE_TOOLCHAIN_FILE=build\vcpkg\scripts\buildsystems\vcpkg.cmake"
 
 build_script:
   - cmake --build .

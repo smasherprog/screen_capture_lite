@@ -3,18 +3,37 @@ image: Visual Studio 2017
 configuration:
   - Debug
   
-clone_folder: c:\projects\sc
+clone_folder: c:\projects\proj
 
 platform:
 - x86
 - x64
 
 install:
+  - cd "C:\Program Files (x86)"
+  - rd /s /q CMake
+  - mkdir C:\projects\deps
+  - cd C:\projects\deps
+  - set CMAKE_URL="https://cmake.org/files/v3.8/cmake-3.8.0-rc3-win32-x86.zip"	
+  - appveyor DownloadFile %CMAKE_URL% -FileName cmake.zip		
+  - 7z x cmake.zip -oC:\projects\deps > nul		
+  - cd "C:\Program Files (x86)"
+  - move C:\projects\deps\cmake-* cmake
+  - cmake --version
+  - cd c:\projects\proj
+  - mkdir build
+  - cd build
+  - git clone https://github.com/Microsoft/vcpkg
+  - cd vcpkg
+  - powershell -exec bypass scripts\bootstrap.ps1  
+  
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects\sc
   - mkdir build
   - cd build
-  - cmake -G "Visual Studio 15 2017%CMAKE_ARCH%" ..
+  - .\vcpkg install openssl:%PLATFORM%-windows-static
+  - cd ..
+  - cmake -G "Visual Studio 15 2017%CMAKE_ARCH%" -DCMAKE_TOOLCHAIN_FILE=c:/projects/rat/build/vcpkg/scripts/buildsystems/vcpkg.cmake ..
 
 build_script:
   - cmake --build .

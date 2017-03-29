@@ -28,7 +28,7 @@ install:
   - powershell -exec bypass scripts\bootstrap.ps1
   - .\vcpkg install openssl:%PLATFORM%-windows-static
   - cd ..
-  - cmake -G "Visual Studio 15 2017%CMAKE_ARCH%" -DCMAKE_TOOLCHAIN_FILE=c:/projects/proj/build/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+  - cmake .. -DCMAKE_TOOLCHAIN_FILE=build/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 build_script:
   - cmake --build .

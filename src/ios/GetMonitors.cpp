@@ -19,13 +19,10 @@ namespace SL{
                 //only include non-mirrored displays
                 if(CGDisplayMirrorsDisplay(displays[i]) == kCGNullDirectDisplay){
                     
-                    auto imageRef = CGDisplayCreateImage(displays[i]);
-                    if(!imageRef) continue;
-                    
-                    auto width = CGImageGetWidth(imageRef);
-                    auto height = CGImageGetHeight(imageRef);
-                    CGImageRelease(imageRef);
-                    
+    
+                    auto width = CGDisplayPixelsWide(displays[i]);
+                    auto height = CGDisplayPixelsHigh(displays[i]);
+      
                     auto r = CGDisplayBounds(displays[i]);
                  
                     auto name = std::string("Monitor ") + std::to_string(displays[i]);

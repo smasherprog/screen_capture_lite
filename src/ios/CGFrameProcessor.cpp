@@ -51,14 +51,30 @@ namespace SL {
                  CGImageRelease(imageRef);
                 return DUPL_RETURN_ERROR_EXPECTED;
             }
+            auto bytesperrow = CGImageGetBytesPerRow(imageRef);
+            auto bitsperpixel = CGImageGetBitsPerPixel(imageRef);
+            // right now only support full 32 bit images.. Most desktops should run this as its the most efficent
+            assert(bitsperpixel == PixelStride*8);
             
             auto rawdatas= CGDataProviderCopyData(prov);
             auto buf = CFDataGetBytePtr(rawdatas);
-            auto datalen = CFDataGetLength(rawdatas);
-            assert(datalen == width*height*PixelStride);
+         
+            auto datalen = width*height*PixelStride;
             _CGFrameProcessorImpl->NewImageBuffer.resize(datalen);
-            
-            memcpy(_CGFrameProcessorImpl->NewImageBuffer.data(),buf, datalen);
+            if(bytesperrow == PixelStride*width){
+                //most efficent, can be done in a single memcpy
+                memcpy(_CGFrameProcessorImpl->NewImageBuffer.data(),buf, datalen);
+            } else {
+                //for loop needed to copy each row
+                auto dst =_CGFrameProcessorImpl->NewImageBuffer.data();
+                auto src =buf;
+                for (auto h =0; h<height;h++) {
+                    memcpy(dst,src, PixelStride*width);
+                    dst +=PixelStride*width;
+                    src +=bytesperrow;
+                }
+            }
+
             CFRelease(rawdatas);
  
             //this is not needed. It is freed when the image is released

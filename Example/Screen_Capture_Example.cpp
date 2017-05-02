@@ -37,7 +37,7 @@ int main()
 		}
 		Extract(img, imgbuffer.get(), size);
 
-		//tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+		tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
 	});
 
 	framgrabber.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {

@@ -2,11 +2,13 @@ image: Visual Studio 2017
 
 configuration:
   - Debug
+  - Relase 
   
 clone_folder: c:\projects\sc
 
 platform:
 - x86
+- x64
 
 install:
   - cd c:\projects\sc

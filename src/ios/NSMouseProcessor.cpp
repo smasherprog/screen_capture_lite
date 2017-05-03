@@ -5,37 +5,37 @@
 #include <iostream>
 
 namespace SL {
-	namespace Screen_Capture {
+    namespace Screen_Capture {
         struct NSMouseProcessorImpl {
-			std::shared_ptr<Mouse_Thread_Data> Data;
+            std::shared_ptr<Mouse_Thread_Data> Data;
             std::vector<char> NewImageBuffer, LastImageBuffer;
             int Last_x, Last_y;
-		};
+        };
 
 
-		NSMouseProcessor::NSMouseProcessor()
-		{
-			_NSMouseProcessorImpl = std::make_unique<NSMouseProcessorImpl>();
+        NSMouseProcessor::NSMouseProcessor()
+        {
+            _NSMouseProcessorImpl = std::make_unique<NSMouseProcessorImpl>();
             _NSMouseProcessorImpl->Last_x = _NSMouseProcessorImpl->Last_y = 0;
-		}
+        }
 
-		NSMouseProcessor::~NSMouseProcessor()
-		{
+        NSMouseProcessor::~NSMouseProcessor()
+        {
 
-		}
-		DUPL_RETURN NSMouseProcessor::Init(std::shared_ptr<Mouse_Thread_Data> data) {
+        }
+        DUPL_RETURN NSMouseProcessor::Init(std::shared_ptr<Mouse_Thread_Data> data) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
             _NSMouseProcessorImpl->Data = data;
             SLScreen_Capture_InitMouseCapture();
-			return ret;
-		}
-		//
-		// Process a given frame and its metadata
-		//
+            return ret;
+        }
+        //
+        // Process a given frame and its metadata
+        //
         
-		DUPL_RETURN NSMouseProcessor::ProcessFrame()
-		{
-			auto Ret = DUPL_RETURN_SUCCESS;
+        DUPL_RETURN NSMouseProcessor::ProcessFrame()
+        {
+            auto Ret = DUPL_RETURN_SUCCESS;
         
             if(_NSMouseProcessorImpl->Data->CaptureCallback){
                 auto mouseev = CGEventCreate(NULL);
@@ -85,8 +85,8 @@ namespace SL {
                 _NSMouseProcessorImpl->Last_y = lasty;
           
             }
-			return Ret;
-		}
+            return Ret;
+        }
 
-	}
+    }
 }

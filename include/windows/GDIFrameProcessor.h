@@ -4,17 +4,17 @@
 #include <memory>
 
 namespace SL {
-	namespace Screen_Capture {
+    namespace Screen_Capture {
 
-		struct GDIFrameProcessorImpl;
-		class GDIFrameProcessor {
-			std::unique_ptr<GDIFrameProcessorImpl> GDIFrameProcessorImpl_;
-		public:
-			GDIFrameProcessor();
-			~GDIFrameProcessor();
-			DUPL_RETURN Init(std::shared_ptr<Monitor_Thread_Data> data);
-			DUPL_RETURN ProcessFrame();
+        struct GDIFrameProcessorImpl;
+        class GDIFrameProcessor {
+            std::unique_ptr<GDIFrameProcessorImpl> GDIFrameProcessorImpl_;
+        public:
+            GDIFrameProcessor();
+            ~GDIFrameProcessor();
+            DUPL_RETURN Init(std::shared_ptr<Monitor_Thread_Data> data);
+            DUPL_RETURN ProcessFrame();
 
-		};
-	}
+        };
+    }
 }

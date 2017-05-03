@@ -13,64 +13,64 @@
 #include <iostream>
 
 namespace SL {
-	namespace Screen_Capture {
+    namespace Screen_Capture {
 
 
-		template<class T>void ProcessExit(DUPL_RETURN Ret, T* TData) {
-			if (Ret != DUPL_RETURN_SUCCESS)
-			{
-				if (Ret == DUPL_RETURN_ERROR_EXPECTED)
-				{
-					// The system is in a transition state so request the duplication be restarted
-					*TData->ExpectedErrorEvent = true;
-				}
-				else
-				{
-					// Unexpected error so exit the application
-					*TData->UnexpectedErrorEvent = true;
-				}
-			}
-		}
-		template<class T>bool SwitchToInputDesktop(const std::shared_ptr<T> data) {
-			HDESK CurrentDesktop = nullptr;
-			CurrentDesktop = OpenInputDesktop(0, FALSE, GENERIC_ALL);
-			if (!CurrentDesktop)
-			{
-				// We do not have access to the desktop so request a retry
-				*data->ExpectedErrorEvent = true;
-				ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
-				return false;
-			}
+        template<class T>void ProcessExit(DUPL_RETURN Ret, T* TData) {
+            if (Ret != DUPL_RETURN_SUCCESS)
+            {
+                if (Ret == DUPL_RETURN_ERROR_EXPECTED)
+                {
+                    // The system is in a transition state so request the duplication be restarted
+                    *TData->ExpectedErrorEvent = true;
+                }
+                else
+                {
+                    // Unexpected error so exit the application
+                    *TData->UnexpectedErrorEvent = true;
+                }
+            }
+        }
+        template<class T>bool SwitchToInputDesktop(const std::shared_ptr<T> data) {
+            HDESK CurrentDesktop = nullptr;
+            CurrentDesktop = OpenInputDesktop(0, FALSE, GENERIC_ALL);
+            if (!CurrentDesktop)
+            {
+                // We do not have access to the desktop so request a retry
+                *data->ExpectedErrorEvent = true;
+                ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
+                return false;
+            }
 
-			// Attach desktop to this thread
-			bool DesktopAttached = SetThreadDesktop(CurrentDesktop) != 0;
-			CloseDesktop(CurrentDesktop);
-			CurrentDesktop = nullptr;
-			if (!DesktopAttached)
-			{
-				// We do not have access to the desktop so request a retry
-				*data->ExpectedErrorEvent = true;
-				ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
-				return false;
-			}
-			return true;
-		}
-		void RunCaptureMouse(std::shared_ptr<Mouse_Thread_Data> data) {
-			if (!SwitchToInputDesktop(data)) return;
-			TryCapture<GDIMouseProcessor>(data);
-		}
-		void RunCapture(std::shared_ptr<Monitor_Thread_Data> data) {
-			//need to switch to the input desktop for capturing...
-			if (!SwitchToInputDesktop(data)) return;
-			std::cout << "Starting to Capture on Monitor " << Name(data->SelectedMonitor) << std::endl;
-			std::cout << "Trying DirectX Desktop Duplication " << std::endl;
-			//TryCapture<GDIFrameProcessor>(data);
-			if (!TryCapture<DXFrameProcessor>(data)) {//if DX is not supported, fallback to GDI capture
-				std::cout << "DirectX Desktop Duplication not supprted, falling back to GDI Capturing . . ." << std::endl;
-				TryCapture<GDIFrameProcessor>(data);
-			}
-		}
-	}
+            // Attach desktop to this thread
+            bool DesktopAttached = SetThreadDesktop(CurrentDesktop) != 0;
+            CloseDesktop(CurrentDesktop);
+            CurrentDesktop = nullptr;
+            if (!DesktopAttached)
+            {
+                // We do not have access to the desktop so request a retry
+                *data->ExpectedErrorEvent = true;
+                ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
+                return false;
+            }
+            return true;
+        }
+        void RunCaptureMouse(std::shared_ptr<Mouse_Thread_Data> data) {
+            if (!SwitchToInputDesktop(data)) return;
+            TryCapture<GDIMouseProcessor>(data);
+        }
+        void RunCapture(std::shared_ptr<Monitor_Thread_Data> data) {
+            //need to switch to the input desktop for capturing...
+            if (!SwitchToInputDesktop(data)) return;
+            std::cout << "Starting to Capture on Monitor " << Name(data->SelectedMonitor) << std::endl;
+            std::cout << "Trying DirectX Desktop Duplication " << std::endl;
+            //TryCapture<GDIFrameProcessor>(data);
+            if (!TryCapture<DXFrameProcessor>(data)) {//if DX is not supported, fallback to GDI capture
+                std::cout << "DirectX Desktop Duplication not supprted, falling back to GDI Capturing . . ." << std::endl;
+                TryCapture<GDIFrameProcessor>(data);
+            }
+        }
+    }
 }
 
 

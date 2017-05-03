@@ -515,6 +515,7 @@ namespace SL {
                         std::swap(DXFrameProcessorImpl_->NewImageBuffer, DXFrameProcessorImpl_->OldImageBuffer);
                     }
 
+
                 }
             }
 

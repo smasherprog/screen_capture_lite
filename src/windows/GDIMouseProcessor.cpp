@@ -126,6 +126,7 @@ namespace SL {
                     GDIMouseProcessorImpl_->Data->CaptureCallback(&wholeimg, lastx, lasty);
                     std::swap(GDIMouseProcessorImpl_->NewImageBuffer, GDIMouseProcessorImpl_->LastImageBuffer);
                 }
+                else if (GDIMouseProcessorImpl_->Last_x != lastx || GDIMouseProcessorImpl_->Last_y != lasty) {
                     GDIMouseProcessorImpl_->Data->CaptureCallback(nullptr, lastx, lasty);
                 }
                 GDIMouseProcessorImpl_->Last_x = lastx;

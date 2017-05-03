@@ -119,6 +119,7 @@ namespace SL {
                     std::cout << r << std::endl;
                 }
                 */
+                //std::cout << "Found " << rects.size() << " rects in img dif. It took " << elapsed.count() << " milliseconds to compare run GetDifs ";
 
             SanitizeRects(rects, newimg);
             return rects;
@@ -186,6 +187,7 @@ namespace SL {
                 }
             }
         }
+
         void Extract(const Image& img, char* dst, size_t dst_size) {
             auto totalsize = RowStride(img)*Height(img);
             assert(dst_size >= totalsize);

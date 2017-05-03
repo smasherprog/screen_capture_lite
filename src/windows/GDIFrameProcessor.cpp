@@ -61,6 +61,7 @@ namespace SL {
 
             DEVMODEA devMode;
             devMode.dmSize = sizeof(devMode);
+            if (EnumDisplaySettingsA(GDIFrameProcessorImpl_->MonitorName.c_str(), ENUM_CURRENT_SETTINGS, &devMode) == TRUE) {
                 if (static_cast<int>(devMode.dmPelsHeight) != ret.bottom || static_cast<int>(devMode.dmPelsWidth) != ret.right) {
                     return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
                 }
@@ -121,6 +122,7 @@ namespace SL {
                     }
                     std::swap(GDIFrameProcessorImpl_->NewImageBuffer, GDIFrameProcessorImpl_->OldImageBuffer);
                 }
+
 
             }
 

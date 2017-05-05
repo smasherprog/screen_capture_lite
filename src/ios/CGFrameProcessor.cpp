@@ -56,13 +56,12 @@ namespace SL {
             auto buf = CFDataGetBytePtr(rawdatas);
          
             auto datalen = width*height*PixelStride;
-            _CGFrameProcessorImpl->NewImageBuffer.resize(datalen);
             if(bytesperrow == PixelStride*width){
                 //most efficent, can be done in a single memcpy
-                memcpy(_CGFrameProcessorImpl->NewImageBuffer.data(),buf, datalen);
+                memcpy(_CGFrameProcessorImpl->Data->NewImageBuffer.get(),buf, datalen);
             } else {
                 //for loop needed to copy each row
-                auto dst =_CGFrameProcessorImpl->NewImageBuffer.data();
+                auto dst =_CGFrameProcessorImpl->Data->NewImageBuffer.get();
                 auto src =buf;
                 for (auto h =0; h<height;h++) {
                     memcpy(dst,src, PixelStride*width);
@@ -70,51 +69,18 @@ namespace SL {
                     src +=bytesperrow;
                 }
             }
-
             CFRelease(rawdatas);
  
             //this is not needed. It is freed when the image is released
             //CGDataProviderRelease(prov);
             
             CGImageRelease(imageRef);
-            
-            
-            
+
             ImageRect imgrect;
             imgrect.left =  imgrect.top=0;
             imgrect.right =width;
             imgrect.bottom = height;
-            if(_CGFrameProcessorImpl->Data->CaptureEntireMonitor){
-           
-                auto img = Create(imgrect, PixelStride, 0,_CGFrameProcessorImpl->NewImageBuffer.data());
-                _CGFrameProcessorImpl->Data->CaptureEntireMonitor(img, _CGFrameProcessorImpl->Data->SelectedMonitor);
-            }
-            if (_CGFrameProcessorImpl->Data->CaptureDifMonitor) {
-                if (_CGFrameProcessorImpl->FirstRun) {
-                        //first time through, just send the whole image
-                        auto wholeimgfirst = Create(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.data());
-                        _CGFrameProcessorImpl->Data->CaptureDifMonitor(wholeimgfirst, _CGFrameProcessorImpl->Data->SelectedMonitor);
-                        _CGFrameProcessorImpl->FirstRun = false;
-                } else {		
-                
-                
-                    //user wants difs, lets do it!
-                    auto newimg = Create(imgrect, PixelStride, 0, _CGFrameProcessorImpl->NewImageBuffer.data());
-                    auto oldimg = Create(imgrect, PixelStride, 0, _CGFrameProcessorImpl->OldImageBuffer.data());
-                    auto imgdifs = GetDifs(oldimg, newimg);
-
-                    for (auto& r : imgdifs) {
-                        auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
-                        auto startsrc = _CGFrameProcessorImpl->NewImageBuffer.data();
-                        startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
-
-                        auto difimg = Create(r, PixelStride, padding, startsrc);
-                        _CGFrameProcessorImpl->Data->CaptureDifMonitor(difimg, _CGFrameProcessorImpl->Data->SelectedMonitor);
-
-                    }
-                }
-                    _CGFrameProcessorImpl->NewImageBuffer.swap(_CGFrameProcessorImpl->OldImageBuffer);
-            }
+            ProcessMonitorCapture(*_CGFrameProcessorImpl->Data, imgrect);
             return Ret;
         }
 

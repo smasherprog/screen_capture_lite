@@ -53,6 +53,7 @@ namespace SL {
         int RowStride(const Image& img);
         //number of bytes per row of padding
         int RowPadding(const Image& img);
+        //the start of the image data, this is not guarenteed to be contiguos. You must use the Rowstride and rowpadding to examine the image
         char* StartSrc(const Image& img);
 
         std::vector<std::shared_ptr<Monitor>> GetMonitors();
@@ -60,6 +61,7 @@ namespace SL {
         typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
         typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
         typedef std::function<std::vector<std::shared_ptr<Monitor>>()> MonitorCallback;
+        typedef std::function<void(char* data, size_t height, size_t width)> ImageCallback;
 
         class ScreenCaptureManagerImpl;
         class ScreenCaptureManager {
@@ -89,6 +91,12 @@ namespace SL {
             void onMouseChanged(const MouseCallback& cb);
             //Used by the library to determine the callback frequency
             void setMouseChangeInterval(int interval);
+            //this is called before onNewFrame, onFrameChanged, and onMouseChanged
+            //This function allows for preprocessing of an image to change the layout or perform any other custom function 
+            void onImage(ImageCallback& cb);
+            //this is called before onNewFrame, onFrameChanged, and onMouseChanged
+            //This function allows for preprocessing of an image to change the layout or perform any other custom function 
+            void onImage(const ImageCallback& cb);
 
             void Start();
             void Stop();

@@ -123,7 +123,12 @@ namespace SL {
         void ScreenCaptureManager::setMouseChangeInterval(int interval) {
             _ScreenCaptureManagerImpl->Settings.Mouse_Capture_Interval = interval;
         }
-
+        void ScreenCaptureManager::onImage(const ImageCallback& cb) {
+            _ScreenCaptureManagerImpl->Settings.ImageFunction = cb;
+        }
+        void ScreenCaptureManager::onImage(ImageCallback& cb) {
+            _ScreenCaptureManagerImpl->Settings.ImageFunction = cb;
+        }
     }
 }
 

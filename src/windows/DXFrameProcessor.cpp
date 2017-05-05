@@ -352,11 +352,6 @@ namespace SL {
             std::vector<BYTE> MetaDataBuffer;
 
             std::shared_ptr<Monitor_Thread_Data> Data;
-
-            std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
-            size_t ImageBufferSize;
-            bool FirstRun;
-
         };
 
 
@@ -364,7 +359,6 @@ namespace SL {
         {
 
             DXFrameProcessorImpl_ = std::make_unique<DXFrameProcessorImpl>();
-            DXFrameProcessorImpl_->ImageBufferSize = 0;
 
         }
 
@@ -390,11 +384,6 @@ namespace SL {
             DXFrameProcessorImpl_->Output = dupl.Output;
 
             DXFrameProcessorImpl_->Data = data;
-            DXFrameProcessorImpl_->ImageBufferSize = Width(data->SelectedMonitor)* Height(data->SelectedMonitor)* PixelStride;
-            if (DXFrameProcessorImpl_->Data->CaptureDifMonitor) {//only need the old buffer if difs are needed. If no dif is needed, then the image is always new
-                DXFrameProcessorImpl_->OldImageBuffer = std::make_unique<char[]>(DXFrameProcessorImpl_->ImageBufferSize);
-            }
-            DXFrameProcessorImpl_->NewImageBuffer = std::make_unique<char[]>(DXFrameProcessorImpl_->ImageBufferSize);
 
             return ret;
         }
@@ -466,7 +455,7 @@ namespace SL {
 
             auto startsrc = (char*)MappingDesc.pData;
 
-            auto startdst = DXFrameProcessorImpl_->NewImageBuffer.get();
+            auto startdst = DXFrameProcessorImpl_->Data->NewImageBuffer.get();
             auto rowstride = PixelStride*Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
             if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
                 memcpy(startdst, MappingDesc.pData, rowstride*Height(DXFrameProcessorImpl_->Data->SelectedMonitor));
@@ -476,49 +465,7 @@ namespace SL {
                     memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
                 }
             }
-            if (DXFrameProcessorImpl_->Data->CaptureEntireMonitor) {
-                auto wholeimg = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->NewImageBuffer.get());
-                DXFrameProcessorImpl_->Data->CaptureEntireMonitor(wholeimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
-            }
-            if (DXFrameProcessorImpl_->Data->CaptureDifMonitor) {
-                if (DXFrameProcessorImpl_->FirstRun) {
-                    //first time through, just send the whole image
-                    auto wholeimgfirst = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->NewImageBuffer.get());
-                    DXFrameProcessorImpl_->Data->CaptureDifMonitor(wholeimgfirst, DXFrameProcessorImpl_->Data->SelectedMonitor);
-                    DXFrameProcessorImpl_->FirstRun = false;
-                }
-                else {
-                    //user wants difs, lets do it!
-                    if (DXFrameProcessorImpl_->Data->CaptureDifMonitor) {
-                        if (DXFrameProcessorImpl_->FirstRun) {
-                            //first time through, just send the whole image
-                            auto wholeimgfirst = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->NewImageBuffer.get());
-                            DXFrameProcessorImpl_->Data->CaptureDifMonitor(wholeimgfirst, DXFrameProcessorImpl_->Data->SelectedMonitor);
-                            DXFrameProcessorImpl_->FirstRun = false;
-                        }
-                        else {
-                            //user wants difs, lets do it!
-                            auto newimg = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->NewImageBuffer.get());
-                            auto oldimg = Create(ret, PixelStride, 0, DXFrameProcessorImpl_->OldImageBuffer.get());
-                            auto imgdifs = GetDifs(oldimg, newimg);
-
-                            for (auto& r : imgdifs) {
-                                auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
-                                auto startsrc = DXFrameProcessorImpl_->NewImageBuffer.get();
-                                startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
-
-                                auto difimg = Create(r, PixelStride, padding, startsrc);
-                                DXFrameProcessorImpl_->Data->CaptureDifMonitor(difimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
-
-                            }
-                        }
-                        std::swap(DXFrameProcessorImpl_->NewImageBuffer, DXFrameProcessorImpl_->OldImageBuffer);
-                    }
-
-
-                }
-            }
-
+            ProcessMonitorCapture(*DXFrameProcessorImpl_->Data, ret);
             return Ret;
         }
 

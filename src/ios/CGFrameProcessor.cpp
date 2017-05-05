@@ -6,18 +6,14 @@
 namespace SL {
     namespace Screen_Capture {
         struct CGFrameProcessorImpl {
-
             std::shared_ptr<Monitor_Thread_Data> Data;
-            std::vector<char> OldImageBuffer, NewImageBuffer;
-
-            bool FirstRun;
+ 
         };
 
 
         CGFrameProcessor::CGFrameProcessor()
         {
             _CGFrameProcessorImpl = std::make_unique<CGFrameProcessorImpl>();
-            _CGFrameProcessorImpl->FirstRun = true;
         }
 
         CGFrameProcessor::~CGFrameProcessor()

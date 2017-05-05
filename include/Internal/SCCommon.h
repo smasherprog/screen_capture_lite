@@ -37,7 +37,7 @@ namespace SL {
             MouseCallback CaptureMouse;
             //get monitors to watch
             MonitorCallback MonitorsChanged;
-
+            ImageCallback ImageFunction;
         };
 
         struct Base_Thread_Data
@@ -58,6 +58,11 @@ namespace SL {
             int CaptureInterval; //in milliseconds	
             CaptureCallback CaptureEntireMonitor;
             CaptureCallback CaptureDifMonitor;
+            ImageCallback ImageFunction;
+
+            std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
+            size_t ImageBufferSize = 0;
+            bool FirstRun = true;
         };
 
         struct Mouse_Thread_Data : Base_Thread_Data
@@ -65,6 +70,7 @@ namespace SL {
 
             int CaptureInterval; //in milliseconds	
             MouseCallback CaptureCallback;
+            ImageCallback ImageFunction;
         };
         enum DUPL_RETURN
         {
@@ -80,6 +86,7 @@ namespace SL {
         void Copy(const Image& dst, const Image& src);
 
         std::vector<ImageRect> GetDifs(const Image & oldimg, const Image & newimg);
+        void ProcessMonitorCapture(Monitor_Thread_Data& data, ImageRect& imageract);
 
     }
 }

@@ -13,5 +13,5 @@ see the Exmaple folder for a demo</p>
 </ul>
 
 <h2>USAGE</h2>
-<p>The image format is raw rgba 32 bits per pixel. Alpha is unused! <p>
+<p>The image format is raw BGRA 32 bits per pixel. Alpha is unused! <p>
 https://github.com/smasherprog/Screen_Capture/tree/master/Example

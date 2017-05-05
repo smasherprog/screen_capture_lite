@@ -29,13 +29,9 @@ int main()
         for (size_t h = 0; h < height; h++) {
             for (size_t w = 0; w < width; w++) {
                 auto b = startdata[0];
-                //auto g = startdata[1];
                 auto r = startdata[2];
-                //auto a = startdata[3];
                 startdata[0] = r;
-                //startdata[1] = g;
                 startdata[2] = b;
-               // startdata[3] = a;
 
                 startdata += 4;//4 bytes per pixel
             }
@@ -55,7 +51,7 @@ int main()
         }
         Extract(img, imgbuffer.get(), size);
 
-        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+        // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     });
 
     framgrabber.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {

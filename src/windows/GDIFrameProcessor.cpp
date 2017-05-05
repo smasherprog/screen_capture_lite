@@ -36,7 +36,9 @@ namespace SL {
             }
 
             GDIFrameProcessorImpl_->Data = data;
-
+            if ((data->ImageFunction || data->CaptureEntireMonitor) && !data->NewImageBuffer) {
+                data->NewImageBuffer = std::make_unique<char[]>(data->ImageBufferSize);
+            }
             return Ret;
         }
         //

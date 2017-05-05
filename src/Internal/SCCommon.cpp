@@ -176,12 +176,12 @@ namespace SL {
             return ret;
         }
 
-        Image Create(const ImageRect& b, int ps, int rp, char* d) {
+        Image Create(const ImageRect& imgrect, int pixelstride, int rowpadding, char* data) {
             Image ret;
-            ret.Bounds = b;
-            ret.Data = d;
-            ret.Pixelstride = ps;
-            ret.RowPadding = rp;
+            ret.Bounds = imgrect;
+            ret.Data = data;
+            ret.Pixelstride = pixelstride;
+            ret.RowPadding = rowpadding;
             return ret;
         }
         int Index(const Monitor& mointor) { return mointor.Index; }

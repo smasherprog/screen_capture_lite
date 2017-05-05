@@ -53,7 +53,9 @@ int main()
 
         // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     });
-
+    std::atomic<int> onNewFramecounter;
+    onNewFramecounter = 0;
+    auto onNewFramestart = std::chrono::high_resolution_clock::now();
     framgrabber.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
         auto r = realcounter.fetch_add(1);
@@ -62,9 +64,13 @@ int main()
         auto size = RowStride(img)*Height(img);
         auto imgbuffer(std::make_unique<char[]>(size));
         Extract(img, imgbuffer.get(), size);
-
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >= 1000) {
+            std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
+            onNewFramecounter = 0;
+            onNewFramestart = std::chrono::high_resolution_clock::now();
+        }
+        onNewFramecounter += 1;
         //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-
     });
     framgrabber.onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
 

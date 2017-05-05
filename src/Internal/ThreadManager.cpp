@@ -39,8 +39,11 @@ void SL::Screen_Capture::ThreadManager::Init(const Base_Thread_Data& data, const
         tdata->ImageBufferSize = Width(tdata->SelectedMonitor)* Height(tdata->SelectedMonitor)* PixelStride;
         if (tdata->CaptureDifMonitor) {//only need the old buffer if difs are needed. If no dif is needed, then the image is always new
             tdata->OldImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
+            tdata->NewImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
+        } else if (tdata->ImageFunction) {
+            tdata->NewImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
         }
-        tdata->NewImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
+        
         m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCapture, tdata);
     }
 

@@ -448,24 +448,40 @@ namespace SL {
             if (MappingDesc.pData == NULL) {
                 return ProcessFailure(DXFrameProcessorImpl_->Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
             }
+
             ImageRect ret;
             ret.left = ret.top = 0;
             ret.bottom = Height(DXFrameProcessorImpl_->Data->SelectedMonitor);
             ret.right = Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
+            auto startsrc = reinterpret_cast<char*>(MappingDesc.pData);
 
-            auto startsrc = (char*)MappingDesc.pData;
-
-            auto startdst = DXFrameProcessorImpl_->Data->NewImageBuffer.get();
             auto rowstride = PixelStride*Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
-            if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
-                memcpy(startdst, MappingDesc.pData, rowstride*Height(DXFrameProcessorImpl_->Data->SelectedMonitor));
-            }
-            else {
-                for (auto i = 0; i < Height(DXFrameProcessorImpl_->Data->SelectedMonitor); i++) {
-                    memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
+          
+            if (DXFrameProcessorImpl_->Data->CaptureEntireMonitor && !DXFrameProcessorImpl_->Data->CaptureDifMonitor && !DXFrameProcessorImpl_->Data->ImageFunction) {
+                if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
+                    auto wholeimg = Create(ret, PixelStride, 0, startsrc);
+                    DXFrameProcessorImpl_->Data->CaptureEntireMonitor(wholeimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
+                }
+                else {
+                    auto wholeimg = Create(ret, PixelStride, static_cast<int>(MappingDesc.RowPitch) - rowstride , startsrc);
+                    DXFrameProcessorImpl_->Data->CaptureEntireMonitor(wholeimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
                 }
             }
-            ProcessMonitorCapture(*DXFrameProcessorImpl_->Data, ret);
+            else {
+                auto startdst = DXFrameProcessorImpl_->Data->NewImageBuffer.get();
+                if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
+                    memcpy(startdst, startsrc, rowstride*Height(DXFrameProcessorImpl_->Data->SelectedMonitor));
+                }
+                else {
+                    for (auto i = 0; i < Height(DXFrameProcessorImpl_->Data->SelectedMonitor); i++) {
+                        memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
+                    }
+                }
+                ProcessMonitorCapture(*DXFrameProcessorImpl_->Data, ret);
+            }
+
+
+
             return Ret;
         }
 

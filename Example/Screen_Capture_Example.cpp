@@ -22,7 +22,25 @@ int main()
     realcounter = 0;
     SL::Screen_Capture::ScreenCaptureManager framgrabber;
     auto start = std::chrono::high_resolution_clock::now();
+    //the below function shows how you can rearrange the data from the captured format of BGRA to RGBA
 
+    framgrabber.onImage([](char* data, size_t height, size_t width) {
+        auto startdata = data;
+        for (size_t h = 0; h < height; h++) {
+            for (size_t w = 0; w < width; w++) {
+                auto b = startdata[0];
+                //auto g = startdata[1];
+                auto r = startdata[2];
+                //auto a = startdata[3];
+                startdata[0] = r;
+                //startdata[1] = g;
+                startdata[2] = b;
+               // startdata[3] = a;
+
+                startdata += 4;//4 bytes per pixel
+            }
+        }
+    });
     framgrabber.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
         std::cout << "height  " << Height(img) << "  width  " << Width(img) << std::endl;
         auto r = realcounter.fetch_add(1);
@@ -37,7 +55,7 @@ int main()
         }
         Extract(img, imgbuffer.get(), size);
 
-        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     });
 
     framgrabber.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {

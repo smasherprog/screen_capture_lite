@@ -93,9 +93,11 @@ namespace SL {
             void setMouseChangeInterval(int interval);
             //this is called before onNewFrame, onFrameChanged, and onMouseChanged
             //This function allows for preprocessing of an image to change the layout or perform any other custom function 
+            //Images are captured by this library in RGBA format. If you want to change that format, use this callback to rearrange the data. 
             void onImage(ImageCallback& cb);
             //this is called before onNewFrame, onFrameChanged, and onMouseChanged
             //This function allows for preprocessing of an image to change the layout or perform any other custom function 
+            //Images are captured by this library in RGBA format. If you want to change that format, use this callback to rearrange the data. 
             void onImage(const ImageCallback& cb);
 
             void Start();

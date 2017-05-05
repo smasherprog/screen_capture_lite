@@ -127,6 +127,9 @@ namespace SL {
 
         void ProcessMonitorCapture(Monitor_Thread_Data & data, ImageRect & imageract)
         {
+            if (data.ImageFunction) {
+                data.ImageFunction(data.NewImageBuffer.get(), imageract.bottom, imageract.right);
+            }
             if (data.CaptureEntireMonitor) {
                 auto wholeimg = Create(imageract, PixelStride, 0, data.NewImageBuffer.get());
                 data.CaptureEntireMonitor(wholeimg, data.SelectedMonitor);

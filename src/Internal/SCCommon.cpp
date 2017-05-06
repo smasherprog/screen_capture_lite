@@ -127,9 +127,6 @@ namespace SL {
 
         void ProcessMonitorCapture(Monitor_Thread_Data & data, ImageRect & imageract)
         {
-            if (data.ImageFunction) {
-                data.ImageFunction(data.NewImageBuffer.get(), imageract.bottom, imageract.right);
-            }
             if (data.CaptureEntireMonitor) {
                 auto wholeimg = Create(imageract, PixelStride, 0, data.NewImageBuffer.get());
                 data.CaptureEntireMonitor(wholeimg, data.SelectedMonitor);
@@ -201,48 +198,6 @@ namespace SL {
         int RowStride(const Image& img) { return img.Pixelstride* Width(img); }
         //number of bytes per row of padding
         int RowPadding(const Image& img) { return img.RowPadding; }
-        char* StartSrc(const Image& img) { return img.Data; }
-        void Copy(const Image& dst, const Image& src) {
-            //make sure the copy is going to be valid!
-            assert(dst.Bounds.Contains(src.Bounds));
-
-            auto startdst = StartSrc(dst) + (src.Bounds.top *(RowStride(dst) + RowPadding(dst))) + (src.Bounds.left * dst.Pixelstride);
-            auto startsrc = StartSrc(src);
-            if (src.Bounds == dst.Bounds && RowStride(src) == RowStride(dst) && RowPadding(src) == RowPadding(dst)) {
-                //if the bounds and rowstride and padding are the same, the entire copy can be a single memcpy
-                memcpy(startdst, startsrc, RowStride(src)*Height(src));
-            }
-            else {
-                for (auto i = 0; i < Height(src); i++) {
-                    //memset(startdst, 0, RowStride(src));
-                    memcpy(startdst, startsrc, RowStride(src));
-
-                    startdst += RowStride(dst) + RowPadding(dst);//advance to the next row
-                    startsrc += RowStride(src) + RowPadding(src);//advance to the next row
-                }
-            }
-        }
-
-        void Extract(const Image& img, char* dst, size_t dst_size) {
-            auto totalsize = RowStride(img)*Height(img);
-            assert(dst_size >= totalsize);
-
-            auto startdst = dst;
-            auto startsrc = StartSrc(img);
-            if (RowPadding(img) == 0) {
-                //no padding, the entire copy can be a single memcpy call
-                memcpy(startdst, startsrc, RowStride(img)*Height(img));
-            }
-            else {
-                for (auto i = 0; i < Height(img); i++) {
-                    //memset(startdst, 0, RowStride(src));
-                    memcpy(startdst, startsrc, RowStride(img));
-
-                    startdst += RowStride(img);//advance to the next row
-                    startsrc += RowStride(img) + RowPadding(img);//advance to the next row
-                }
-            }
-
-        }
+        const char* StartSrc(const Image& img) { return img.Data; }
     }
 }

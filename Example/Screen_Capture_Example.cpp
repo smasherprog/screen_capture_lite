@@ -24,19 +24,19 @@ int main()
     auto start = std::chrono::high_resolution_clock::now();
     //the below function shows how you can rearrange the data from the captured format of BGRA to RGBA
 
-    framgrabber.onImage([](char* data, size_t height, size_t width) {
-        auto startdata = data;
-        for (size_t h = 0; h < height; h++) {
-            for (size_t w = 0; w < width; w++) {
-                auto b = startdata[0];
-                auto r = startdata[2];
-                startdata[0] = r;
-                startdata[2] = b;
+    //framgrabber.onImage([](char* data, size_t height, size_t width) {
+    //    auto startdata = data;
+    //    for (size_t h = 0; h < height; h++) {
+    //        for (size_t w = 0; w < width; w++) {
+    //            auto b = startdata[0];
+    //            auto r = startdata[2];
+    //            startdata[0] = r;
+    //            startdata[2] = b;
 
-                startdata += 4;//4 bytes per pixel
-            }
-        }
-    });
+    //            startdata += 4;//4 bytes per pixel
+    //        }
+    //    }
+    //});
     framgrabber.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
         std::cout << "height  " << Height(img) << "  width  " << Width(img) << std::endl;
         auto r = realcounter.fetch_add(1);
@@ -64,6 +64,7 @@ int main()
         auto size = RowStride(img)*Height(img);
         auto imgbuffer(std::make_unique<char[]>(size));
         Extract(img, imgbuffer.get(), size);
+        
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >= 1000) {
             std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
             onNewFramecounter = 0;

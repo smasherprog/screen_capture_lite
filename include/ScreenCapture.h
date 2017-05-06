@@ -4,12 +4,21 @@
 #include <vector>
 #include <string>
 #include <ostream>
-
+#include <assert.h>
 
 namespace SL {
     namespace Screen_Capture {
 
-        struct Monitor;
+        struct Monitor {
+            int Id = INT32_MAX;
+            int Index = INT32_MAX;
+            int Height = 0;
+            int Width = 0;
+            //Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.
+            int OffsetX = 0;
+            int OffsetY = 0;
+            char Name[128] = { 0 };
+        };
 
         struct ImageRect {
             int    left = 0;
@@ -19,8 +28,14 @@ namespace SL {
             bool Contains(const ImageRect& a) const {
                 return left <= a.left && right >= a.right && top <= a.top && bottom >= a.bottom;
             }
-        
         };
+        struct Image {
+            ImageRect Bounds;
+            int Pixelstride = 4;
+            int RowPadding = 0;
+            const char* Data = nullptr;
+        };
+
         inline bool operator==(const ImageRect& a, const ImageRect& b) {
             return b.left == a.left && b.right == a.right && b.top == a.top && b.bottom == a.bottom;
         }
@@ -28,9 +43,6 @@ namespace SL {
         {
             return os << "left=" << p.left << " top=" << p.top << " right=" << p.right << " bottom=" << p.bottom;
         }
-        //the Image Struct does NOT OWN any of the data it holds. It Describes an image and provides helpful functions. 
-        struct Image;
-        void Extract(const Image& img, char* dst, size_t dst_size);
 
         //index to self in the GetMonitors() function
         int Index(const Monitor& mointor);
@@ -54,14 +66,30 @@ namespace SL {
         //number of bytes per row of padding
         int RowPadding(const Image& img);
         //the start of the image data, this is not guarenteed to be contiguos. You must use the Rowstride and rowpadding to examine the image
-        char* StartSrc(const Image& img);
+        const char* StartSrc(const Image& img);
+
+        inline void Extract(const Image& img, char* dst, size_t dst_size) {
+            auto totalsize = RowStride(img)*Height(img);
+            assert(dst_size >= (int)totalsize);
+            auto startdst = dst;
+            auto startsrc = StartSrc(img);
+            if (RowPadding(img) == 0) { //no padding, the entire copy can be a single memcpy call
+                memcpy(startdst, startsrc, RowStride(img)*Height(img));
+            }
+            else {
+                for (auto i = 0; i < Height(img); i++) {
+                    memcpy(startdst, startsrc, RowStride(img));
+                    startdst += RowStride(img);//advance to the next row
+                    startsrc += RowStride(img) + RowPadding(img);//advance to the next row
+                }
+            }
+        }
 
         std::vector<std::shared_ptr<Monitor>> GetMonitors();
 
         typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
         typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
         typedef std::function<std::vector<std::shared_ptr<Monitor>>()> MonitorCallback;
-        typedef std::function<void(char* data, size_t height, size_t width)> ImageCallback;
 
         class ScreenCaptureManagerImpl;
         class ScreenCaptureManager {
@@ -91,14 +119,6 @@ namespace SL {
             void onMouseChanged(const MouseCallback& cb);
             //Used by the library to determine the callback frequency
             void setMouseChangeInterval(int interval);
-            //this is called before onNewFrame, onFrameChanged, and onMouseChanged
-            //This function allows for preprocessing of an image to change the layout or perform any other custom function 
-            //Images are captured by this library in RGBA format. If you want to change that format, use this callback to rearrange the data. 
-            void onImage(ImageCallback& cb);
-            //this is called before onNewFrame, onFrameChanged, and onMouseChanged
-            //This function allows for preprocessing of an image to change the layout or perform any other custom function 
-            //Images are captured by this library in RGBA format. If you want to change that format, use this callback to rearrange the data. 
-            void onImage(const ImageCallback& cb);
 
             void Start();
             void Stop();

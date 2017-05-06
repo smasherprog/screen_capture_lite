@@ -457,7 +457,7 @@ namespace SL {
 
             auto rowstride = PixelStride*Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
           
-            if (DXFrameProcessorImpl_->Data->CaptureEntireMonitor && !DXFrameProcessorImpl_->Data->CaptureDifMonitor && !DXFrameProcessorImpl_->Data->ImageFunction) {
+            if (DXFrameProcessorImpl_->Data->CaptureEntireMonitor && !DXFrameProcessorImpl_->Data->CaptureDifMonitor) {
                 if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
                     auto wholeimg = Create(ret, PixelStride, 0, startsrc);
                     DXFrameProcessorImpl_->Data->CaptureEntireMonitor(wholeimg, DXFrameProcessorImpl_->Data->SelectedMonitor);

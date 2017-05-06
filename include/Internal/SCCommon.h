@@ -7,23 +7,6 @@
 namespace SL {
     namespace Screen_Capture {
 
-        struct Monitor {
-            int Id = INT32_MAX;
-            int Index = INT32_MAX;
-            int Height = 0;
-            int Width = 0;
-            //Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their monitors around so this affects their offset.
-            int OffsetX = 0;
-            int OffsetY = 0;
-            char Name[128] = { 0 };
-        };
-        struct Image {
-            ImageRect Bounds;
-            int Pixelstride = 4;
-            int RowPadding = 0;
-            char* Data = nullptr;
-        };
-
         struct ScreenCapture_Settings {
             //min interval between frames that are captured
             int Monitor_Capture_Interval;
@@ -37,7 +20,6 @@ namespace SL {
             MouseCallback CaptureMouse;
             //get monitors to watch
             MonitorCallback MonitorsChanged;
-            ImageCallback ImageFunction;
         };
 
         struct Base_Thread_Data
@@ -58,7 +40,6 @@ namespace SL {
             int CaptureInterval; //in milliseconds	
             CaptureCallback CaptureEntireMonitor;
             CaptureCallback CaptureDifMonitor;
-            ImageCallback ImageFunction;
 
             std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
             size_t ImageBufferSize = 0;
@@ -70,7 +51,6 @@ namespace SL {
 
             int CaptureInterval; //in milliseconds	
             MouseCallback CaptureCallback;
-            ImageCallback ImageFunction;
         };
         enum DUPL_RETURN
         {
@@ -83,7 +63,7 @@ namespace SL {
 
         Image Create(const ImageRect& imgrect, int pixelstride, int rowpadding, char* data);
         //this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
-        void Copy(const Image& dst, const Image& src);
+       // void Copy(const Image& dst, const Image& src);
 
         std::vector<ImageRect> GetDifs(const Image & oldimg, const Image & newimg);
         void ProcessMonitorCapture(Monitor_Thread_Data& data, ImageRect& imageract);

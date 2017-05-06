@@ -34,15 +34,12 @@ void SL::Screen_Capture::ThreadManager::Init(const Base_Thread_Data& data, const
         tdata->CaptureDifMonitor = settings.CaptureDifMonitor;
         tdata->CaptureEntireMonitor = settings.CaptureEntireMonitor;
         tdata->CaptureInterval = settings.Monitor_Capture_Interval;
-        tdata->ImageFunction = settings.ImageFunction;
 
         tdata->ImageBufferSize = Width(tdata->SelectedMonitor)* Height(tdata->SelectedMonitor)* PixelStride;
         if (tdata->CaptureDifMonitor) {//only need the old buffer if difs are needed. If no dif is needed, then the image is always new
             tdata->OldImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
             tdata->NewImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
-        } else if (tdata->ImageFunction) {
-            tdata->NewImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
-        }
+        } 
         
         m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCapture, tdata);
     }
@@ -56,7 +53,6 @@ void SL::Screen_Capture::ThreadManager::Init(const Base_Thread_Data& data, const
         mousedata->TerminateThreadsEvent = data.TerminateThreadsEvent;
         mousedata->CaptureCallback = settings.CaptureMouse;
         mousedata->CaptureInterval = settings.Mouse_Capture_Interval;
-        mousedata->ImageFunction = settings.ImageFunction;
 
         m_ThreadHandles.back() = std::thread(&SL::Screen_Capture::RunCaptureMouse, mousedata);
     }

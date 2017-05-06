@@ -18,25 +18,9 @@
 int main()
 {
     std::cout << "Starting Capture Demo" << std::endl;
-    std::atomic<int> realcounter;
-    realcounter = 0;
+    std::atomic<int> realcounter = 0;
     SL::Screen_Capture::ScreenCaptureManager framgrabber;
-    auto start = std::chrono::high_resolution_clock::now();
-    //the below function shows how you can rearrange the data from the captured format of BGRA to RGBA
 
-    //framgrabber.onImage([](char* data, size_t height, size_t width) {
-    //    auto startdata = data;
-    //    for (size_t h = 0; h < height; h++) {
-    //        for (size_t w = 0; w < width; w++) {
-    //            auto b = startdata[0];
-    //            auto r = startdata[2];
-    //            startdata[0] = r;
-    //            startdata[2] = b;
-
-    //            startdata += 4;//4 bytes per pixel
-    //        }
-    //    }
-    //});
     framgrabber.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
         std::cout << "height  " << Height(img) << "  width  " << Width(img) << std::endl;
         auto r = realcounter.fetch_add(1);
@@ -44,17 +28,13 @@ int main()
         auto size = RowStride(img)*Height(img);
 
         auto imgbuffer(std::make_unique<char[]>(size));
-        if (Height(img) > 2000) {
-            auto s = std::chrono::high_resolution_clock::now();
-            std::cout << "TimeFromLast " << std::chrono::duration_cast<std::chrono::milliseconds>(s - start).count() << std::endl;
-            start = s;
-        }
-        Extract(img, imgbuffer.get(), size);
+        //you can extract the image as is in BGRA, or Convert
+        //Extract(img, imgbuffer.get(), size);
+        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
 
-        // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     });
-    std::atomic<int> onNewFramecounter;
-    onNewFramecounter = 0;
+    std::atomic<int> onNewFramecounter = 0;
     auto onNewFramestart = std::chrono::high_resolution_clock::now();
     framgrabber.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
@@ -63,8 +43,10 @@ int main()
 
         auto size = RowStride(img)*Height(img);
         auto imgbuffer(std::make_unique<char[]>(size));
-        Extract(img, imgbuffer.get(), size);
-        
+        //Extract(img, imgbuffer.get(), size);
+
+        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >= 1000) {
             std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
             onNewFramecounter = 0;

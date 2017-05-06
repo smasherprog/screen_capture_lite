@@ -33,6 +33,8 @@ namespace SL {
             ImageRect Bounds;
             int Pixelstride = 4;
             int RowPadding = 0;
+            //image data is BGRA, for example Data[0] = B, Data[1] =G, Data[2] = R, Data [3]=A
+            //alpha is always unused and might contain garbage
             const char* Data = nullptr;
         };
 
@@ -70,7 +72,7 @@ namespace SL {
 
         inline void Extract(const Image& img, char* dst, size_t dst_size) {
             auto totalsize = RowStride(img)*Height(img);
-            assert(dst_size >= (int)totalsize);
+            assert(dst_size >= static_cast<size_t>(totalsize));
             auto startdst = dst;
             auto startsrc = StartSrc(img);
             if (RowPadding(img) == 0) { //no padding, the entire copy can be a single memcpy call
@@ -85,6 +87,22 @@ namespace SL {
             }
         }
 
+        inline void ExtractAndConvertToRGBA(const Image& img, char* dst, size_t dst_size) {
+            auto totalsize = RowStride(img)*Height(img);
+            assert(dst_size >= static_cast<size_t>(totalsize));
+            auto imgsrc = StartSrc(img);
+            auto imgdist = dst;
+            for (auto h = 0; h < Height(img); h++) {
+                for (auto w = 0; w < Width(img); w++) {
+                    *imgdist++ = *(imgsrc + 2);
+                    *imgdist++ = *(imgsrc + 1);
+                    *imgdist++ = *(imgsrc);
+                    *imgdist++ = 0;//alpha should be zero
+                    imgsrc += img.Pixelstride;
+                }
+                imgsrc += RowPadding(img);
+            }
+        }
         std::vector<std::shared_ptr<Monitor>> GetMonitors();
 
         typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;

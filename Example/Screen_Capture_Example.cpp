@@ -18,7 +18,8 @@
 int main()
 {
     std::cout << "Starting Capture Demo" << std::endl;
-    std::atomic<int> realcounter = 0;
+    std::atomic<int> realcounter;
+    realcounter = 0;
     SL::Screen_Capture::ScreenCaptureManager framgrabber;
 
     framgrabber.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
@@ -34,7 +35,8 @@ int main()
 
         //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     });
-    std::atomic<int> onNewFramecounter = 0;
+    std::atomic<int> onNewFramecounter;
+    onNewFramecounter = 0;
     auto onNewFramestart = std::chrono::high_resolution_clock::now();
     framgrabber.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 

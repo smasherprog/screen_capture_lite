@@ -5,6 +5,7 @@
 #include <string>
 #include <ostream>
 #include <assert.h>
+#include <cstring>
 
 namespace SL {
     namespace Screen_Capture {

@@ -75,6 +75,7 @@ else()
 	
 endif()
 
+
 set(SCREEN_CAPTURE_COMMON_SRC 
    ${CMAKE_CURRENT_SOURCE_DIR}/../include/ScreenCapture.h
    ${CMAKE_CURRENT_SOURCE_DIR}/../src/ScreenCapture.cpp

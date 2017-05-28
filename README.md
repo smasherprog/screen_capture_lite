@@ -6,6 +6,7 @@
 see the Exmaple folder for a demo</p>
 <h2>No External Dependencies</h2>
 <h4>Platforms supported:</h4>
+<h3>Project setup: https://github.com/smasherprog/Projects_Setup</h3>
 <ul>
 <li>Windows XP and Up</li>
 <li>MacOS</li>

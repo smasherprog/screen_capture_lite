@@ -120,7 +120,9 @@ namespace SL {
             void setFrameChangeInterval(std::chrono::milliseconds interval);
             //Used by the library to determine the callback frequency
             void setMouseChangeInterval(std::chrono::milliseconds interval);
-
+            operator bool() const { return Impl_.operator bool(); }
+            //will stop the library from processing frames and release all memory
+            void destroy() { Impl_.reset(); }
         };
         class ScreenCaptureConfiguration {
             std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
@@ -133,7 +135,7 @@ namespace SL {
             //When a mouse image changes or the mouse changes position, the callback is invoked.
             ScreenCaptureConfiguration onMouseChanged(const MouseCallback& cb);
             //start capturing
-            std::shared_ptr<ScreenCaptureManager> start_capturing();
+            ScreenCaptureManager start_capturing();
         };
         ScreenCaptureConfiguration CreateScreeCapture(const MonitorCallback& monitorstocapture);
     }

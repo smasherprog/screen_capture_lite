@@ -133,7 +133,7 @@ namespace SL {
             //When a mouse image changes or the mouse changes position, the callback is invoked.
             ScreenCaptureConfiguration onMouseChanged(const MouseCallback& cb);
             //start capturing
-            ScreenCaptureManager start_capturing();
+            std::shared_ptr<ScreenCaptureManager> start_capturing();
         };
         ScreenCaptureConfiguration CreateScreeCapture(const MonitorCallback& monitorstocapture);
     }

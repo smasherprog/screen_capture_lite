@@ -71,8 +71,8 @@ int main()
 
     }).start_capturing();
 
-    framgrabber.setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
-    framgrabber.setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
+    framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
+    framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
     return 0;

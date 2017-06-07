@@ -75,9 +75,9 @@ namespace SL {
             Impl_->Thread_Data_->Mouse_Capture_Interval = interval;
         }
 
-        ScreenCaptureManager ScreenCaptureConfiguration::start_capturing() {
+        std::shared_ptr<ScreenCaptureManager> ScreenCaptureConfiguration::start_capturing() {
             Impl_->start();
-            return ScreenCaptureManager(Impl_);
+            return std::make_shared<ScreenCaptureManager>(Impl_);
         }
         ScreenCaptureConfiguration ScreenCaptureConfiguration::onNewFrame(const CaptureCallback& cb) {
             assert(!Impl_->Thread_Data_->CaptureEntireMonitor);

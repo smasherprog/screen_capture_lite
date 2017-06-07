@@ -10,7 +10,7 @@ namespace SL {
         DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor& monitor) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
             Data = data;
-
+            SelectedMonitor = monitor;
             return ret;
         }
         //

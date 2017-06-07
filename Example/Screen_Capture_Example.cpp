@@ -55,7 +55,7 @@ int main()
             onNewFramestart = std::chrono::high_resolution_clock::now();
         }
         onNewFramecounter += 1;
-       // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+            tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     }).onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
 
         auto r = realcounter.fetch_add(1);

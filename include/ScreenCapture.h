@@ -6,6 +6,7 @@
 #include <ostream>
 #include <assert.h>
 #include <cstring>
+#include <chrono>
 
 namespace SL {
     namespace Screen_Capture {
@@ -112,36 +113,28 @@ namespace SL {
 
         class ScreenCaptureManagerImpl;
         class ScreenCaptureManager {
-            std::unique_ptr<ScreenCaptureManagerImpl> _ScreenCaptureManagerImpl;
-
+            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
         public:
-            ScreenCaptureManager();
-            ~ScreenCaptureManager();
-
-            //Used by the library to determine which monitors to watch
-            void setMonitorsToCapture(MonitorCallback& cb);
-            //Used by the library to determine which monitors to watch
-            void setMonitorsToCapture(const MonitorCallback& cb);
+            ScreenCaptureManager(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
             //Used by the library to determine the callback frequency
-            void setFrameChangeInterval(int interval);
-            //When a new frame is available the callback is invoked
-            void onNewFrame(CaptureCallback& cb);
-            //When a new frame is available the callback is invoked
-            void onNewFrame(const CaptureCallback& cb);
-            //When a change in a frame is detected, the callback is invoked
-            void onFrameChanged(CaptureCallback& cb);
-            //When a change in a frame is detected, the callback is invoked
-            void onFrameChanged(const CaptureCallback& cb);
-            //When a mouse image changes or the mouse changes position, the callback is invoked.
-            void onMouseChanged(MouseCallback& cb);
-            //When a mouse image changes or the mouse changes position, the callback is invoked.
-            void onMouseChanged(const MouseCallback& cb);
+            void setFrameChangeInterval(std::chrono::milliseconds interval);
             //Used by the library to determine the callback frequency
-            void setMouseChangeInterval(int interval);
+            void setMouseChangeInterval(std::chrono::milliseconds interval);
 
-            void Start();
-            void Stop();
         };
-    
+        class ScreenCaptureConfiguration {
+            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
+        public:
+            ScreenCaptureConfiguration(const  std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
+            //When a new frame is available the callback is invoked
+            ScreenCaptureConfiguration onNewFrame(const CaptureCallback& cb);
+            //When a change in a frame is detected, the callback is invoked
+            ScreenCaptureConfiguration onFrameChanged(const CaptureCallback& cb);
+            //When a mouse image changes or the mouse changes position, the callback is invoked.
+            ScreenCaptureConfiguration onMouseChanged(const MouseCallback& cb);
+            //start capturing
+            ScreenCaptureManager start_capturing();
+        };
+        ScreenCaptureConfiguration CreateScreeCapture(const MonitorCallback& monitorstocapture);
     }
 }

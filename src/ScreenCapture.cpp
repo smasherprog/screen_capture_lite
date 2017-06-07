@@ -16,112 +16,88 @@ namespace SL {
         class ScreenCaptureManagerImpl {
         public:
 
-            ScreenCapture_Settings Settings;
+            std::shared_ptr<Thread_Data> Thread_Data_;
 
             std::thread _Thread;
-            std::shared_ptr<std::atomic_bool> _TerminateThread;
+            std::shared_ptr<std::atomic_bool> TerminateThread_;
 
 
             ScreenCaptureManagerImpl() {
-                _TerminateThread = std::make_shared<std::atomic_bool>(false);
+                TerminateThread_ = std::make_shared<std::atomic_bool>(false);
+                Thread_Data_ = std::make_shared<Thread_Data>();
+                Thread_Data_->Monitor_Capture_Interval = std::chrono::milliseconds(100);
+                Thread_Data_->Mouse_Capture_Interval = std::chrono::milliseconds(50);
             }
             ~ScreenCaptureManagerImpl() {
-                stop(true);
+                *TerminateThread_ = true;
+                if (_Thread.joinable()) {
+                    _Thread.join();
+                }
             }
             void start() {
-            
-                //users must set at least one callback before starting
-                assert(Settings.CaptureEntireMonitor || Settings.CaptureDifMonitor || Settings.CaptureMouse);
 
-                stop(true);
+                //users must set at least one callback before starting
+                assert(Thread_Data_->CaptureEntireMonitor || Thread_Data_->CaptureDifMonitor || Thread_Data_->CaptureMouse);
                 _Thread = std::thread([&]() {
                     ThreadManager ThreadMgr;
-                    Base_Thread_Data data;
-                    data.ExpectedErrorEvent = std::make_shared<std::atomic_bool>(false);
-                    data.UnexpectedErrorEvent = std::make_shared<std::atomic_bool>(false);
-                    data.TerminateThreadsEvent = _TerminateThread;
+                    Thread_Data_->ExpectedErrorEvent = std::make_shared<std::atomic_bool>(false);
+                    Thread_Data_->UnexpectedErrorEvent = std::make_shared<std::atomic_bool>(false);
+                    Thread_Data_->TerminateThreadsEvent = TerminateThread_;
 
-                    ThreadMgr.Init(data, Settings);
+                    ThreadMgr.Init(Thread_Data_);
 
-                    while (!*_TerminateThread) {
+                    while (!*TerminateThread_) {
 
-                        if (*data.ExpectedErrorEvent)
+                        if (*Thread_Data_->ExpectedErrorEvent)
                         {
                             // std::cout<<"Expected Error, Restarting Thread Manager"<<std::endl;
                              // Terminate other threads
-                            *_TerminateThread = true;
+                            *TerminateThread_ = true;
                             ThreadMgr.Join();
-                            *data.ExpectedErrorEvent = *data.UnexpectedErrorEvent = *_TerminateThread = false;
+                            *Thread_Data_->ExpectedErrorEvent = *Thread_Data_->UnexpectedErrorEvent = *TerminateThread_ = false;
                             // Clean up
                             ThreadMgr.Reset();
                             std::this_thread::sleep_for(std::chrono::milliseconds(1000));//sleep for 1 second since an error occcured
 
-                            ThreadMgr.Init(data, Settings);
+                            ThreadMgr.Init(Thread_Data_);
                         }
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     }
-                    *_TerminateThread = true;
+                    *TerminateThread_ = true;
                     ThreadMgr.Join();
                 });
             }
-            void stop(bool block) {
-                *_TerminateThread = false;
-                if (block) {
-                    if (_Thread.joinable()) {
-                        _Thread.join();
-                    }
-                }
-
-            }
         };
-
-        ScreenCaptureManager::ScreenCaptureManager()
-        {
-            _ScreenCaptureManagerImpl = std::make_unique<ScreenCaptureManagerImpl>();
+        void ScreenCaptureManager::setFrameChangeInterval(std::chrono::milliseconds interval) {
+            Impl_->Thread_Data_->Monitor_Capture_Interval = interval;
+        }
+        void ScreenCaptureManager::setMouseChangeInterval(std::chrono::milliseconds interval) {
+            Impl_->Thread_Data_->Mouse_Capture_Interval = interval;
         }
 
-        ScreenCaptureManager::~ScreenCaptureManager()
-        {
-            _ScreenCaptureManagerImpl->stop(true);
+        ScreenCaptureManager ScreenCaptureConfiguration::start_capturing() {
+            Impl_->start();
+            return ScreenCaptureManager(Impl_);
         }
-
-        void ScreenCaptureManager::Start()
-        {
-            _ScreenCaptureManagerImpl->start();
+        ScreenCaptureConfiguration ScreenCaptureConfiguration::onNewFrame(const CaptureCallback& cb) {
+            assert(!Impl_->Thread_Data_->CaptureEntireMonitor);
+            Impl_->Thread_Data_->CaptureEntireMonitor = cb;
+            return ScreenCaptureConfiguration(Impl_);
         }
-        void ScreenCaptureManager::Stop()
-        {
-            _ScreenCaptureManagerImpl->stop(false);
+        ScreenCaptureConfiguration ScreenCaptureConfiguration::onFrameChanged(const CaptureCallback& cb) {
+            assert(!Impl_->Thread_Data_->CaptureDifMonitor);
+            Impl_->Thread_Data_->CaptureDifMonitor = cb;
+            return ScreenCaptureConfiguration(Impl_);
         }
-        void ScreenCaptureManager::setMonitorsToCapture(MonitorCallback& cb) {
-            _ScreenCaptureManagerImpl->Settings.MonitorsChanged = cb;
-        }	
-        void ScreenCaptureManager::setMonitorsToCapture(const MonitorCallback& cb) {
-            _ScreenCaptureManagerImpl->Settings.MonitorsChanged = cb;
+        ScreenCaptureConfiguration ScreenCaptureConfiguration::onMouseChanged(const MouseCallback& cb) {
+            assert(!Impl_->Thread_Data_->CaptureMouse);
+            Impl_->Thread_Data_->CaptureMouse = cb;
+            return ScreenCaptureConfiguration(Impl_);
         }
-        void ScreenCaptureManager::setFrameChangeInterval(int interval) {
-            _ScreenCaptureManagerImpl->Settings.Monitor_Capture_Interval = interval;
-        }
-        void ScreenCaptureManager::onNewFrame(CaptureCallback& cb) {
-            _ScreenCaptureManagerImpl->Settings.CaptureEntireMonitor = cb;
-        }
-        void ScreenCaptureManager::onNewFrame(const CaptureCallback& cb) {
-            _ScreenCaptureManagerImpl->Settings.CaptureEntireMonitor = cb;
-        }
-        void ScreenCaptureManager::onFrameChanged(CaptureCallback& cb) {
-            _ScreenCaptureManagerImpl->Settings.CaptureDifMonitor = cb;
-        }
-        void ScreenCaptureManager::onFrameChanged(const CaptureCallback& cb) {
-            _ScreenCaptureManagerImpl->Settings.CaptureDifMonitor = cb;
-        }
-        void ScreenCaptureManager::onMouseChanged(MouseCallback& cb) {
-            _ScreenCaptureManagerImpl->Settings.CaptureMouse = cb;
-        }
-        void ScreenCaptureManager::onMouseChanged(const MouseCallback& cb) {
-            _ScreenCaptureManagerImpl->Settings.CaptureMouse = cb;
-        }
-        void ScreenCaptureManager::setMouseChangeInterval(int interval) {
-            _ScreenCaptureManagerImpl->Settings.Mouse_Capture_Interval = interval;
+        ScreenCaptureConfiguration CreateScreeCapture(const MonitorCallback& monitorstocapture) {
+            auto  impl = std::make_shared<ScreenCaptureManagerImpl>();
+            impl->Thread_Data_->MonitorsChanged = monitorstocapture;
+            return ScreenCaptureConfiguration(impl);
         }
     }
 }

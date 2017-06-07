@@ -9,21 +9,8 @@
 namespace SL {
     namespace Screen_Capture {
 
-        struct DXFrameProcessorImpl {
 
-        };
-
-
-        DXFrameProcessor::DXFrameProcessor()
-        {
-
-        }
-
-        DXFrameProcessor::~DXFrameProcessor()
-        {
-
-        }
-        DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
+        DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<Thread_Data> data) {
             return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
         }
         DUPL_RETURN DXFrameProcessor::ProcessFrame() {
@@ -33,16 +20,6 @@ namespace SL {
     }
 }
 #else
-
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <d3d11.h>
-#include <dxgi1_2.h>
-#include <wrl.h>
-
-#pragma comment(lib,"dxgi.lib")
-#pragma comment(lib,"d3d11.lib")
 
 
 namespace SL {
@@ -341,49 +318,25 @@ namespace SL {
             }
         };
 
-        struct DXFrameProcessorImpl {
-            Microsoft::WRL::ComPtr<ID3D11Device> Device;
-            Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext;
-            Microsoft::WRL::ComPtr<ID3D11Texture2D> StagingSurf;
-
-            Microsoft::WRL::ComPtr<IDXGIOutputDuplication> OutputDuplication;
-            DXGI_OUTPUT_DESC OutputDesc;
-            UINT Output;
-            std::vector<BYTE> MetaDataBuffer;
-
-            std::shared_ptr<Monitor_Thread_Data> Data;
-        };
-
-
-        DXFrameProcessor::DXFrameProcessor()
-        {
-
-            DXFrameProcessorImpl_ = std::make_unique<DXFrameProcessorImpl>();
-
-        }
-
-        DXFrameProcessor::~DXFrameProcessor()
-        {
-
-        }
-        DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
+        DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor& monitor){
+            SelectedMonitor = monitor;
             DX_RESOURCES res;
             auto ret = Initialize(res);
             if (ret != DUPL_RETURN_SUCCESS) {
                 return ret;
             }
             DUPLE_RESOURCES dupl;
-            ret = Initialize(dupl, res.Device.Get(), Id(data->SelectedMonitor));
+            ret = Initialize(dupl, res.Device.Get(), Id(SelectedMonitor));
             if (ret != DUPL_RETURN_SUCCESS) {
                 return ret;
             }
-            DXFrameProcessorImpl_->Device = res.Device;
-            DXFrameProcessorImpl_->DeviceContext = res.DeviceContext;
-            DXFrameProcessorImpl_->OutputDuplication = dupl.OutputDuplication;
-            DXFrameProcessorImpl_->OutputDesc = dupl.OutputDesc;
-            DXFrameProcessorImpl_->Output = dupl.Output;
+           Device = res.Device;
+           DeviceContext = res.DeviceContext;
+           OutputDuplication = dupl.OutputDuplication;
+           OutputDesc = dupl.OutputDesc;
+           Output = dupl.Output;
 
-            DXFrameProcessorImpl_->Data = data;
+           Data = data;
 
             return ret;
         }
@@ -401,7 +354,7 @@ namespace SL {
 
             Microsoft::WRL::ComPtr<IDXGIResource> DesktopResource;
             DXGI_OUTDUPL_FRAME_INFO FrameInfo;
-            AquireFrameRAII frame(DXFrameProcessorImpl_->OutputDuplication.Get());
+            AquireFrameRAII frame(OutputDuplication.Get());
 
             // Get new frame
             auto hr = frame.AcquireNextFrame(500, &FrameInfo, DesktopResource.GetAddressOf());
@@ -411,7 +364,7 @@ namespace SL {
             }
             else if (FAILED(hr))
             {
-                return ProcessFailure(DXFrameProcessorImpl_->Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
+                return ProcessFailure(Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
             }
             Microsoft::WRL::ComPtr<ID3D11Texture2D> aquireddesktopimage;
             // QI for IDXGIResource
@@ -424,7 +377,7 @@ namespace SL {
             D3D11_TEXTURE2D_DESC ThisDesc;
             aquireddesktopimage->GetDesc(&ThisDesc);
 
-            if (!DXFrameProcessorImpl_->StagingSurf)
+            if (!StagingSurf)
             {
                 D3D11_TEXTURE2D_DESC StagingDesc;
                 StagingDesc = ThisDesc;
@@ -432,52 +385,52 @@ namespace SL {
                 StagingDesc.Usage = D3D11_USAGE_STAGING;
                 StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
                 StagingDesc.MiscFlags = 0;
-                hr = DXFrameProcessorImpl_->Device->CreateTexture2D(&StagingDesc, nullptr, DXFrameProcessorImpl_->StagingSurf.GetAddressOf());
+                hr =Device->CreateTexture2D(&StagingDesc, nullptr,StagingSurf.GetAddressOf());
                 if (FAILED(hr))
                 {
-                    return ProcessFailure(DXFrameProcessorImpl_->Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
+                    return ProcessFailure(Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
                 }
             }
 
-            DXFrameProcessorImpl_->DeviceContext->CopyResource(DXFrameProcessorImpl_->StagingSurf.Get(), aquireddesktopimage.Get());
+           DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
 
             D3D11_MAPPED_SUBRESOURCE MappingDesc;
-            MAPPED_SUBRESOURCERAII mappedresrouce(DXFrameProcessorImpl_->DeviceContext.Get());
-            hr = mappedresrouce.Map(DXFrameProcessorImpl_->StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
+            MAPPED_SUBRESOURCERAII mappedresrouce(DeviceContext.Get());
+            hr = mappedresrouce.Map(StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
             // Get the data
             if (MappingDesc.pData == NULL) {
-                return ProcessFailure(DXFrameProcessorImpl_->Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
+                return ProcessFailure(Device.Get(), L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error", hr, SystemTransitionsExpectedErrors);
             }
 
             ImageRect ret;
             ret.left = ret.top = 0;
-            ret.bottom = Height(DXFrameProcessorImpl_->Data->SelectedMonitor);
-            ret.right = Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
+            ret.bottom = Height(SelectedMonitor);
+            ret.right = Width(SelectedMonitor);
             auto startsrc = reinterpret_cast<char*>(MappingDesc.pData);
 
-            auto rowstride = PixelStride*Width(DXFrameProcessorImpl_->Data->SelectedMonitor);
+            auto rowstride = PixelStride*Width(SelectedMonitor);
           
-            if (DXFrameProcessorImpl_->Data->CaptureEntireMonitor && !DXFrameProcessorImpl_->Data->CaptureDifMonitor) {
+            if (Data->CaptureEntireMonitor && !Data->CaptureDifMonitor) {
                 if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
                     auto wholeimg = Create(ret, PixelStride, 0, startsrc);
-                    DXFrameProcessorImpl_->Data->CaptureEntireMonitor(wholeimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
+                   Data->CaptureEntireMonitor(wholeimg,SelectedMonitor);
                 }
                 else {
                     auto wholeimg = Create(ret, PixelStride, static_cast<int>(MappingDesc.RowPitch) - rowstride , startsrc);
-                    DXFrameProcessorImpl_->Data->CaptureEntireMonitor(wholeimg, DXFrameProcessorImpl_->Data->SelectedMonitor);
+                   Data->CaptureEntireMonitor(wholeimg,SelectedMonitor);
                 }
             }
             else {
-                auto startdst = DXFrameProcessorImpl_->Data->NewImageBuffer.get();
+                auto startdst =NewImageBuffer.get();
                 if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
-                    memcpy(startdst, startsrc, rowstride*Height(DXFrameProcessorImpl_->Data->SelectedMonitor));
+                    memcpy(startdst, startsrc, rowstride*Height(SelectedMonitor));
                 }
                 else {
-                    for (auto i = 0; i < Height(DXFrameProcessorImpl_->Data->SelectedMonitor); i++) {
+                    for (auto i = 0; i < Height(SelectedMonitor); i++) {
                         memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
                     }
                 }
-                ProcessMonitorCapture(*DXFrameProcessorImpl_->Data, ret);
+                ProcessMonitorCapture(*Data, *this, SelectedMonitor, ret);
             }
 
 

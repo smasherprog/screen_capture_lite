@@ -125,37 +125,6 @@ namespace SL {
             return rects;
         }
 
-        void ProcessMonitorCapture(Monitor_Thread_Data & data, ImageRect & imageract)
-        {
-            if (data.CaptureEntireMonitor) {
-                auto wholeimg = Create(imageract, PixelStride, 0, data.NewImageBuffer.get());
-                data.CaptureEntireMonitor(wholeimg, data.SelectedMonitor);
-            }
-            if (data.CaptureDifMonitor) {
-                if (data.FirstRun) {
-                    //first time through, just send the whole image
-                    auto wholeimgfirst = Create(imageract, PixelStride, 0, data.NewImageBuffer.get());
-                    data.CaptureDifMonitor(wholeimgfirst, data.SelectedMonitor);
-                    data.FirstRun = false;
-                }
-                else {
-                    //user wants difs, lets do it!
-                    auto newimg = Create(imageract, PixelStride, 0, data.NewImageBuffer.get());
-                    auto oldimg = Create(imageract, PixelStride, 0, data.OldImageBuffer.get());
-                    auto imgdifs = GetDifs(oldimg, newimg);
-
-                    for (auto& r : imgdifs) {
-                        auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
-                        auto startsrc = data.NewImageBuffer.get();
-                        startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
-
-                        auto difimg = Create(r, PixelStride, padding, startsrc);
-                        data.CaptureDifMonitor(difimg, data.SelectedMonitor);
-                    }
-                }
-                std::swap(data.NewImageBuffer, data.OldImageBuffer);
-            }
-        }
 
 
 

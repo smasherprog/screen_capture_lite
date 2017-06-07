@@ -2,19 +2,24 @@
 #include "ScreenCapture.h"
 #include "SCCommon.h"
 #include <memory>
+#include "GDIHelpers.h"
 
 namespace SL {
     namespace Screen_Capture {
 
-        struct GDIMouseProcessorImpl;
-        class GDIMouseProcessor {
-            std::unique_ptr<GDIMouseProcessorImpl> GDIMouseProcessorImpl_;
+        class GDIMouseProcessor : public BaseFrameProcessor {
+
+            HDCWrapper MonitorDC;
+            HDCWrapper CaptureDC;
+            std::shared_ptr<Thread_Data> Data;
+       
+            int Last_x = 0;
+            int Last_y = 0;
 
         public:
 
-            GDIMouseProcessor();
-            ~GDIMouseProcessor();
-            DUPL_RETURN Init(std::shared_ptr<Mouse_Thread_Data> data);
+            const int MaxCursurorSize = 32;
+            DUPL_RETURN Init(std::shared_ptr<Thread_Data> data);
             DUPL_RETURN ProcessFrame();
 
         };

@@ -7,23 +7,19 @@
 namespace SL {
     namespace Screen_Capture {
 
-        struct ScreenCapture_Settings {
+        struct Thread_Data {
             //min interval between frames that are captured
-            int Monitor_Capture_Interval;
+            std::chrono::milliseconds Monitor_Capture_Interval;
             //set this if you want to capture the entire monitor each interval
             CaptureCallback CaptureEntireMonitor;
             //set this if you want to receive difs each interval on what has changed
             CaptureCallback CaptureDifMonitor;
             //min interval between mouse captures
-            int Mouse_Capture_Interval;
+            std::chrono::milliseconds Mouse_Capture_Interval;
             //the function to be called on each mouse interval. If a the mouse image has changed, img will not be null, otherwise, the only change is new mouse coords
             MouseCallback CaptureMouse;
             //get monitors to watch
-            MonitorCallback MonitorsChanged;
-        };
-
-        struct Base_Thread_Data
-        {
+            MonitorCallback MonitorsChanged;          
             // Used to indicate abnormal error condition
             std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent;
             // Used to indicate a transition event occurred e.g. PnpStop, PnpStart, mode change, TDR, desktop switch and the application needs to recreate the duplication interface
@@ -32,26 +28,15 @@ namespace SL {
             std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
         };
 
-        struct Monitor_Thread_Data : Base_Thread_Data
-        {
-
-            Monitor SelectedMonitor;
-
-            int CaptureInterval; //in milliseconds	
-            CaptureCallback CaptureEntireMonitor;
-            CaptureCallback CaptureDifMonitor;
-
+       
+        class BaseFrameProcessor {
+        public:
+            std::shared_ptr<Thread_Data> Data;
             std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
             size_t ImageBufferSize = 0;
             bool FirstRun = true;
         };
 
-        struct Mouse_Thread_Data : Base_Thread_Data
-        {
-
-            int CaptureInterval; //in milliseconds	
-            MouseCallback CaptureCallback;
-        };
         enum DUPL_RETURN
         {
             DUPL_RETURN_SUCCESS = 0,
@@ -66,7 +51,38 @@ namespace SL {
        // void Copy(const Image& dst, const Image& src);
 
         std::vector<ImageRect> GetDifs(const Image & oldimg, const Image & newimg);
-        void ProcessMonitorCapture(Monitor_Thread_Data& data, ImageRect& imageract);
+
+        template<class T>void ProcessMonitorCapture(Thread_Data & data, T& base, const Monitor& mointor, ImageRect & imageract)
+        {
+            if (data.CaptureEntireMonitor) {
+                auto wholeimg = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
+                data.CaptureEntireMonitor(wholeimg, mointor);
+            }
+            if (data.CaptureDifMonitor) {
+                if (base.FirstRun) {
+                    //first time through, just send the whole image
+                    auto wholeimgfirst = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
+                    data.CaptureDifMonitor(wholeimgfirst, mointor);
+                    base.FirstRun = false;
+                }
+                else {
+                    //user wants difs, lets do it!
+                    auto newimg = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
+                    auto oldimg = Create(imageract, PixelStride, 0, base.OldImageBuffer.get());
+                    auto imgdifs = GetDifs(oldimg, newimg);
+
+                    for (auto& r : imgdifs) {
+                        auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
+                        auto startsrc = base.NewImageBuffer.get();
+                        startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
+
+                        auto difimg = Create(r, PixelStride, padding, startsrc);
+                        data.CaptureDifMonitor(difimg, mointor);
+                    }
+                }
+                std::swap(base.NewImageBuffer, base.OldImageBuffer);
+            }
+        }
 
     }
 }

@@ -20,9 +20,13 @@ int main()
     std::cout << "Starting Capture Demo" << std::endl;
     std::atomic<int> realcounter;
     realcounter = 0;
-    SL::Screen_Capture::ScreenCaptureManager framgrabber;
+    std::atomic<int> onNewFramecounter;
+    onNewFramecounter = 0;
+    auto onNewFramestart = std::chrono::high_resolution_clock::now();
 
-    framgrabber.onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+    auto framgrabber = SL::Screen_Capture::CreateScreeCapture([]() {
+        return SL::Screen_Capture::GetMonitors();
+    }).onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
         std::cout << "height  " << Height(img) << "  width  " << Width(img) << std::endl;
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
@@ -33,12 +37,8 @@ int main()
         //Extract(img, imgbuffer.get(), size);
         ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
 
-        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-    });
-    std::atomic<int> onNewFramecounter;
-    onNewFramecounter = 0;
-    auto onNewFramestart = std::chrono::high_resolution_clock::now();
-    framgrabber.onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
+        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+    }).onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
@@ -55,9 +55,8 @@ int main()
             onNewFramestart = std::chrono::high_resolution_clock::now();
         }
         onNewFramecounter += 1;
-        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-    });
-    framgrabber.onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
+       // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+    }).onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
 
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string(" M") + std::string(".png");
@@ -70,22 +69,12 @@ int main()
             //std::cout << "x= " << x << " y= " << y << std::endl;
         }
 
-    });
+    }).start_capturing();
 
-    framgrabber.setMonitorsToCapture([] {
-        return SL::Screen_Capture::GetMonitors();//specify which monitors you are interested in
-    });
+    framgrabber.setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
+    framgrabber.setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
 
-    framgrabber.setFrameChangeInterval(100);//100 ms
-    framgrabber.setMouseChangeInterval(100);//100 ms
-
-    framgrabber.Start();
-
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-
-    framgrabber.Stop();
+    std::this_thread::sleep_for(std::chrono::seconds(10));
     return 0;
 }
 

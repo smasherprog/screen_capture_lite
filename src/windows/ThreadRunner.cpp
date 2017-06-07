@@ -55,19 +55,20 @@ namespace SL {
             }
             return true;
         }
-        void RunCaptureMouse(std::shared_ptr<Mouse_Thread_Data> data) {
+        void RunCaptureMouse(std::shared_ptr<Thread_Data> data) {
             if (!SwitchToInputDesktop(data)) return;
-            TryCapture<GDIMouseProcessor>(data);
-        }
-        void RunCapture(std::shared_ptr<Monitor_Thread_Data> data) {
+            TryCaptureMouse<GDIMouseProcessor>(data);
+        } 
+        void RunCaptureMonitor(std::shared_ptr<Thread_Data> data, Monitor monitor) {
             //need to switch to the input desktop for capturing...
             if (!SwitchToInputDesktop(data)) return;
-            std::cout << "Starting to Capture on Monitor " << Name(data->SelectedMonitor) << std::endl;
+            std::cout << "Starting to Capture on Monitor " << Name(monitor) << std::endl;
             std::cout << "Trying DirectX Desktop Duplication " << std::endl;
             //TryCapture<GDIFrameProcessor>(data);
-            if (!TryCapture<DXFrameProcessor>(data)) {//if DX is not supported, fallback to GDI capture
+            
+            if (!TryCaptureMonitor<DXFrameProcessor>(data, monitor)) {//if DX is not supported, fallback to GDI capture
                 std::cout << "DirectX Desktop Duplication not supprted, falling back to GDI Capturing . . ." << std::endl;
-                TryCapture<GDIFrameProcessor>(data);
+                TryCaptureMonitor<GDIFrameProcessor>(data, monitor);
             }
         }
     }

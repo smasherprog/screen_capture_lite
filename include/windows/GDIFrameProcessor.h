@@ -2,17 +2,19 @@
 #include "ScreenCapture.h"
 #include "SCCommon.h"
 #include <memory>
+#include "GDIHelpers.h"
 
 namespace SL {
     namespace Screen_Capture {
 
-        struct GDIFrameProcessorImpl;
-        class GDIFrameProcessor {
-            std::unique_ptr<GDIFrameProcessorImpl> GDIFrameProcessorImpl_;
+        class GDIFrameProcessor : public BaseFrameProcessor {
+            HDCWrapper MonitorDC;
+            HDCWrapper CaptureDC;
+            HBITMAPWrapper CaptureBMP;
+            Monitor SelectedMonitor;
+            std::shared_ptr<Thread_Data> Data;
         public:
-            GDIFrameProcessor();
-            ~GDIFrameProcessor();
-            DUPL_RETURN Init(std::shared_ptr<Monitor_Thread_Data> data);
+            DUPL_RETURN Init(std::shared_ptr<Thread_Data> data, Monitor& monitor);
             DUPL_RETURN ProcessFrame();
 
         };

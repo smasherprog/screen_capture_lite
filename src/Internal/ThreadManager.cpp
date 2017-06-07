@@ -10,51 +10,28 @@ SL::Screen_Capture::ThreadManager::~ThreadManager() {
     Join();
 }
 
-void SL::Screen_Capture::ThreadManager::Init(const Base_Thread_Data& data, const ScreenCapture_Settings& settings)
+void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>& data)
 {
     Reset();
-    TerminateThreadsEvent = data.TerminateThreadsEvent;
+    TerminateThreadsEvent = data->TerminateThreadsEvent;
 
-    auto monitorcapturing = settings.CaptureDifMonitor || settings.CaptureEntireMonitor;
+    auto monitorcapturing = data->CaptureDifMonitor || data->CaptureEntireMonitor;
     std::vector<std::shared_ptr<Monitor>> monitors;
     if (monitorcapturing) {
-        assert(settings.MonitorsChanged);
-        monitors = settings.MonitorsChanged();
+        assert(data->MonitorsChanged);
+        monitors = data->MonitorsChanged();
     }
 
-    m_ThreadHandles.resize(monitors.size() + (settings.CaptureMouse ? 1 : 0));// add another thread for mouse capturing if needed
+    m_ThreadHandles.resize(monitors.size() + (data->CaptureMouse ? 1 : 0));// add another thread for mouse capturing if needed
 
     for (size_t i = 0; i < monitors.size(); ++i)
-    {
-        auto tdata = std::make_shared<Monitor_Thread_Data>();
-        tdata->UnexpectedErrorEvent = data.UnexpectedErrorEvent;
-        tdata->ExpectedErrorEvent = data.ExpectedErrorEvent;
-        tdata->TerminateThreadsEvent = data.TerminateThreadsEvent;
-        tdata->SelectedMonitor = *monitors[i];
-        tdata->CaptureDifMonitor = settings.CaptureDifMonitor;
-        tdata->CaptureEntireMonitor = settings.CaptureEntireMonitor;
-        tdata->CaptureInterval = settings.Monitor_Capture_Interval;
-
-        tdata->ImageBufferSize = Width(tdata->SelectedMonitor)* Height(tdata->SelectedMonitor)* PixelStride;
-        if (tdata->CaptureDifMonitor) {//only need the old buffer if difs are needed. If no dif is needed, then the image is always new
-            tdata->OldImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
-            tdata->NewImageBuffer = std::make_unique<char[]>(tdata->ImageBufferSize);
-        } 
-        
-        m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCapture, tdata);
+    {   
+        m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCaptureMonitor, data, *monitors[i]);
     }
 
 
-    if (settings.CaptureMouse) {
-        auto mousedata = std::make_shared<Mouse_Thread_Data>();
-
-        mousedata->UnexpectedErrorEvent = data.UnexpectedErrorEvent;
-        mousedata->ExpectedErrorEvent = data.ExpectedErrorEvent;
-        mousedata->TerminateThreadsEvent = data.TerminateThreadsEvent;
-        mousedata->CaptureCallback = settings.CaptureMouse;
-        mousedata->CaptureInterval = settings.Mouse_Capture_Interval;
-
-        m_ThreadHandles.back() = std::thread(&SL::Screen_Capture::RunCaptureMouse, mousedata);
+    if (data->CaptureMouse) {
+        m_ThreadHandles.back() = std::thread(&SL::Screen_Capture::RunCaptureMouse, data);
     }
 }
 

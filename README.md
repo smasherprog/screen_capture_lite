@@ -30,7 +30,7 @@ auto framgrabber = SL::Screen_Capture::CreateScreeCapture([]() {
   
   }).start_capturing();
 
-  framgrabber.setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
-  framgrabber.setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
+framgrabber.setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
+framgrabber.setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
 
 ```

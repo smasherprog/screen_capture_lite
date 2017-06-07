@@ -33,7 +33,7 @@ namespace SL {
         public:
             std::shared_ptr<Thread_Data> Data;
             std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
-            size_t ImageBufferSize = 0;
+            int ImageBufferSize = 0;
             bool FirstRun = true;
         };
 

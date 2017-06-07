@@ -2,15 +2,31 @@
 #include "SCCommon.h"
 #include <memory>
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xlibint.h>
+#include <X11/keysym.h>
+#include <X11/Xutil.h>
+#include <sys/shm.h>
+#include <X11/extensions/XTest.h>
+#include <X11/extensions/Xfixes.h>
+#include <X11/extensions/XShm.h>
+
 namespace SL {
     namespace Screen_Capture {
-        struct X11FrameProcessorImpl;
-        class X11FrameProcessor {
-            std::unique_ptr<X11FrameProcessorImpl> _X11FrameProcessorImpl;
+   
+        class X11FrameProcessor: public BaseFrameProcessor {
+            
+			Display* SelectedDisplay=nullptr;
+			Window RootWindow;
+			XImage* Image=nullptr;
+			std::unique_ptr<XShmSegmentInfo> ShmInfo;
+            Monitor SelectedMonitor;
+            
         public:
             X11FrameProcessor();
             ~X11FrameProcessor();
-            DUPL_RETURN Init(std::shared_ptr<Monitor_Thread_Data> data);
+            DUPL_RETURN Init(std::shared_ptr<Thread_Data> data, Monitor& monitor);
             DUPL_RETURN ProcessFrame();
 
         };

@@ -1,16 +1,23 @@
 #pragma once
 #include "SCCommon.h"
 #include <memory>
+#include <X11/X.h>
+#include <X11/extensions/Xfixes.h>
 
 namespace SL {
     namespace Screen_Capture {
-        struct X11MouseProcessorImpl;
-        class X11MouseProcessor {
-            std::unique_ptr<X11MouseProcessorImpl> _X11MouseProcessorImpl;
+        
+        class X11MouseProcessor: public BaseFrameProcessor {
+            Display* SelectedDisplay=nullptr;
+            Window RootWindow;
+            int Last_x = 0;
+            int Last_y =0;
+            
         public:
+            const int MaxCursurorSize =32;
             X11MouseProcessor();
             ~X11MouseProcessor();
-            DUPL_RETURN Init(std::shared_ptr<Mouse_Thread_Data> data);
+            DUPL_RETURN Init(std::shared_ptr<Thread_Data> data);
             DUPL_RETURN ProcessFrame();
 
         };

@@ -5,24 +5,11 @@
 
 namespace SL {
     namespace Screen_Capture {
-        struct CGFrameProcessorImpl {
-            std::shared_ptr<Monitor_Thread_Data> Data;
  
-        };
-
-
-        CGFrameProcessor::CGFrameProcessor()
-        {
-            _CGFrameProcessorImpl = std::make_unique<CGFrameProcessorImpl>();
-        }
-
-        CGFrameProcessor::~CGFrameProcessor()
-        {
-
-        }
-        DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Monitor_Thread_Data> data) {
+   
+        DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor& monitor) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
-            _CGFrameProcessorImpl->Data = data;
+            Data = data;
 
             return ret;
         }
@@ -32,12 +19,12 @@ namespace SL {
         DUPL_RETURN CGFrameProcessor::ProcessFrame()
         {
             auto Ret = DUPL_RETURN_SUCCESS;
-            auto imageRef = CGDisplayCreateImage(Id(_CGFrameProcessorImpl->Data->SelectedMonitor));
+            auto imageRef = CGDisplayCreateImage(Id(SelectedMonitor));
             if(!imageRef) return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
             
             auto width = CGImageGetWidth(imageRef);
             auto height = CGImageGetHeight(imageRef);
-            if(width!= Width(_CGFrameProcessorImpl->Data->SelectedMonitor) || height!= Height(_CGFrameProcessorImpl->Data->SelectedMonitor)){
+            if(width!= Width(SelectedMonitor) || height!= Height(SelectedMonitor)){
                  CGImageRelease(imageRef);
                 return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
             }
@@ -58,10 +45,10 @@ namespace SL {
             auto datalen = width*height*PixelStride;
             if(bytesperrow == PixelStride*width){
                 //most efficent, can be done in a single memcpy
-                memcpy(_CGFrameProcessorImpl->Data->NewImageBuffer.get(),buf, datalen);
+                memcpy(NewImageBuffer.get(),buf, datalen);
             } else {
                 //for loop needed to copy each row
-                auto dst =_CGFrameProcessorImpl->Data->NewImageBuffer.get();
+                auto dst =NewImageBuffer.get();
                 auto src =buf;
                 for (auto h =0; h<height;h++) {
                     memcpy(dst,src, PixelStride*width);
@@ -80,7 +67,7 @@ namespace SL {
             imgrect.left =  imgrect.top=0;
             imgrect.right =width;
             imgrect.bottom = height;
-            ProcessMonitorCapture(*_CGFrameProcessorImpl->Data, imgrect);
+            ProcessMonitorCapture(*Data, *this, SelectedMonitor ,imgrect);
             return Ret;
         }
 

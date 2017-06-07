@@ -4,13 +4,11 @@
 
 namespace SL {
     namespace Screen_Capture {
-        struct CGFrameProcessorImpl;
-        class CGFrameProcessor {
-            std::unique_ptr<CGFrameProcessorImpl> _CGFrameProcessorImpl;
+        class CGFrameProcessor: public BaseFrameProcessor {
+            Monitor SelectedMonitor;
         public:
-            CGFrameProcessor();
-            ~CGFrameProcessor();
-            DUPL_RETURN Init(std::shared_ptr<Monitor_Thread_Data> data);
+            
+            DUPL_RETURN Init(std::shared_ptr<Thread_Data> data, Monitor& monitor);
             DUPL_RETURN ProcessFrame();
 
         };

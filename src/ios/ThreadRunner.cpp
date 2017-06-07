@@ -5,11 +5,11 @@
 
 namespace SL{
     namespace Screen_Capture{
-        void RunCaptureMouse(std::shared_ptr<Mouse_Thread_Data> data) {
-            TryCapture<NSMouseProcessor>(data);
+        void RunCaptureMouse(std::shared_ptr<Thread_Data> data) {
+            TryCaptureMouse<NSMouseProcessor>(data);
         }
-        void RunCapture(std::shared_ptr<Monitor_Thread_Data> data){
-            TryCapture<CGFrameProcessor>(data);
+        void RunCaptureMonitor(std::shared_ptr<Thread_Data> data, Monitor monitor){
+            TryCaptureMonitor<CGFrameProcessor>(data, monitor);
         }
     }
 }

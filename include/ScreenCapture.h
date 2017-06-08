@@ -116,6 +116,7 @@ namespace SL {
             std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
         public:
             ScreenCaptureManager(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
+            ScreenCaptureManager() {}
             //Used by the library to determine the callback frequency
             void setFrameChangeInterval(std::chrono::milliseconds interval);
             //Used by the library to determine the callback frequency

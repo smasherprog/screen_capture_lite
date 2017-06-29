@@ -318,7 +318,7 @@ namespace SL {
             }
         };
 
-        DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor& monitor){
+        DUPL_RETURN DXFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor& monitor) {
             SelectedMonitor = monitor;
             DX_RESOURCES res;
             auto ret = Initialize(res);
@@ -330,13 +330,13 @@ namespace SL {
             if (ret != DUPL_RETURN_SUCCESS) {
                 return ret;
             }
-           Device = res.Device;
-           DeviceContext = res.DeviceContext;
-           OutputDuplication = dupl.OutputDuplication;
-           OutputDesc = dupl.OutputDesc;
-           Output = dupl.Output;
+            Device = res.Device;
+            DeviceContext = res.DeviceContext;
+            OutputDuplication = dupl.OutputDuplication;
+            OutputDesc = dupl.OutputDesc;
+            Output = dupl.Output;
 
-           Data = data;
+            Data = data;
 
             return ret;
         }
@@ -385,14 +385,14 @@ namespace SL {
                 StagingDesc.Usage = D3D11_USAGE_STAGING;
                 StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
                 StagingDesc.MiscFlags = 0;
-                hr =Device->CreateTexture2D(&StagingDesc, nullptr,StagingSurf.GetAddressOf());
+                hr = Device->CreateTexture2D(&StagingDesc, nullptr, StagingSurf.GetAddressOf());
                 if (FAILED(hr))
                 {
                     return ProcessFailure(Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
                 }
             }
 
-           DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
+            DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
 
             D3D11_MAPPED_SUBRESOURCE MappingDesc;
             MAPPED_SUBRESOURCERAII mappedresrouce(DeviceContext.Get());
@@ -409,19 +409,15 @@ namespace SL {
             auto startsrc = reinterpret_cast<char*>(MappingDesc.pData);
 
             auto rowstride = PixelStride*Width(SelectedMonitor);
-          
+
             if (Data->CaptureEntireMonitor && !Data->CaptureDifMonitor) {
-                if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
-                    auto wholeimg = Create(ret, PixelStride, 0, startsrc);
-                   Data->CaptureEntireMonitor(wholeimg,SelectedMonitor);
-                }
-                else {
-                    auto wholeimg = Create(ret, PixelStride, static_cast<int>(MappingDesc.RowPitch) - rowstride , startsrc);
-                   Data->CaptureEntireMonitor(wholeimg,SelectedMonitor);
-                }
+
+                auto wholeimg = Create(ret, PixelStride, static_cast<int>(MappingDesc.RowPitch) - rowstride, startsrc);
+                Data->CaptureEntireMonitor(wholeimg, SelectedMonitor);
+
             }
             else {
-                auto startdst =NewImageBuffer.get();
+                auto startdst = NewImageBuffer.get();
                 if (rowstride == static_cast<int>(MappingDesc.RowPitch)) {//no need for multiple calls, there is no padding here
                     memcpy(startdst, startsrc, rowstride*Height(SelectedMonitor));
                 }

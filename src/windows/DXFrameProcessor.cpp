@@ -406,7 +406,7 @@ namespace SL {
             ret.left = ret.top = 0;
             ret.bottom = Height(SelectedMonitor);
             ret.right = Width(SelectedMonitor);
-            auto startsrc = reinterpret_cast<char*>(MappingDesc.pData);
+            auto startsrc = reinterpret_cast<unsigned char*>(MappingDesc.pData);
 
             auto rowstride = PixelStride*Width(SelectedMonitor);
 

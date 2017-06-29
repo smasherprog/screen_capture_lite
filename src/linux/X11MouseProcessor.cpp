@@ -52,8 +52,8 @@ namespace SL {
             imgrect.bottom = img->height;
             auto newsize = PixelStride*imgrect.right*imgrect.bottom;
             if(newsize>ImageBufferSize){
-                NewImageBuffer = std::make_unique<char[]>(PixelStride*imgrect.right*imgrect.bottom);
-                OldImageBuffer=std::make_unique<char[]>(PixelStride*imgrect.right*imgrect.bottom);
+                NewImageBuffer = std::make_unique<unsigned char[]>(PixelStride*imgrect.right*imgrect.bottom);
+                OldImageBuffer=std::make_unique<unsigned char[]>(PixelStride*imgrect.right*imgrect.bottom);
             }
             
             memcpy(NewImageBuffer.get(), img->pixels, newsize);

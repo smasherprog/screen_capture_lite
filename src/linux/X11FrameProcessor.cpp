@@ -89,7 +89,7 @@ namespace Screen_Capture
 
         if(Data->CaptureEntireMonitor && !Data->CaptureDifMonitor) {
 
-            auto wholeimg = Create(ret, PixelStride, 0, Image->data);
+            auto wholeimg = Create(ret, PixelStride, 0, reinterpret_cast<unsigned char*>(Image->data));
             Data->CaptureEntireMonitor(wholeimg, SelectedMonitor);
         } else {
             memcpy(NewImageBuffer.get(), Image->data, PixelStride * ret.right * ret.bottom);

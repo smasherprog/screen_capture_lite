@@ -37,7 +37,7 @@ namespace SL {
             int RowPadding = 0;
             //image data is BGRA, for example Data[0] = B, Data[1] =G, Data[2] = R, Data [3]=A
             //alpha is always unused and might contain garbage
-            const char* Data = nullptr;
+            const unsigned char* Data = nullptr;
         };
 
         inline bool operator==(const ImageRect& a, const ImageRect& b) {
@@ -70,7 +70,7 @@ namespace SL {
         //number of bytes per row of padding
         int RowPadding(const Image& img);
         //the start of the image data, this is not guarenteed to be contiguos. You must use the Rowstride and rowpadding to examine the image
-        const char* StartSrc(const Image& img);
+        const unsigned char* StartSrc(const Image& img);
 
         inline void Extract(const Image& img, char* dst, size_t dst_size) {
             auto totalsize = RowStride(img)*Height(img);

@@ -142,7 +142,7 @@ namespace SL {
             return ret;
         }
 
-        Image Create(const ImageRect& imgrect, int pixelstride, int rowpadding, char* data) {
+        Image Create(const ImageRect& imgrect, int pixelstride, int rowpadding, const unsigned char* data) {
             Image ret;
             ret.Bounds = imgrect;
             ret.Data = data;
@@ -167,6 +167,6 @@ namespace SL {
         int RowStride(const Image& img) { return img.Pixelstride* Width(img); }
         //number of bytes per row of padding
         int RowPadding(const Image& img) { return img.RowPadding; }
-        const char* StartSrc(const Image& img) { return img.Data; }
+        const unsigned char* StartSrc(const Image& img) { return img.Data; }
     }
 }

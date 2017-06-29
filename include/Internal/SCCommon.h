@@ -32,7 +32,7 @@ namespace SL {
         class BaseFrameProcessor {
         public:
             std::shared_ptr<Thread_Data> Data;
-            std::unique_ptr<char[]> OldImageBuffer, NewImageBuffer;
+            std::unique_ptr<unsigned char[]> OldImageBuffer, NewImageBuffer;
             int ImageBufferSize = 0;
             bool FirstRun = true;
         };
@@ -46,7 +46,7 @@ namespace SL {
         const int PixelStride = 4;
         std::shared_ptr<Monitor> CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string& n);
 
-        Image Create(const ImageRect& imgrect, int pixelstride, int rowpadding, char* data);
+        Image Create(const ImageRect& imgrect, int pixelstride, int rowpadding, const unsigned char* data);
         //this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
        // void Copy(const Image& dst, const Image& src);
 

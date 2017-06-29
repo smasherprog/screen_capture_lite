@@ -5,8 +5,8 @@
 
 namespace SL {
     namespace Screen_Capture {
- 
-   
+        
+        
         DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor& monitor) {
             auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
             Data = data;
@@ -25,13 +25,13 @@ namespace SL {
             auto width = CGImageGetWidth(imageRef);
             auto height = CGImageGetHeight(imageRef);
             if(width!= Width(SelectedMonitor) || height!= Height(SelectedMonitor)){
-                 CGImageRelease(imageRef);
+                CGImageRelease(imageRef);
                 return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
             }
             
             auto prov = CGImageGetDataProvider(imageRef);
             if(!prov){
-                 CGImageRelease(imageRef);
+                CGImageRelease(imageRef);
                 return DUPL_RETURN_ERROR_EXPECTED;
             }
             auto bytesperrow = CGImageGetBytesPerRow(imageRef);
@@ -41,35 +41,41 @@ namespace SL {
             
             auto rawdatas= CGDataProviderCopyData(prov);
             auto buf = CFDataGetBytePtr(rawdatas);
-         
-            auto datalen = width*height*PixelStride;
-            if(bytesperrow == PixelStride*width){
-                //most efficent, can be done in a single memcpy
-                memcpy(NewImageBuffer.get(),buf, datalen);
-            } else {
-                //for loop needed to copy each row
-                auto dst =NewImageBuffer.get();
-                auto src =buf;
-                for (auto h =0; h<height;h++) {
-                    memcpy(dst,src, PixelStride*width);
-                    dst +=PixelStride*width;
-                    src +=bytesperrow;
-                }
-            }
-            CFRelease(rawdatas);
- 
-            //this is not needed. It is freed when the image is released
-            //CGDataProviderRelease(prov);
             
+            auto datalen = width*height*PixelStride;
+            ImageRect ret;
+            ret.left =  ret.top=0;
+            ret.right =width;
+            ret.bottom = height;
+            if(Data->CaptureEntireMonitor && !Data->CaptureDifMonitor) {
+                
+                auto wholeimg = SL::Screen_Capture::Create(ret, PixelStride, bytesperrow - PixelStride*width, buf);
+                Data->CaptureEntireMonitor(wholeimg, SelectedMonitor);
+                
+            } else {
+                if(bytesperrow == PixelStride*width){
+                    //most efficent, can be done in a single memcpy
+                    memcpy(NewImageBuffer.get(),buf, datalen);
+                } else {
+                    //for loop needed to copy each row
+                    auto dst =NewImageBuffer.get();
+                    auto src =buf;
+                    for (auto h =0; h<height;h++) {
+                        memcpy(dst,src, PixelStride*width);
+                        dst +=PixelStride*width;
+                        src +=bytesperrow;
+                    }
+                }
+                
+                ProcessMonitorCapture(*Data, *this, SelectedMonitor ,ret);
+            }
+            
+            CFRelease(rawdatas);
             CGImageRelease(imageRef);
-
-            ImageRect imgrect;
-            imgrect.left =  imgrect.top=0;
-            imgrect.right =width;
-            imgrect.bottom = height;
-            ProcessMonitorCapture(*Data, *this, SelectedMonitor ,imgrect);
+            
+            
             return Ret;
         }
-
+        
     }
 }

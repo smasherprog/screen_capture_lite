@@ -36,8 +36,8 @@ namespace SL {
                 auto buf = CFDataGetBytePtr(rawdatas);
                 auto datalen = CFDataGetLength(rawdatas);
                 if(datalen > ImageBufferSize){
-                    NewImageBuffer = std::make_unique<char[]>(datalen);
-                    OldImageBuffer= std::make_unique<char[]>(datalen);
+                    NewImageBuffer = std::make_unique<unsigned char[]>(datalen);
+                    OldImageBuffer= std::make_unique<unsigned char[]>(datalen);
                 }
                 
                 memcpy(NewImageBuffer.get(),buf, datalen);

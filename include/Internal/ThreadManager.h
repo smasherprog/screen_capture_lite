@@ -56,8 +56,8 @@ namespace SL {
             }
             frameprocessor.ImageBufferSize = frameprocessor.MaxCursurorSize*frameprocessor.MaxCursurorSize* PixelStride;
 
-            frameprocessor.OldImageBuffer = std::make_unique<char[]>(frameprocessor.ImageBufferSize);
-            frameprocessor.NewImageBuffer = std::make_unique<char[]>(frameprocessor.ImageBufferSize);
+            frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
+            frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
 
             ret = RunThread(data->TerminateThreadsEvent, data->Mouse_Capture_Interval, frameprocessor);
             if (ret != DUPL_RETURN_SUCCESS)
@@ -86,11 +86,11 @@ namespace SL {
             }
             frameprocessor.ImageBufferSize = Width(monitor)* Height(monitor)* PixelStride;
             if (data->CaptureDifMonitor) {//only need the old buffer if difs are needed. If no dif is needed, then the image is always new
-                frameprocessor.OldImageBuffer = std::make_unique<char[]>(frameprocessor.ImageBufferSize);
-                frameprocessor.NewImageBuffer = std::make_unique<char[]>(frameprocessor.ImageBufferSize);
+                frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
+                frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             }
             if ((data->CaptureEntireMonitor) && !frameprocessor.NewImageBuffer) {
-                frameprocessor.NewImageBuffer = std::make_unique<char[]>(frameprocessor.ImageBufferSize);
+                frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             }
             ret = RunThread(data->TerminateThreadsEvent, data->Monitor_Capture_Interval, frameprocessor);
             if (ret != DUPL_RETURN_SUCCESS)

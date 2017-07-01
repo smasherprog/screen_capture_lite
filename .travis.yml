@@ -4,9 +4,9 @@ matrix:
   include:
     - os: osx
       osx_image: xcode8
-      env: CC=gcc-6 && CXX=g++-6
+      compiler: clang
     - os: linux
-      env: BUILD_TYPE=Release
+      env: CLANG_VERSION=5.0 BUILD_TYPE=Release
       addons: &clang5
         apt:
           packages:
@@ -20,8 +20,7 @@ matrix:
             - llvm-toolchain-precise
       
 before_install:
-  - export CC=clang-5.0;
-  - export CXX=clang++-5.0;
+  - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi
   - |
     if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
       CMAKE_URL="https://cmake.org/files/v3.8/cmake-3.8.2-Linux-x86_64.tar.gz"

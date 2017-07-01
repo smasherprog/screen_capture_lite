@@ -9,12 +9,14 @@ matrix:
     - os: linux
       env: 
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-      sudo: required
       addons:
         apt:
           packages:
             - clang-5.0
             - libssl-dev
+            - libx11-dev
+            - libxfixes-dev 
+            - libxtst-dev
           sources: 
             - llvm-toolchain-trusty
       
@@ -23,9 +25,6 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
         brew update && brew upgrade cmake || brew install cmake;
     fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-        sudo apt-get install -y libx11-dev libxfixes-dev libxtst-dev;
-    fi  
     
 install:    
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"

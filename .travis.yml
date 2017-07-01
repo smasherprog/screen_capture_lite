@@ -3,17 +3,20 @@ language : cpp
 matrix:
   include:
     - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="brew install gcc && CC=gcc-6 && CXX=g++-6"
     - os: linux
-      env: CLANG_VERSION=3.8 BUILD_TYPE=Release
+      env: 
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
       sudo: required
-      addons: &clang38
+      addons:
         apt:
           packages:
-            - clang-3.8
+            - clang-5.0
             - libssl-dev
-          sources: &sources
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
+          sources: 
+            - llvm-toolchain-trusty
       
 before_install:
   - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi

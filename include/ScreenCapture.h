@@ -74,8 +74,7 @@ namespace SL {
         const unsigned char* StartSrc(const Image& img);
 
         inline void Extract(const Image& img, char* dst, size_t dst_size) {
-            auto totalsize = RowStride(img)*Height(img);
-            assert(dst_size >= static_cast<size_t>(totalsize));
+            assert(dst_size >= static_cast<size_t>(RowStride(img)*Height(img)));
             auto startdst = dst;
             auto startsrc = StartSrc(img);
             if (RowPadding(img) == 0) { //no padding, the entire copy can be a single memcpy call

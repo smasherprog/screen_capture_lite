@@ -7,8 +7,7 @@ matrix:
       env:
         - MATRIX_EVAL="brew install gcc && CC=gcc-6 && CXX=g++-6"
     - os: linux
-      env: 
-        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+      env: CC=clang-5.0 && CXX=clang++-5.0 BUILD_TYPE=Release
       addons: &clang5
         apt:
           packages:
@@ -35,7 +34,7 @@ before_install:
   
 script:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-       cmake -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
+       cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
     else
        cmake . && make;
     fi  

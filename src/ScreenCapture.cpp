@@ -30,6 +30,7 @@ namespace SL {
             }
             ~ScreenCaptureManagerImpl() {
                 *TerminateThread_ = true;
+                Thread_Data_->Paused = false;//unpaused the threads to let everything exit
                 if (_Thread.joinable()) {
                     _Thread.join();
                 }
@@ -79,6 +80,16 @@ namespace SL {
             Impl_->start();
             return ScreenCaptureManager(Impl_);
         }
+        void ScreenCaptureManager::pause() {
+            Impl_->Thread_Data_->Paused = true;
+        }
+        bool ScreenCaptureManager::isPaused() const {
+            return Impl_->Thread_Data_->Paused;
+        }
+        void ScreenCaptureManager::resume() {
+            Impl_->Thread_Data_->Paused = false;
+        }
+
         ScreenCaptureConfiguration ScreenCaptureConfiguration::onNewFrame(const CaptureCallback& cb) {
             assert(!Impl_->Thread_Data_->CaptureEntireMonitor);
             Impl_->Thread_Data_->CaptureEntireMonitor = cb;
@@ -99,6 +110,7 @@ namespace SL {
             impl->Thread_Data_->MonitorsChanged = monitorstocapture;
             return ScreenCaptureConfiguration(impl);
         }
+
     }
 }
 

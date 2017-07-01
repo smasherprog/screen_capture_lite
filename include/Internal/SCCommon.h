@@ -26,6 +26,7 @@ namespace SL {
             std::shared_ptr<std::atomic_bool> ExpectedErrorEvent;
             // Used to signal to threads to exit
             std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
+            bool Paused = false;
         };
 
        

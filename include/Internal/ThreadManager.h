@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 
+using namespace std::chrono_literals;
 
 // this is internal stuff.. 
 namespace SL {
@@ -24,7 +25,7 @@ namespace SL {
             void Reset();
         };
 
-        template<class T, typename CAPTUREINTERVALTYPE>DUPL_RETURN RunThread(const std::shared_ptr<std::atomic_bool>& termintethreads, CAPTUREINTERVALTYPE captureinterval, T& frameprocessor) {
+        template<class T, typename CAPTUREINTERVALTYPE>DUPL_RETURN RunThread(const std::shared_ptr<std::atomic_bool>& termintethreads, CAPTUREINTERVALTYPE captureinterval, T& frameprocessor, bool* paused) {
             while (!*termintethreads)
             {
                 auto start = std::chrono::high_resolution_clock::now();
@@ -43,6 +44,9 @@ namespace SL {
                 auto timetowait = captureinterval - mspassed;
                 if (timetowait.count() > 0) {
                     std::this_thread::sleep_for(timetowait);
+                }   
+                while (*paused) {
+                    std::this_thread::sleep_for(50ms);
                 }
             }
             return DUPL_RETURN_SUCCESS;
@@ -59,7 +63,7 @@ namespace SL {
             frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
 
-            ret = RunThread(data->TerminateThreadsEvent, data->Mouse_Capture_Interval, frameprocessor);
+            ret = RunThread(data->TerminateThreadsEvent, data->Mouse_Capture_Interval, frameprocessor, &data->Paused);
             if (ret != DUPL_RETURN_SUCCESS)
             {
                 if (ret == DUPL_RETURN_ERROR_EXPECTED)
@@ -92,7 +96,7 @@ namespace SL {
             if ((data->CaptureEntireMonitor) && !frameprocessor.NewImageBuffer) {
                 frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             }
-            ret = RunThread(data->TerminateThreadsEvent, data->Monitor_Capture_Interval, frameprocessor);
+            ret = RunThread(data->TerminateThreadsEvent, data->Monitor_Capture_Interval, frameprocessor, &data->Paused);
             if (ret != DUPL_RETURN_SUCCESS)
             {
                 if (ret == DUPL_RETURN_ERROR_EXPECTED)

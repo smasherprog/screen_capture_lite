@@ -117,12 +117,20 @@ namespace SL {
         public:
             ScreenCaptureManager(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
             ScreenCaptureManager() {}
+
             //Used by the library to determine the callback frequency
             void setFrameChangeInterval(std::chrono::milliseconds interval);
             //Used by the library to determine the callback frequency
             void setMouseChangeInterval(std::chrono::milliseconds interval);
+            //Will pause all capturing 
+            void pause();
+            //Will return whether the library is paused
+            bool isPaused() const;
+            //Will resume all capturing if paused, otherwise has no effect
+            void resume();
+
             operator bool() const { return Impl_.operator bool(); }
-            //will stop the library from processing frames and release all memory
+            //the library will stop processing frames and release all memory
             void destroy() { Impl_.reset(); }
         };
         class ScreenCaptureConfiguration {

@@ -74,9 +74,26 @@ int main()
     })
         .start_capturing();
 
+
+
     framgrabber.setFrameChangeInterval(std::chrono::milliseconds(100)); // 100 ms
     framgrabber.setMouseChangeInterval(std::chrono::milliseconds(100)); // 100 ms
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::cout << "Pausing for 10 seconds. ";
+    framgrabber.pause();
+    auto i = 0;
+    while (i++ < 10) {
+        assert(framgrabber.isPaused());
+        std::cout << " . ";
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+  
+    
+    std::cout << std::endl<<"Resuming  . . ." << std::endl;
+    framgrabber.resume();
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+
     return 0;
 }
+

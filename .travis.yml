@@ -9,16 +9,18 @@ matrix:
     - os: linux
       env: 
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-      addons:
+      addons: &clang5
         apt:
           packages:
             - clang-5.0
+            - g++-6
             - libssl-dev
             - libx11-dev
             - libxfixes-dev 
             - libxtst-dev
           sources: 
-            - llvm-toolchain-trusty
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise
       
 before_install:
   - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi

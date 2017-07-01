@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <cstring>
 #include <chrono>
+#include <thread>
 
 namespace SL {
     namespace Screen_Capture {

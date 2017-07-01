@@ -26,7 +26,7 @@ namespace SL {
             std::atomic<bool> ExpectedErrorEvent;
             // Used to signal to threads to exit
             std::atomic<bool> TerminateThreadsEvent;
-            std::atomic<bool> Paused = false;
+            std::atomic<bool> Paused;
         };
 
        

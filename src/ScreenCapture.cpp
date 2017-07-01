@@ -22,6 +22,7 @@ namespace SL {
 
             ScreenCaptureManagerImpl() {
                 Thread_Data_ = std::make_shared<Thread_Data>();
+                Thread_Data_->Paused = false;
                 Thread_Data_->Monitor_Capture_Timer = std::make_shared<Timer<long long, std::milli>>(100ms);
                 Thread_Data_->Mouse_Capture_Timer = std::make_shared<Timer<long long, std::milli>>(50ms);
             }

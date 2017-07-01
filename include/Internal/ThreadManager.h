@@ -23,27 +23,6 @@ namespace SL {
             void Init(const std::shared_ptr<Thread_Data>& settings);
             void Join();
         };
-
-        template<typename F>DUPL_RETURN RunThread(const F& data) {
-            while (!data->TerminateThreadsEvent)
-            {
-                //get a copy of the shared_ptr in a safe way
-                auto timer = std::atomic_load(&data->Monitor_Capture_Timer);
-                timer->start();
-                //Process Frame
-                auto Ret = frameprocessor.ProcessFrame();
-                if (Ret != DUPL_RETURN_SUCCESS)
-                {
-                    return Ret;
-                }
-                timer->wait();
-                while (data->Paused) {
-                    std::this_thread::sleep_for(50ms);
-                }
-            }
-            return DUPL_RETURN_SUCCESS;
-        }
-
         template<class T, class F>bool TryCaptureMouse(const F& data) {
             T frameprocessor;
             auto ret = frameprocessor.Init(data);

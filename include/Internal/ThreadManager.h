@@ -22,30 +22,22 @@ namespace SL {
             ~ThreadManager();
             void Init(const std::shared_ptr<Thread_Data>& settings);
             void Join();
-            void Reset();
         };
 
-        template<class T, typename CAPTUREINTERVALTYPE>DUPL_RETURN RunThread(const std::shared_ptr<std::atomic_bool>& termintethreads, CAPTUREINTERVALTYPE captureinterval, T& frameprocessor, bool* paused) {
-            while (!*termintethreads)
+        template<typename F>DUPL_RETURN RunThread(const F& data) {
+            while (!data->TerminateThreadsEvent)
             {
-                auto start = std::chrono::high_resolution_clock::now();
+                //get a copy of the shared_ptr in a safe way
+                auto timer = std::atomic_load(&data->Monitor_Capture_Timer);
+                timer->start();
                 //Process Frame
                 auto Ret = frameprocessor.ProcessFrame();
                 if (Ret != DUPL_RETURN_SUCCESS)
                 {
                     return Ret;
                 }
-                auto mspassed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
-
-                std::string msg = "took ";
-                msg += std::to_string(mspassed.count()) + "ms for output ";
-                //std::cout << msg << std::endl;
-
-                auto timetowait = captureinterval - mspassed;
-                if (timetowait.count() > 0) {
-                    std::this_thread::sleep_for(timetowait);
-                }   
-                while (*paused) {
+                timer->wait();
+                while (data->Paused) {
                     std::this_thread::sleep_for(50ms);
                 }
             }
@@ -63,23 +55,34 @@ namespace SL {
             frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
 
-            ret = RunThread(data->TerminateThreadsEvent, data->Mouse_Capture_Interval, frameprocessor, &data->Paused);
-            if (ret != DUPL_RETURN_SUCCESS)
+            while (!data->TerminateThreadsEvent)
             {
-                if (ret == DUPL_RETURN_ERROR_EXPECTED)
+                //get a copy of the shared_ptr in a safe way
+                auto timer = std::atomic_load(&data->Mouse_Capture_Timer);
+                timer->start();
+                //Process Frame
+                ret = frameprocessor.ProcessFrame();
+                if (ret != DUPL_RETURN_SUCCESS)
                 {
-                    // The system is in a transition state so request the duplication be restarted
-                    *data->ExpectedErrorEvent = true;
-                    std::cout << "Exiting Thread due to expected error " << std::endl;
+                    if (ret == DUPL_RETURN_ERROR_EXPECTED)
+                    {
+                        // The system is in a transition state so request the duplication be restarted
+                        data->ExpectedErrorEvent = true;
+                        std::cout << "Exiting Thread due to expected error " << std::endl;
+                    }
+                    else
+                    {
+                        // Unexpected error so exit the application
+                        data->UnexpectedErrorEvent = true;
+                        std::cout << "Exiting Thread due to Unexpected error " << std::endl;
+                    }
+                    return true;
                 }
-                else
-                {
-                    // Unexpected error so exit the application
-                    *data->UnexpectedErrorEvent = true;
-                    std::cout << "Exiting Thread due to Unexpected error " << std::endl;
+                timer->wait();
+                while (data->Paused) {
+                    std::this_thread::sleep_for(50ms);
                 }
             }
-
             return true;
         }
         template<class T, class F>bool TryCaptureMonitor(const F& data, Monitor& monitor) {
@@ -96,24 +99,36 @@ namespace SL {
             if ((data->CaptureEntireMonitor) && !frameprocessor.NewImageBuffer) {
                 frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             }
-            ret = RunThread(data->TerminateThreadsEvent, data->Monitor_Capture_Interval, frameprocessor, &data->Paused);
-            if (ret != DUPL_RETURN_SUCCESS)
+            while (!data->TerminateThreadsEvent)
             {
-                if (ret == DUPL_RETURN_ERROR_EXPECTED)
+                //get a copy of the shared_ptr in a safe way
+                auto timer = std::atomic_load(&data->Monitor_Capture_Timer);
+                timer->start();
+                //Process Frame
+                ret = frameprocessor.ProcessFrame();
+                if (ret != DUPL_RETURN_SUCCESS)
                 {
-                    // The system is in a transition state so request the duplication be restarted
-                    *data->ExpectedErrorEvent = true;
-                    std::cout << "Exiting Thread due to expected error " << std::endl;
+                    if (ret == DUPL_RETURN_ERROR_EXPECTED)
+                    {
+                        // The system is in a transition state so request the duplication be restarted
+                        data->ExpectedErrorEvent = true;
+                        std::cout << "Exiting Thread due to expected error " << std::endl;
+                    }
+                    else
+                    {
+                        // Unexpected error so exit the application
+                        data->UnexpectedErrorEvent = true;
+                        std::cout << "Exiting Thread due to Unexpected error " << std::endl;
+                    }
+                    return true;
                 }
-                else
-                {
-                    // Unexpected error so exit the application
-                    *data->UnexpectedErrorEvent = true;
-                    std::cout << "Exiting Thread due to Unexpected error " << std::endl;
+                timer->wait();
+                while (data->Paused) {
+                    std::this_thread::sleep_for(50ms);
                 }
             }
-
             return true;
+
         }
 
         void RunCaptureMonitor(std::shared_ptr<Thread_Data> data, Monitor monitor);

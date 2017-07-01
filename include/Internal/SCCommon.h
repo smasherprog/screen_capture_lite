@@ -9,24 +9,24 @@ namespace SL {
 
         struct Thread_Data {
             //min interval between frames that are captured
-            std::chrono::milliseconds Monitor_Capture_Interval;
+            std::shared_ptr<ITimer> Monitor_Capture_Timer;
             //set this if you want to capture the entire monitor each interval
             CaptureCallback CaptureEntireMonitor;
             //set this if you want to receive difs each interval on what has changed
             CaptureCallback CaptureDifMonitor;
             //min interval between mouse captures
-            std::chrono::milliseconds Mouse_Capture_Interval;
+            std::shared_ptr<ITimer> Mouse_Capture_Timer;
             //the function to be called on each mouse interval. If a the mouse image has changed, img will not be null, otherwise, the only change is new mouse coords
             MouseCallback CaptureMouse;
             //get monitors to watch
             MonitorCallback MonitorsChanged;          
             // Used to indicate abnormal error condition
-            std::shared_ptr<std::atomic_bool> UnexpectedErrorEvent;
+            std::atomic<bool> UnexpectedErrorEvent;
             // Used to indicate a transition event occurred e.g. PnpStop, PnpStart, mode change, TDR, desktop switch and the application needs to recreate the duplication interface
-            std::shared_ptr<std::atomic_bool> ExpectedErrorEvent;
+            std::atomic<bool> ExpectedErrorEvent;
             // Used to signal to threads to exit
-            std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
-            bool Paused = false;
+            std::atomic<bool> TerminateThreadsEvent;
+            std::atomic<bool> Paused = false;
         };
 
        

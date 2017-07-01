@@ -105,6 +105,36 @@ namespace SL {
                 imgsrc += RowPadding(img);
             }
         }
+        class ITimer {
+        public:
+            ITimer() {};
+            virtual ~ITimer() {}
+
+            virtual void start() = 0;
+            virtual void wait() = 0;
+        };
+        template<class Rep,
+            class Period>class Timer : public ITimer {
+            std::chrono::duration<Rep, Period> Rel_Time;
+            std::chrono::time_point<std::chrono::high_resolution_clock> StartTime;
+            std::chrono::time_point<std::chrono::high_resolution_clock> StopTime;
+            public:
+                Timer(const std::chrono::duration<Rep, Period>& rel_time) : Rel_Time(rel_time) {};
+                virtual ~Timer() { }
+                virtual void start() {
+                    StartTime = std::chrono::high_resolution_clock::now();
+                }
+                virtual void wait() {
+                    auto duration = std::chrono::duration_cast<std::chrono::duration<Rep, Period>>(std::chrono::high_resolution_clock::now() - StartTime);
+                    auto timetowait = Rel_Time - duration;
+                    if (timetowait.count() > 0) {
+                        std::this_thread::sleep_for(timetowait);
+                    }
+                }
+        };
+
+
+
         std::vector<std::shared_ptr<Monitor>> GetMonitors();
 
         typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
@@ -114,14 +144,23 @@ namespace SL {
         class ScreenCaptureManagerImpl;
         class ScreenCaptureManager {
             std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
+
+            void setFrameChangeInterval_(const std::shared_ptr<ITimer>& timer);
+            void setMouseChangeInterval_(const std::shared_ptr<ITimer>& timer);
+
         public:
             ScreenCaptureManager(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
             ScreenCaptureManager() {}
 
             //Used by the library to determine the callback frequency
-            void setFrameChangeInterval(std::chrono::milliseconds interval);
+            template<class Rep, class Period>void setFrameChangeInterval(const std::chrono::duration<Rep, Period>& rel_time) {
+                setFrameChangeInterval_(std::make_shared<Timer<Rep, Period>>(rel_time));
+            }  
             //Used by the library to determine the callback frequency
-            void setMouseChangeInterval(std::chrono::milliseconds interval);
+            template<class Rep, class Period>void setMouseChangeInterval(const std::chrono::duration<Rep, Period>& rel_time) {
+                setMouseChangeInterval_(std::make_shared<Timer<Rep, Period>>(rel_time));
+            }
+         
             //Will pause all capturing 
             void pause();
             //Will return whether the library is paused

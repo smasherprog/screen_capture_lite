@@ -10,6 +10,7 @@ matrix:
       addons: &clang5
         apt:
           packages:
+            - g++-6
             - clang-5.0
             - libssl-dev
             - libx11-dev

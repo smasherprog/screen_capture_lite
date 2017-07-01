@@ -33,3 +33,6 @@ before_install:
   
 script:
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
+  
+notifications:
+  email: false

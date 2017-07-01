@@ -12,7 +12,6 @@ matrix:
           packages:
             - g++-6
             - clang-5.0
-            - libssl-dev
             - libx11-dev
             - libxfixes-dev 
             - libxtst-dev

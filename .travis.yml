@@ -4,8 +4,7 @@ matrix:
   include:
     - os: osx
       osx_image: xcode8
-      env:
-        - MATRIX_EVAL="brew install gcc && CC=gcc-6 && CXX=g++-6"
+      env: CC=gcc-6 && CXX=g++-6
     - os: linux
       env: CC=clang-5.0 && CXX=clang++-5.0 BUILD_TYPE=Release
       addons: &clang5
@@ -29,12 +28,8 @@ before_install:
       export PATH="${TRAVIS_BUILD_DIR}/deps/cmake/bin:${PATH}"
     else
       brew update && brew upgrade cmake || brew install cmake;
+      brew install gcc
     fi
-  - cmake --version
   
 script:
-  - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-       cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="${CXX}" -DCMAKE_C_COMPILER="${CC}" . && make;
-    else
-       cmake . && make;
-    fi  
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="${CXX}" -DCMAKE_C_COMPILER="${CC}" . && make;

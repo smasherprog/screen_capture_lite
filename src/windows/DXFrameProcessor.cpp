@@ -385,6 +385,7 @@ namespace SL {
                 StagingDesc.Usage = D3D11_USAGE_STAGING;
                 StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
                 StagingDesc.MiscFlags = 0;
+               // StagingDesc.Height
                 hr = Device->CreateTexture2D(&StagingDesc, nullptr, StagingSurf.GetAddressOf());
                 if (FAILED(hr))
                 {

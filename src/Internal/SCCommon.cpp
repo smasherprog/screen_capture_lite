@@ -58,12 +58,7 @@ namespace SL {
                 }
             }
 
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
-
-            /*		for (auto& r : rects) {
-                        std::cout << r << std::endl;
-                    }*/
-
+  
             if (rects.size() <= 2) {
                 SanitizeRects(rects, newimg);
                 return rects;//make sure there is at least 2

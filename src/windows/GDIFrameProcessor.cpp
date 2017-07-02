@@ -30,18 +30,11 @@ namespace SL {
             ret.bottom = Height(SelectedMonitor);
             ret.right = Width(SelectedMonitor);
 
-            DEVMODEA devMode;
-            devMode.dmSize = sizeof(devMode);
-            if (EnumDisplaySettingsA(Name(SelectedMonitor), ENUM_CURRENT_SETTINGS, &devMode) == TRUE) {
-                if (static_cast<int>(devMode.dmPelsHeight) != ret.bottom || static_cast<int>(devMode.dmPelsWidth) != ret.right) {
-                    return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
-                }
-            }
-
+  
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
 
-            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
+            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, OffsetX(SelectedMonitor), OffsetY(SelectedMonitor), SRCCOPY | CAPTUREBLT) == FALSE) {
                 //if the screen cannot be captured, return
                 SelectObject(CaptureDC.DC, originalBmp);
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue

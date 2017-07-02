@@ -26,7 +26,7 @@ namespace Screen_Capture
             return false;
         } // if the area to capture is outside the dimensions of the desktop!!
         auto& realmonitor = monitors[Index(monitor)];
-        if(Height(realmonitor) < OffsetY(realmonitor) + Height(monitor) || // monitor height check
+        if(Height(realmonitor) < Height(monitor) || // monitor height check
            totalwidth < Width(monitor) + OffsetX(monitor) ||               // total width check
            Width(monitor) > Width(realmonitor)) // regular width check
            

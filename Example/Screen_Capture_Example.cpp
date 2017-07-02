@@ -30,40 +30,27 @@ void createframegrabber()
                                                    std::cout << "Library is requesting the list of monitors to capture!"
                                                              << std::endl;
                                                    for(auto& m : mons) {
+                                                        //capture just a 512x512 square...  USERS SHOULD MAKE SURE bounds are valid!!!!
 
-                                                       /*
-                                                        * capture just a 512x512 square...
-                                                        m.ffsetX += 512;
-                                                        m.OffsetY += 512;
+                                                        m.OffsetX += 512;
+                                                        m.OffsetY += 512; 
                                                         m.Height = 512;
                                                         m.Width = 512;
-                                                           */
+                                                          
                                                        std::cout << m << std::endl;
                                                    }
                                                    return mons;
                                                })
-            .onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
-                auto r = realcounter.fetch_add(1);
-                auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
-                auto size = RowStride(img) * Height(img);
-
-                // auto imgbuffer(std::make_unique<char[]>(size));
-                // you can extract the image as is in BGRA, or Convert
-                // Extract(img, imgbuffer.get(), size);
-                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-
-                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-            })
+        
             .onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
 
                 auto r = realcounter.fetch_add(1);
                 auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
 
                 auto size = RowStride(img) * Height(img);
-                // auto imgbuffer(std::make_unique<char[]>(size));
-                // Extract(img, imgbuffer.get(), size);
-                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                 auto imgbuffer(std::make_unique<char[]>(size));
+                //Extract(img, imgbuffer.get(), size);
+                ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
 
                 if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
                                                                          onNewFramestart).count() >= 1000) {
@@ -72,26 +59,11 @@ void createframegrabber()
                     onNewFramestart = std::chrono::high_resolution_clock::now();
                 }
                 onNewFramecounter += 1;
-                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-            })
-            .onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
-
-                auto r = realcounter.fetch_add(1);
-                auto s = std::to_string(r) + std::string(" M") + std::string(".png");
-                if(img) {
-                    // std::cout << "New mouse coordinates AND NEW Image received." << " x= " << x << " y= " << y  <<
-                    // std::endl;
-                    // tje_encode_to_file(s.c_str(), Width(*img), Height(*img), 4, (const unsigned
-                    // char*)StartSrc(*img));
-                } else {
-                    // std::cout << "New mouse coordinates received." << " x= " << x << " y= " << y << " The mouse image
-                    // is still the same as the last" << std::endl;
-                }
-
+                tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
             })
             .start_capturing();
 
-    framgrabber.setFrameChangeInterval(std::chrono::milliseconds(100));
+    framgrabber.setFrameChangeInterval(std::chrono::milliseconds(0));
     framgrabber.setMouseChangeInterval(std::chrono::milliseconds(100));
 }
 int main()

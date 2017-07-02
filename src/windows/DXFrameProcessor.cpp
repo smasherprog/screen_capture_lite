@@ -385,15 +385,29 @@ namespace SL {
                 StagingDesc.Usage = D3D11_USAGE_STAGING;
                 StagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
                 StagingDesc.MiscFlags = 0;
-               // StagingDesc.Height
+                StagingDesc.Height = Height(SelectedMonitor);
+                StagingDesc.Width = Width(SelectedMonitor);
+
                 hr = Device->CreateTexture2D(&StagingDesc, nullptr, StagingSurf.GetAddressOf());
                 if (FAILED(hr))
                 {
                     return ProcessFailure(Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
                 }
             }
-
-            DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
+            if (ThisDesc.Width == Width(SelectedMonitor) && ThisDesc.Height == Height(SelectedMonitor)) {
+                DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
+            }
+            else {
+                D3D11_BOX sourceRegion;
+                sourceRegion.left = OffsetX(SelectedMonitor)- OutputDesc.DesktopCoordinates.left;
+                sourceRegion.right = sourceRegion.left+ Width(SelectedMonitor);
+                sourceRegion.top = OffsetY(SelectedMonitor) + OutputDesc.DesktopCoordinates.top;
+                sourceRegion.bottom = sourceRegion.top + Height(SelectedMonitor);
+                sourceRegion.front = 0;
+                sourceRegion.back = 1;
+                DeviceContext->CopySubresourceRegion(StagingSurf.Get(),0, 0, 0, 0, aquireddesktopimage.Get(), 0, &sourceRegion);
+            }
+         
 
             D3D11_MAPPED_SUBRESOURCE MappingDesc;
             MAPPED_SUBRESOURCERAII mappedresrouce(DeviceContext.Get());

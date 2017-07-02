@@ -8,8 +8,8 @@
 namespace SL {
     namespace Screen_Capture {
 
-        std::vector<std::shared_ptr<Monitor>> GetMonitors() {
-            std::vector<std::shared_ptr<Monitor>> ret;
+        std::vector<Monitor> GetMonitors() {
+            std::vector<Monitor> ret;
             DISPLAY_DEVICEA dd;
             ZeroMemory(&dd, sizeof(dd));
             dd.cb = sizeof(dd);

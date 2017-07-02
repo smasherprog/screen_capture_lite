@@ -64,7 +64,7 @@ namespace SL {
             if (!SwitchToInputDesktop(data)) return;
             std::cout << "Starting to Capture on Monitor " << Name(monitor) << std::endl;
             std::cout << "Trying DirectX Desktop Duplication " << std::endl;
-            //TryCapture<GDIFrameProcessor>(data);
+   
             
             if (!TryCaptureMonitor<DXFrameProcessor>(data, monitor)) {//if DX is not supported, fallback to GDI capture
                 std::cout << "DirectX Desktop Duplication not supprted, falling back to GDI Capturing . . ." << std::endl;

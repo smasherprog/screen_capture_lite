@@ -25,9 +25,25 @@ void createframegrabber()
     realcounter = 0;
     onNewFramecounter = 0;
     framgrabber =
-        SL::Screen_Capture::CreateScreeCapture([]() { return SL::Screen_Capture::GetMonitors(); })
+        SL::Screen_Capture::CreateScreeCapture([]() {
+                                                   auto mons = SL::Screen_Capture::GetMonitors();
+                                                   std::cout << "Library is requesting the list of monitors to capture!"
+                                                             << std::endl;
+                                                   for(auto& m : mons) {
+
+                                                       /*
+                                                        * capture just a 512x512 square...
+                                                        m.ffsetX += 512;
+                                                        m.OffsetY += 512;
+                                                        m.Height = 512;
+                                                        m.Width = 512;
+                                                           */
+                                                       std::cout << m << std::endl;
+                                                   }
+                                                   return mons;
+                                               })
             .onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-                std::cout << "height  " << Height(img) << "  width  " << Width(img) << std::endl;
+                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
                 auto r = realcounter.fetch_add(1);
                 auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
                 auto size = RowStride(img) * Height(img);
@@ -80,12 +96,31 @@ void createframegrabber()
 }
 int main()
 {
-    std::cout << "Starting Capture Demo" << std::endl; 
-    std::cout << "Running standard capturing "<< std::endl;
-    createframegrabber();
+    std::cout << "Starting Capture Demo/Test" << std::endl;
+    std::cout << "Testing captured monitor bounds check" << std::endl;
+    auto goodmonitors = SL::Screen_Capture::GetMonitors();
+    for(auto& m : goodmonitors) {
+        std::cout << m << std::endl;
+        assert(isMonitorInsideBounds(goodmonitors, m));
+    }
+    auto badmonitors = SL::Screen_Capture::GetMonitors();
 
-    std::cout << "Pausing for 10 seconds. "<< std::endl;
+    for(auto m : badmonitors) {
+        m.Height += 1;
+        std::cout << m << std::endl;
+        assert(!isMonitorInsideBounds(goodmonitors, m));
+    }
+    for(auto m : badmonitors) {
+        m.Width += 1;
+        std::cout << m << std::endl;
+        assert(!isMonitorInsideBounds(goodmonitors, m));
+    }
+    
+    std::cout << "Running standard capturing for 10 seconds" << std::endl;
+    createframegrabber();
     std::this_thread::sleep_for(std::chrono::seconds(10));
+
+    std::cout << "Pausing for 10 seconds. " << std::endl;
     framgrabber.pause();
     auto i = 0;
     while(i++ < 10) {
@@ -94,11 +129,11 @@ int main()
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
-    std::cout << std::endl << "Resuming  . . ." << std::endl;
+    std::cout << std::endl << "Resuming  . . . for 5 seconds" << std::endl;
     framgrabber.resume();
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    std::cout << "Testing changing the interval during runtime for race conditions ";
+    std::cout << "Testing changing the interval during runtime for race conditions " << std::endl;
 
     // HAMMER THE SET FRAME INTERVAL FOR RACE CONDITIONS!!
     auto start = std::chrono::high_resolution_clock::now();
@@ -109,23 +144,23 @@ int main()
             framgrabber.setMouseChangeInterval(std::chrono::microseconds(100));
         }
     }
-    std::cout << "Changing the cpature rate to 1 second";
+    std::cout << "Changing the cpature rate to 1 second" << std::endl;
     framgrabber.setFrameChangeInterval(std::chrono::seconds(1));
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    std::cout << "Setting timer using chrono literals";
+    std::cout << "Setting timer using chrono literals" << std::endl;
     // You can use chron's literals as well!
     framgrabber.setFrameChangeInterval(10ms);
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    std::cout << "Testing recreating";
+    std::cout << "Testing recreating" << std::endl;
     createframegrabber();
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    std::cout << "Testing destroy";
+    std::cout << "Testing destroy" << std::endl;
     framgrabber.destroy();
 
-    std::cout << "Testing recreating";
+    std::cout << "Testing recreating" << std::endl;
     createframegrabber();
     std::this_thread::sleep_for(std::chrono::seconds(5));
 

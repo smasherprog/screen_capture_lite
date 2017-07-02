@@ -12,7 +12,6 @@ matrix:
           packages:
             - g++-6
             - clang-5.0
-            - libssl-dev
             - libx11-dev
             - libxfixes-dev 
             - libxtst-dev
@@ -34,3 +33,6 @@ before_install:
   
 script:
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
+  
+notifications:
+  email: false

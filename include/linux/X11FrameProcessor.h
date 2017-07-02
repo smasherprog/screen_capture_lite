@@ -18,7 +18,6 @@ namespace SL {
         class X11FrameProcessor: public BaseFrameProcessor {
             
 			Display* SelectedDisplay=nullptr;
-			Window RootWindow;
 			XImage* Image=nullptr;
 			std::unique_ptr<XShmSegmentInfo> ShmInfo;
             Monitor SelectedMonitor;

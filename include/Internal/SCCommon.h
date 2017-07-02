@@ -45,7 +45,7 @@ namespace SL {
             DUPL_RETURN_ERROR_UNEXPECTED = 2
         };
         const int PixelStride = 4;
-        std::shared_ptr<Monitor> CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string& n);
+        Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string& n);
 
         Image Create(const ImageRect& imgrect, int pixelstride, int rowpadding, const unsigned char* data);
         //this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller

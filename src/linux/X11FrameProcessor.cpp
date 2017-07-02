@@ -1,5 +1,5 @@
 #include "X11FrameProcessor.h"
-
+#include <X11/extensions/Xinerama.h>
 #include <assert.h>
 #include <vector>
 
@@ -35,19 +35,13 @@ namespace Screen_Capture
         if(!SelectedDisplay) {
             return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
         }
-
-        RootWindow = XRootWindow(SelectedDisplay, Index(SelectedMonitor));
-        if(!RootWindow) {
-            return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
-        }
-        auto visual = DefaultVisual(SelectedDisplay, Index(SelectedMonitor));
-        auto depth = DefaultDepth(SelectedDisplay, Index(SelectedMonitor));
+        int scr = XDefaultScreen(SelectedDisplay);
 
         ShmInfo = std::make_unique<XShmSegmentInfo>();
 
         Image = XShmCreateImage(SelectedDisplay,
-                                visual,
-                                depth,
+                                DefaultVisual(SelectedDisplay, scr),
+                                DefaultDepth(SelectedDisplay, scr),
                                 ZPixmap,
                                 NULL,
                                 ShmInfo.get(),
@@ -72,18 +66,13 @@ namespace Screen_Capture
         ret.left = ret.top = 0;
         ret.right = Width(SelectedMonitor);
         ret.bottom = Height(SelectedMonitor);
-
-        // check to see if the display has changed
-        auto t = XOpenDisplay(NULL);
-        auto monh = DisplayHeight(t, Id(SelectedMonitor));
-        auto monw = DisplayWidth(t, Id(SelectedMonitor));
-        XCloseDisplay(t);
-
-        if(monh != ret.bottom || monw != ret.right) {
-            return DUPL_RETURN_ERROR_EXPECTED;
-        }
-
-        if(!XShmGetImage(SelectedDisplay, RootWindow, Image, 0, 0, AllPlanes)) {
+        
+        if(!XShmGetImage(SelectedDisplay,
+                         RootWindow(SelectedDisplay, DefaultScreen(SelectedDisplay)),
+                         Image,
+                         OffsetX(SelectedMonitor),
+                         OffsetY(SelectedMonitor),
+                         AllPlanes)) {
             return DUPL_RETURN_ERROR_EXPECTED;
         }
 

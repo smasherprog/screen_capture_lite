@@ -13,7 +13,32 @@ namespace SL
 {
 namespace Screen_Capture
 {
+    bool isMonitorInsideBounds(const std::vector<Monitor>& monitors, const Monitor& monitor)
+    {
 
+        auto totalwidth = 0;
+        for(auto& m : monitors) {
+            totalwidth += Width(m);
+        }
+
+        // if the monitor doesnt exist any more!
+        if(std::find_if(begin(monitors), end(monitors), [&](auto& m) { return m.Id == monitor.Id; }) == end(monitors)) {
+            return false;
+        } // if the area to capture is outside the dimensions of the desktop!!
+        auto& realmonitor = monitors[Index(monitor)];
+        if(Height(realmonitor) < OffsetY(realmonitor) + Height(monitor) || // monitor height check
+           totalwidth < Width(monitor) + OffsetX(monitor) ||               // total width check
+           Width(monitor) > Width(realmonitor)) // regular width check
+           
+        {
+            return false;
+        } // if the entire screen is capture and the offsets changed, get out and rebuild
+        else if(Height(realmonitor) == Height(monitor) && Width(realmonitor) == Width(monitor) &&
+                (OffsetX(realmonitor) != OffsetX(monitor) || OffsetY(realmonitor) != OffsetY(monitor))) {
+            return false;
+        }
+        return true;
+    }
     class ScreenCaptureManagerImpl
     {
     public:
@@ -32,7 +57,7 @@ namespace Screen_Capture
         ~ScreenCaptureManagerImpl()
         {
             Thread_Data_->TerminateThreadsEvent = true; // set the exit flag for the threads
-            Thread_Data_->Paused = false; // unpaused the threads to let everything exit
+            Thread_Data_->Paused = false;               // unpaused the threads to let everything exit
             if(Thread_.joinable()) {
                 Thread_.join();
             }

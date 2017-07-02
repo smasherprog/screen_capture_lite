@@ -33,17 +33,17 @@ void createframegrabber()
 
                                                        /*
                                                         * capture just a 512x512 square...
-                                                        m->OffsetX += 512;
-                                                        m->OffsetY += 512;
-                                                        m->Height = 512;
-                                                        m->Width = 512;
+                                                        m.ffsetX += 512;
+                                                        m.OffsetY += 512;
+                                                        m.Height = 512;
+                                                        m.Width = 512;
                                                            */
-                                                       std::cout << *m << std::endl;
+                                                       std::cout << m << std::endl;
                                                    }
                                                    return mons;
                                                })
             .onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
-                std::cout << "Difference detected!  " << img.Bounds << std::endl;
+                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
                 auto r = realcounter.fetch_add(1);
                 auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
                 auto size = RowStride(img) * Height(img);
@@ -96,7 +96,26 @@ void createframegrabber()
 }
 int main()
 {
-    std::cout << "Starting Capture Demo" << std::endl;
+    std::cout << "Starting Capture Demo/Test" << std::endl;
+    std::cout << "Testing captured monitor bounds check" << std::endl;
+    auto goodmonitors = SL::Screen_Capture::GetMonitors();
+    for(auto& m : goodmonitors) {
+        std::cout << m << std::endl;
+        assert(isMonitorInsideBounds(goodmonitors, m));
+    }
+    auto badmonitors = SL::Screen_Capture::GetMonitors();
+
+    for(auto m : badmonitors) {
+        m.Height += 1;
+        std::cout << m << std::endl;
+        assert(!isMonitorInsideBounds(goodmonitors, m));
+    }
+    for(auto m : badmonitors) {
+        m.Width += 1;
+        std::cout << m << std::endl;
+        assert(!isMonitorInsideBounds(goodmonitors, m));
+    }
+    
     std::cout << "Running standard capturing for 10 seconds" << std::endl;
     createframegrabber();
     std::this_thread::sleep_for(std::chrono::seconds(10));

@@ -96,7 +96,7 @@ namespace Screen_Capture
         } else {
             for(auto i = 0; i < Height(img); i++) {
                 memcpy(startdst, startsrc, RowStride(img));
-                startdst += RowStride(img); // advance to the next row
+                startdst += RowStride(img);                   // advance to the next row
                 startsrc += RowStride(img) + RowPadding(img); // advance to the next row
             }
         }
@@ -157,12 +157,13 @@ namespace Screen_Capture
         }
     };
 
-    std::vector<std::shared_ptr<Monitor> > GetMonitors();
-
+    std::vector<Monitor> GetMonitors();
+    bool isMonitorInsideBounds(const std::vector<Monitor>& monitors, const Monitor& monitor);
+    
     typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)>
         CaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
-    typedef std::function<std::vector<std::shared_ptr<Monitor> >()> MonitorCallback;
+    typedef std::function<std::vector<Monitor>()> MonitorCallback;
 
     class ScreenCaptureManagerImpl;
     class ScreenCaptureManager

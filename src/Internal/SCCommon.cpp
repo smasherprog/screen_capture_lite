@@ -128,17 +128,17 @@ namespace SL {
 
 
 
-        std::shared_ptr<Monitor> CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string & n)
+        Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string & n)
         {
-            auto ret(std::make_shared<Monitor>());
-            ret->Index = index;
-            ret->Height = h;
-            ret->Id = id;
-            assert(n.size() + 1 < sizeof(ret->Name));
-            memcpy(ret->Name, n.c_str(), n.size() + 1);
-            ret->OffsetX = ox;
-            ret->OffsetY = oy;
-            ret->Width = w;
+            Monitor ret ={};
+            ret.Index = index;
+            ret.Height = h;
+            ret.Id = id;
+            assert(n.size() + 1 < sizeof(ret.Name));
+            memcpy(ret.Name, n.c_str(), n.size() + 1);
+            ret.OffsetX = ox;
+            ret.OffsetY = oy;
+            ret.Width = w;
             return ret;
         }
 

@@ -66,26 +66,7 @@ namespace Screen_Capture
         ret.left = ret.top = 0;
         ret.right = Width(SelectedMonitor);
         ret.bottom = Height(SelectedMonitor);
-        int nmonitors = 0;
-
-        auto s = std::shared_ptr<XineramaScreenInfo>(XineramaQueryScreens(SelectedDisplay, &nmonitors),
-                                                     [](auto scrns) { XFree(scrns); });
-        auto screen = s.get();
-        // if the monitor doesnt exist any more!
-        if(Index(SelectedMonitor) >= nmonitors) {
-            return DUPL_RETURN_ERROR_EXPECTED;
-        } // if the screen is smaller than the allocated image.. get out and rebuild
-        else if(screen[Index(SelectedMonitor)].height < ret.bottom ||
-                screen[Index(SelectedMonitor)].width < ret.right) {
-            return DUPL_RETURN_ERROR_EXPECTED;
-        } // if the entire screen is capture and the offsets changed, get out and rebuild
-        else if(screen[Index(SelectedMonitor)].height == ret.bottom &&
-                screen[Index(SelectedMonitor)].width == ret.right &&
-                (screen[Index(SelectedMonitor)].x_org != OffsetX(SelectedMonitor) ||
-                 screen[Index(SelectedMonitor)].y_org != OffsetY(SelectedMonitor))) {
-            return DUPL_RETURN_ERROR_EXPECTED;
-        }
-
+        
         if(!XShmGetImage(SelectedDisplay,
                          RootWindow(SelectedDisplay, DefaultScreen(SelectedDisplay)),
                          Image,

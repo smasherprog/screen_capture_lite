@@ -25,8 +25,7 @@ void createframegrabber()
 {
     realcounter = 0;
     onNewFramecounter = 0;
-    framgrabber =
-        SL::Screen_Capture::CreateScreeCapture([]() {
+    framgrabber = SL::Screen_Capture::CreateScreeCapture([]() {
         auto mons = SL::Screen_Capture::GetMonitors();
         std::cout << "Library is requesting the list of monitors to capture!"
             << std::endl;
@@ -34,10 +33,10 @@ void createframegrabber()
             // capture just a 512x512 square...  USERS SHOULD MAKE SURE bounds are
             // valid!!!!
 
-            m.OffsetX += 512;
+       /*     m.OffsetX += 512;
             m.OffsetY += 512;
             m.Height = 512;
-            m.Width = 512;
+            m.Width = 512;*/
 
             std::cout << m << std::endl;
         }

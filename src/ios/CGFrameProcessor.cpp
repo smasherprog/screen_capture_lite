@@ -16,19 +16,30 @@ namespace SL {
         //
         // Process a given frame and its metadata
         //
-        DUPL_RETURN CGFrameProcessor::ProcessFrame()
+        DUPL_RETURN CGFrameProcessor::ProcessFrame(const Monitor& curentmonitorinfo)
         {
             auto Ret = DUPL_RETURN_SUCCESS;
-            auto imageRef = CGDisplayCreateImage(Id(SelectedMonitor));
+            
+            CGImageRef imageRef;
+            
+            if(Height(curentmonitorinfo) != Height(SelectedMonitor) || Width(curentmonitorinfo) != Width(SelectedMonitor)){
+                CGRect rec;
+                rec.origin.y =OffsetY(SelectedMonitor);
+                rec.origin.x =OffsetX(SelectedMonitor);
+                rec.size.width =Width(SelectedMonitor);
+                rec.size.height =Height(SelectedMonitor);
+                
+                imageRef = CGDisplayCreateImageForRect(Id(SelectedMonitor), rec);
+            } else {
+                imageRef =  CGDisplayCreateImage(Id(SelectedMonitor));
+            }
+         
+            
             if(!imageRef) return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
             
             auto width = CGImageGetWidth(imageRef);
             auto height = CGImageGetHeight(imageRef);
-            if(width!= Width(SelectedMonitor) || height!= Height(SelectedMonitor)){
-                CGImageRelease(imageRef);
-                return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
-            }
-            
+
             auto prov = CGImageGetDataProvider(imageRef);
             if(!prov){
                 CGImageRelease(imageRef);

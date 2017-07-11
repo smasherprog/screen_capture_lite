@@ -32,12 +32,12 @@ void createframegrabber()
         for (auto& m : mons) {
             // capture just a 512x512 square...  USERS SHOULD MAKE SURE bounds are
             // valid!!!!
-
-       /*     m.OffsetX += 512;
+/*
+            m.OffsetX += 512;
             m.OffsetY += 512;
             m.Height = 512;
-            m.Width = 512;*/
-
+            m.Width = 512;
+*/
             std::cout << m << std::endl;
         }
         return mons;
@@ -66,7 +66,7 @@ void createframegrabber()
         auto size = RowStride(img) * Height(img);
         //auto imgbuffer(std::make_unique<char[]>(size));
         // Extract(img, imgbuffer.get(), size);
-        //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+       // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
 
         if (std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - onNewFramestart)

@@ -23,7 +23,6 @@ namespace Screen_Capture {
 
     std::vector<ImageRect> GetDifs(const Image& oldimg, const Image& newimg)
     {
-        auto start = std::chrono::steady_clock::now();
         std::vector<ImageRect> rects;
         if (Width(oldimg) != Width(newimg) || Height(oldimg) != Height(newimg)) {
             rects.push_back(Rect(newimg));

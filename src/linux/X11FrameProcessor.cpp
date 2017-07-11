@@ -56,10 +56,8 @@ namespace Screen_Capture
 
         return ret;
     }
-    //
-    // Process a given frame and its metadata
-    //
-    DUPL_RETURN X11FrameProcessor::ProcessFrame()
+ 
+    DUPL_RETURN X11FrameProcessor::ProcessFrame(const Monitor& currentmonitorinfo)
     {
         auto Ret = DUPL_RETURN_SUCCESS;
         ImageRect ret;

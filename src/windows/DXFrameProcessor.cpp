@@ -348,7 +348,7 @@ namespace SL {
         // Process a given frame and its metadata
         //
 
-        DUPL_RETURN DXFrameProcessor::ProcessFrame()
+        DUPL_RETURN DXFrameProcessor::ProcessFrame(const Monitor& currentmonitorinfo)
         {
             auto Ret = DUPL_RETURN_SUCCESS;
 
@@ -394,7 +394,7 @@ namespace SL {
                     return ProcessFailure(Device.Get(), L"Failed to create staging texture for move rects", L"Error", hr, SystemTransitionsExpectedErrors);
                 }
             }
-            if (ThisDesc.Width == Width(SelectedMonitor) && ThisDesc.Height == Height(SelectedMonitor)) {
+            if (Width(currentmonitorinfo) == Width(SelectedMonitor) && Height(currentmonitorinfo) == Height(SelectedMonitor)) {
                 DeviceContext->CopyResource(StagingSurf.Get(), aquireddesktopimage.Get());
             }
             else {

@@ -15,7 +15,7 @@ see the Exmaple folder for a demo</p>
 
 <h2>USAGE</h2>
 <p>The image format is raw BGRA 32 bits per pixel. Alpha is unused! <p>
-https://github.com/smasherprog/Screen_Capture/tree/master/Example
+https://github.com/smasherprog/screen_capture_lite/blob/master/Example/Screen_Capture_Example.cpp
 
 
 ```c++

@@ -1,5 +1,5 @@
 # screen capture lite
-<p>Linux/Mac <img src="https://travis-ci.org/smasherprog/Screen_Capture.svg?branch=master" /></p>
+<p>Linux/Mac <img src="https://travis-ci.org/smasherprog/screen_capture_lite.svg?branch=master" /></p>
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/6nlqo1csbkgdxorx"/><p>
 <h3>Project setup: https://github.com/smasherprog/Projects_Setup</h3>
 <p>Cross-platform screen capturing library . . . this is made to be lightweight and fast.

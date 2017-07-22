@@ -86,7 +86,7 @@ namespace SL
         // examine the image
         const unsigned char* StartSrc(const Image& img);
 
-        inline void Extract(const Image& img, char* dst, size_t dst_size)
+        inline void Extract(const Image& img, unsigned char* dst, size_t dst_size)
         {
             assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
             auto startdst = dst;
@@ -103,7 +103,7 @@ namespace SL
             }
         }
 
-        inline void ExtractAndConvertToRGBA(const Image& img, char* dst, size_t dst_size)
+        inline void ExtractAndConvertToRGBA(const Image& img, unsigned char* dst, size_t dst_size)
         {
             auto totalsize = RowStride(img) * Height(img);
             assert(dst_size >= static_cast<size_t>(totalsize));
@@ -120,7 +120,7 @@ namespace SL
                 imgsrc += RowPadding(img);
             }
         }
-        inline void ExtractAndConvertToRGB(const Image& img, char* dst, size_t dst_size)
+        inline void ExtractAndConvertToRGB(const Image& img, unsigned char* dst, size_t dst_size)
         {
             auto totalsize = Width(img) * 3 * Height(img);
             assert(dst_size >= static_cast<size_t>(totalsize));
@@ -137,7 +137,7 @@ namespace SL
             }
         }
 
-        inline void ExtractAndConvertToRGB565(const Image& img, char* dst, size_t dst_size)
+        inline void ExtractAndConvertToRGB565(const Image& img, unsigned char* dst, size_t dst_size)
         {
             auto totalsize = Width(img) * 2 * Height(img);
             assert(dst_size >= static_cast<size_t>(totalsize));
@@ -146,8 +146,8 @@ namespace SL
             for (auto h = 0; h < Height(img); h++) {
                 for (auto w = 0; w < Width(img); w++) {
                     int short rgb = (*(imgsrc + 2) << 11) | (*(imgsrc + 1) << 5) | *(imgsrc);
-                    *imgdist++ = rgb;
-                    *imgdist++ = rgb << 8;
+                    *imgdist++ = static_cast<unsigned char>(rgb);
+                    *imgdist++ = static_cast<unsigned char>(rgb << 8);
                     imgsrc += img.Pixelstride;
                 }
                 imgsrc += RowPadding(img);

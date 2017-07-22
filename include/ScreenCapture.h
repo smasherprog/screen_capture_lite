@@ -120,6 +120,39 @@ namespace SL
                 imgsrc += RowPadding(img);
             }
         }
+        inline void ExtractAndConvertToRGB(const Image& img, char* dst, size_t dst_size)
+        {
+            auto totalsize = Width(img) * 3 * Height(img);
+            assert(dst_size >= static_cast<size_t>(totalsize));
+            auto imgsrc = StartSrc(img);
+            auto imgdist = dst;
+            for (auto h = 0; h < Height(img); h++) {
+                for (auto w = 0; w < Width(img); w++) {
+                    *imgdist++ = *(imgsrc + 2);
+                    *imgdist++ = *(imgsrc + 1);
+                    *imgdist++ = *(imgsrc);
+                    imgsrc += img.Pixelstride;
+                }
+                imgsrc += RowPadding(img);
+            }
+        }
+
+        inline void ExtractAndConvertToRGB565(const Image& img, char* dst, size_t dst_size)
+        {
+            auto totalsize = Width(img) * 2 * Height(img);
+            assert(dst_size >= static_cast<size_t>(totalsize));
+            auto imgsrc = StartSrc(img);
+            auto imgdist = dst;
+            for (auto h = 0; h < Height(img); h++) {
+                for (auto w = 0; w < Width(img); w++) {
+                    int short rgb = (*(imgsrc + 2) << 11) | (*(imgsrc + 1) << 5) | *(imgsrc);
+                    *imgdist++ = rgb;
+                    *imgdist++ = rgb << 8;
+                    imgsrc += img.Pixelstride;
+                }
+                imgsrc += RowPadding(img);
+            }
+        }
         class ITimer
         {
         public:

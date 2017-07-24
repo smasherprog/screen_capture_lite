@@ -72,7 +72,9 @@ namespace SL {
         DUPL_RETURN ProcessFailure(ID3D11Device * Device, LPCWSTR Str, LPCWSTR Title, HRESULT hr, HRESULT * ExpectedErrors = nullptr)
         {
             HRESULT TranslatedHr;
+#if defined _DEBUG || !defined NDEBUG
             std::wcout << Str << "\t" << Title << std::endl;
+#endif
             // On an error check if the DX device is lost
             if (Device)
             {

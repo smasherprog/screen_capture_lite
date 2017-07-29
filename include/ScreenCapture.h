@@ -105,8 +105,8 @@ namespace SL
 
         inline void ExtractAndConvertToRGBA(const Image& img, unsigned char* dst, size_t dst_size)
         {
-            auto totalsize = RowStride(img) * Height(img);
-            assert(dst_size >= static_cast<size_t>(totalsize));
+      
+            assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
             auto imgsrc = StartSrc(img);
             auto imgdist = dst;
             for (auto h = 0; h < Height(img); h++) {
@@ -122,8 +122,7 @@ namespace SL
         }
         inline void ExtractAndConvertToRGB(const Image& img, unsigned char* dst, size_t dst_size)
         {
-            auto totalsize = Width(img) * 3 * Height(img);
-            assert(dst_size >= static_cast<size_t>(totalsize));
+            assert(dst_size >= static_cast<size_t>(Width(img) * 3 * Height(img)));
             auto imgsrc = StartSrc(img);
             auto imgdist = dst;
             for (auto h = 0; h < Height(img); h++) {
@@ -139,8 +138,7 @@ namespace SL
 
         inline void ExtractAndConvertToRGB565(const Image& img, unsigned char* dst, size_t dst_size)
         {
-            auto totalsize = Width(img) * 2 * Height(img);
-            assert(dst_size >= static_cast<size_t>(totalsize));
+            assert(dst_size >= static_cast<size_t>(Width(img) * 2 * Height(img)));
             auto imgsrc = StartSrc(img);
             auto imgdist = dst;
             for (auto h = 0; h < Height(img); h++) {

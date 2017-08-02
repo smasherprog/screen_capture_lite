@@ -19,7 +19,6 @@ namespace SL
 
             std::vector<std::thread> m_ThreadHandles;
             std::shared_ptr<std::atomic_bool> TerminateThreadsEvent;
-
         public:
             ThreadManager();
             ~ThreadManager();
@@ -65,10 +64,23 @@ namespace SL
             return true;
         }
 
-
+        inline bool MonitorsChanged(const std::vector<Monitor>& startmonitors, const std::vector<Monitor>& nowmonitors) {
+            if (startmonitors.size() != nowmonitors.size()) return true;
+            for (size_t i = 0; i < startmonitors.size(); i++) {
+                if (startmonitors[i].Height != nowmonitors[i].Height ||
+                    startmonitors[i].Id != nowmonitors[i].Id ||
+                    startmonitors[i].Index != nowmonitors[i].Index ||
+                    startmonitors[i].Name != nowmonitors[i].Name ||
+                    startmonitors[i].OffsetX != nowmonitors[i].OffsetX ||
+                    startmonitors[i].OffsetY != nowmonitors[i].OffsetY ||
+                    startmonitors[i].Width != nowmonitors[i].Width) return true;
+            }
+            return false;
+        }
         template <class T, class F> bool TryCaptureMonitor(const F& data, Monitor& monitor)
         {
             T frameprocessor;
+            auto startmonitors = GetMonitors();
             auto ret = frameprocessor.Init(data, monitor);
             if (ret != DUPL_RETURN_SUCCESS) {
                 return false;
@@ -88,7 +100,7 @@ namespace SL
                 auto timer = std::atomic_load(&data->Monitor_Capture_Timer);
                 timer->start();
                 auto monitors = GetMonitors();
-                if (isMonitorInsideBounds(monitors, monitor)) {
+                if (isMonitorInsideBounds(monitors, monitor) && !MonitorsChanged(startmonitors, monitors)) {
                     ret = frameprocessor.ProcessFrame(monitors[Index(monitor)]);
                 }
                 else {

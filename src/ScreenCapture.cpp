@@ -77,11 +77,9 @@ namespace Screen_Capture
                     if(Thread_Data_->ExpectedErrorEvent) {
                         Thread_Data_->TerminateThreadsEvent = true;
                         ThreadMgr.Join();
-                        Thread_Data_->ExpectedErrorEvent = Thread_Data_->UnexpectedErrorEvent =
-                            Thread_Data_->TerminateThreadsEvent = false;
+                        Thread_Data_->ExpectedErrorEvent = Thread_Data_->UnexpectedErrorEvent = Thread_Data_->TerminateThreadsEvent = false;
                         // Clean up
-                        std::this_thread::sleep_for(
-                            std::chrono::milliseconds(1000)); // sleep for 1 second since an error occcured
+                        std::this_thread::sleep_for( std::chrono::milliseconds(1000)); // sleep for 1 second since an error occcured
 
                         ThreadMgr.Init(Thread_Data_);
                     }

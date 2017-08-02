@@ -69,8 +69,7 @@ namespace SL
             for (size_t i = 0; i < startmonitors.size(); i++) {
                 if (startmonitors[i].Height != nowmonitors[i].Height ||
                     startmonitors[i].Id != nowmonitors[i].Id ||
-                    startmonitors[i].Index != nowmonitors[i].Index ||
-                    startmonitors[i].Name != nowmonitors[i].Name ||
+                    startmonitors[i].Index != nowmonitors[i].Index || 
                     startmonitors[i].OffsetX != nowmonitors[i].OffsetX ||
                     startmonitors[i].OffsetY != nowmonitors[i].OffsetY ||
                     startmonitors[i].Width != nowmonitors[i].Width) return true;

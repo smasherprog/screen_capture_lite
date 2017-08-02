@@ -26,8 +26,7 @@ void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>&
         assert(isMonitorInsideBounds(mons, m));
     }
 
-    m_ThreadHandles.resize(monitors.size() +
-                           (data->CaptureMouse ? 1 : 0)); // add another thread for mouse capturing if needed
+    m_ThreadHandles.resize(monitors.size() +   (data->CaptureMouse ? 1 : 0)); // add another thread for mouse capturing if needed
 
     for(size_t i = 0; i < monitors.size(); ++i) {
         m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCaptureMonitor, data, monitors[i]);

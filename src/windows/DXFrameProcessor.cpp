@@ -427,10 +427,10 @@ namespace SL {
 
             auto rowstride = PixelStride*Width(SelectedMonitor);
 
-            if (Data->CaptureEntireMonitor && !Data->CaptureDifMonitor) {
+            if (Data->OnNewFrame && !Data->OnFrameChanged) {
 
                 auto wholeimg = Create(ret, PixelStride, static_cast<int>(MappingDesc.RowPitch) - rowstride, startsrc);
-                Data->CaptureEntireMonitor(wholeimg, SelectedMonitor);
+                Data->OnNewFrame(wholeimg, SelectedMonitor);
 
             }
             else {

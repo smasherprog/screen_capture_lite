@@ -1,15 +1,20 @@
-#include "GDIFrameProcessor.h"
+#include "GDIWindowProcessor.h"
 
 namespace SL {
     namespace Screen_Capture {
 
-        DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor& monitor) {
-            SelectedMonitor = monitor;
+        DUPL_RETURN GDIWindowProcessor::Init(std::shared_ptr<Thread_Data> data) {
+            SelectedWindow = reinterpret_cast<HWND>(data->getWindowToWatch());
             auto Ret = DUPL_RETURN_SUCCESS;
 
-            MonitorDC.DC = CreateDCA(Name(SelectedMonitor), NULL, NULL, NULL);
+            MonitorDC.DC = GetWindowDC(SelectedWindow);
             CaptureDC.DC = CreateCompatibleDC(MonitorDC.DC);
-            CaptureBMP.Bitmap = CreateCompatibleBitmap(MonitorDC.DC, Width(SelectedMonitor), Height(SelectedMonitor));
+            RECT r;
+            GetWindowRect(SelectedWindow, &r);
+            auto width = r.right - r.left;
+            auto height = r.bottom - r.top;
+
+            CaptureBMP.Bitmap = CreateCompatibleBitmap(MonitorDC.DC, width, height);
 
             if (!MonitorDC.DC || !CaptureDC.DC || !CaptureBMP.Bitmap) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
@@ -21,20 +26,22 @@ namespace SL {
         //
         // Process a given frame and its metadata
         //
-        DUPL_RETURN GDIFrameProcessor::ProcessFrame(const Monitor& currentmonitorinfo)
+        DUPL_RETURN GDIWindowProcessor::ProcessFrame()
         {
-            
-            auto Ret = DUPL_RETURN_SUCCESS;
 
+            auto Ret = DUPL_RETURN_SUCCESS;
+            RECT r;
+            GetWindowRect(SelectedWindow, &r);
             ImageRect ret;
             ret.left = ret.top = 0;
-            ret.bottom = Height(SelectedMonitor);
-            ret.right = Width(SelectedMonitor);
+            ret.bottom = r.bottom - r.top;
+            ret.right = r.right - r.left;
+
 
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
 
-            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, OffsetX(SelectedMonitor), OffsetY(SelectedMonitor), SRCCOPY | CAPTUREBLT) == FALSE) {
+            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
                 //if the screen cannot be captured, return
                 SelectObject(CaptureDC.DC, originalBmp);
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
@@ -54,7 +61,7 @@ namespace SL {
                 bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride* ret.bottom;
                 GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
                 SelectObject(CaptureDC.DC, originalBmp);
-                ProcessMonitorCapture(*Data, *this, SelectedMonitor, ret);
+            //    ProcessMonitorCapture(*Data, *this, ret);
             }
 
             return Ret;

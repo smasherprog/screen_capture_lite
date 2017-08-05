@@ -90,16 +90,16 @@ namespace SL {
             //	}
             //}
 
-            if (Data->CaptureMouse) {
+            if (Data->OnMouseChanged) {
                 int lastx = static_cast<int>(cursorInfo.ptScreenPos.x - ii.xHotspot);
                 int lasty = static_cast<int>(cursorInfo.ptScreenPos.y - ii.yHotspot);
                 //if the mouse image is different, send the new image and swap the data 
                 if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), bi.biSizeImage) != 0) {
-                    Data->CaptureMouse(&wholeimg, lastx, lasty);
+                    Data->OnMouseChanged(&wholeimg, lastx, lasty);
                     std::swap(NewImageBuffer, OldImageBuffer);
                 }
                 else if (Last_x != lastx || Last_y != lasty) {
-                    Data->CaptureMouse(nullptr, lastx, lasty);
+                    Data->OnMouseChanged(nullptr, lastx, lasty);
                 }
                 Last_x = lastx;
                 Last_y = lasty;

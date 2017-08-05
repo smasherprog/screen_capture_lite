@@ -16,7 +16,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 using namespace std::chrono_literals;
-SL::Screen_Capture::ScreenCaptureManager framgrabber;
+std::shared_ptr<SL::Screen_Capture::IScreenCaptureManager> framgrabber;
 std::atomic<int> realcounter;
 std::atomic<int> onNewFramecounter;
 
@@ -25,7 +25,7 @@ void createframegrabber()
 {
     realcounter = 0;
     onNewFramecounter = 0;
-    framgrabber = SL::Screen_Capture::CreateScreeCapture([]() {
+    framgrabber = SL::Screen_Capture::CreateCaptureConfiguration([]() {
         auto mons = SL::Screen_Capture::GetMonitors();
         std::cout << "Library is requesting the list of monitors to capture!"
             << std::endl;
@@ -96,8 +96,8 @@ void createframegrabber()
     })
         .start_capturing();
 
-    framgrabber.setFrameChangeInterval(std::chrono::milliseconds(100));
-    framgrabber.setMouseChangeInterval(std::chrono::milliseconds(100));
+    framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));
+    framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
 }
 int
 main()
@@ -127,16 +127,16 @@ main()
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
     std::cout << "Pausing for 10 seconds. " << std::endl;
-    framgrabber.pause();
+    framgrabber->pause();
     auto i = 0;
     while (i++ < 10) {
-        assert(framgrabber.isPaused());
+        assert(framgrabber->isPaused());
         std::cout << " . ";
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     std::cout << std::endl << "Resuming  . . . for 5 seconds" << std::endl;
-    framgrabber.resume();
+    framgrabber->resume();
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     std::cout
@@ -149,18 +149,18 @@ main()
         std::chrono::high_resolution_clock::now() - start)
         .count() < 10) {
         for (auto t = 0; t < 100; t++) {
-            framgrabber.setFrameChangeInterval(std::chrono::microseconds(100));
-            framgrabber.setMouseChangeInterval(std::chrono::microseconds(100));
+            framgrabber->setFrameChangeInterval(std::chrono::microseconds(100));
+            framgrabber->setMouseChangeInterval(std::chrono::microseconds(100));
         }
     }
 
     std::cout << "Changing the cpature rate to 1 second" << std::endl;
-    framgrabber.setFrameChangeInterval(std::chrono::seconds(1));
+    framgrabber->setFrameChangeInterval(std::chrono::seconds(1));
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     std::cout << "Setting timer using chrono literals" << std::endl;
     // You can use chron's literals as well!
-    framgrabber.setFrameChangeInterval(10ms);
+    framgrabber->setFrameChangeInterval(10ms);
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     std::cout << "Testing recreating" << std::endl;
@@ -168,7 +168,7 @@ main()
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     std::cout << "Testing destroy" << std::endl;
-    framgrabber.destroy();
+    framgrabber = nullptr;
 
     std::cout << "Testing recreating" << std::endl;
     createframegrabber();

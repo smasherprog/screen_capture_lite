@@ -64,7 +64,7 @@ namespace SL
             return true;
         }
 
-        inline bool MonitorsChanged(const std::vector<Monitor>& startmonitors, const std::vector<Monitor>& nowmonitors) {
+        inline bool getMonitorsToWatch(const std::vector<Monitor>& startmonitors, const std::vector<Monitor>& nowmonitors) {
             if (startmonitors.size() != nowmonitors.size()) return true;
             for (size_t i = 0; i < startmonitors.size(); i++) {
                 if (startmonitors[i].Height != nowmonitors[i].Height ||
@@ -85,12 +85,12 @@ namespace SL
                 return false;
             }
             frameprocessor.ImageBufferSize = Width(monitor) * Height(monitor) * PixelStride;
-            if (data->CaptureDifMonitor) { // only need the old buffer if difs are needed. If no dif is needed, then the
+            if (data->OnFrameChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
                                           // image is always new
                 frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
                 frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             }
-            if ((data->CaptureEntireMonitor) && !frameprocessor.NewImageBuffer) {
+            if ((data->OnNewFrame) && !frameprocessor.NewImageBuffer) {
 
                 frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             }
@@ -99,7 +99,7 @@ namespace SL
                 auto timer = std::atomic_load(&data->Monitor_Capture_Timer);
                 timer->start();
                 auto monitors = GetMonitors();
-                if (isMonitorInsideBounds(monitors, monitor) && !MonitorsChanged(startmonitors, monitors)) {
+                if (isMonitorInsideBounds(monitors, monitor) && !getMonitorsToWatch(startmonitors, monitors)) {
                     ret = frameprocessor.ProcessFrame(monitors[Index(monitor)]);
                 }
                 else {
@@ -129,6 +129,8 @@ namespace SL
         }
 
         void RunCaptureMonitor(std::shared_ptr<Thread_Data> data, Monitor monitor);
+        void RunCaptureWindow(std::shared_ptr<Thread_Data> data);
+
         void RunCaptureMouse(std::shared_ptr<Thread_Data> data);
     }
 }

@@ -73,6 +73,10 @@ namespace SL {
                 TryCaptureMonitor<GDIFrameProcessor>(data, monitor);
             }
         }
+        void RunCaptureWindow(std::shared_ptr<Thread_Data> data) {
+            //need to switch to the input desktop for capturing...
+            if (!SwitchToInputDesktop(data)) return;
+        }
     }
 }
 

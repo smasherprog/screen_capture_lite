@@ -105,7 +105,7 @@ namespace SL
 
         inline void ExtractAndConvertToRGBA(const Image& img, unsigned char* dst, size_t dst_size)
         {
-      
+
             assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
             auto imgsrc = StartSrc(img);
             auto imgdist = dst;
@@ -192,67 +192,46 @@ namespace SL
         std::vector<Monitor> GetMonitors();
         bool isMonitorInsideBounds(const std::vector<Monitor>& monitors, const Monitor& monitor);
 
-        typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)>
-            CaptureCallback;
+        typedef std::function<void(const SL::Screen_Capture::Image& img)> WindowCaptureCallback;
+        typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
         typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
         typedef std::function<std::vector<Monitor>()> MonitorCallback;
+        typedef std::function<size_t()> WindowCallback;
 
-        class ScreenCaptureManagerImpl;
-        class ScreenCaptureManager
+        class IScreenCaptureManager
         {
-            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
-
-            void setFrameChangeInterval_(const std::shared_ptr<ITimer>& timer);
-            void setMouseChangeInterval_(const std::shared_ptr<ITimer>& timer);
-
         public:
-            ScreenCaptureManager(const std::shared_ptr<ScreenCaptureManagerImpl>& impl)
-                : Impl_(impl)
-            {
-            }
-            ScreenCaptureManager()
-            {
-            }
+            virtual ~IScreenCaptureManager() {}
 
             // Used by the library to determine the callback frequency
             template <class Rep, class Period>
             void setFrameChangeInterval(const std::chrono::duration<Rep, Period>& rel_time)
             {
-                setFrameChangeInterval_(std::make_shared<Timer<Rep, Period> >(rel_time));
+                setFrameChangeInterval(std::make_shared<Timer<Rep, Period> >(rel_time));
             }
             // Used by the library to determine the callback frequency
             template <class Rep, class Period>
             void setMouseChangeInterval(const std::chrono::duration<Rep, Period>& rel_time)
             {
-                setMouseChangeInterval_(std::make_shared<Timer<Rep, Period> >(rel_time));
+                setMouseChangeInterval(std::make_shared<Timer<Rep, Period> >(rel_time));
             }
+
+            virtual void setFrameChangeInterval(const std::shared_ptr<ITimer>& timer) = 0;
+            virtual void setMouseChangeInterval(const std::shared_ptr<ITimer>& timer) = 0;
 
             // Will pause all capturing
-            void pause();
+            virtual void pause() = 0;
             // Will return whether the library is paused
-            bool isPaused() const;
+            virtual bool isPaused() const = 0;
             // Will resume all capturing if paused, otherwise has no effect
-            void resume();
-
-            operator bool() const
-            {
-                return Impl_.operator bool();
-            }
-            // the library will stop processing frames and release all memory
-            void destroy()
-            {
-                Impl_.reset();
-            }
+            virtual void resume() = 0;
         };
+        class ScreenCaptureManagerImpl;
         class ScreenCaptureConfiguration
         {
             std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
-
         public:
-            ScreenCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl)
-                : Impl_(impl)
-            {
-            }
+            ScreenCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl): Impl_(impl){}
             // When a new frame is available the callback is invoked
             ScreenCaptureConfiguration onNewFrame(const CaptureCallback& cb);
             // When a change in a frame is detected, the callback is invoked
@@ -260,8 +239,24 @@ namespace SL
             // When a mouse image changes or the mouse changes position, the callback is invoked.
             ScreenCaptureConfiguration onMouseChanged(const MouseCallback& cb);
             // start capturing
-            ScreenCaptureManager start_capturing();
+            std::shared_ptr<IScreenCaptureManager> start_capturing();
         };
-        ScreenCaptureConfiguration CreateScreeCapture(const MonitorCallback& monitorstocapture);
+
+        class WindowCaptureConfiguration
+        {
+            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
+        public:
+            WindowCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
+            // When a new frame is available the callback is invoked
+            WindowCaptureConfiguration onNewFrame(const WindowCaptureCallback& cb);
+            // When a change in a frame is detected, the callback is invoked
+            WindowCaptureConfiguration onFrameChanged(const WindowCaptureCallback& cb);
+            // When a mouse image changes or the mouse changes position, the callback is invoked.
+            WindowCaptureConfiguration onMouseChanged(const MouseCallback& cb);
+            // start capturing
+            std::shared_ptr<IScreenCaptureManager> start_capturing();
+        };
+        ScreenCaptureConfiguration CreateCaptureConfiguration(const MonitorCallback& monitorstocapture);
+        WindowCaptureConfiguration CreateCaptureConfiguration(const WindowCallback& windowtocapture);
     }
 }

@@ -21,8 +21,6 @@ namespace SL {
         DUPL_RETURN GDIMouseProcessor::ProcessFrame()
         {
             auto Ret = DUPL_RETURN_SUCCESS;
-
-
             CURSORINFO cursorInfo;
             memset(&cursorInfo, 0, sizeof(cursorInfo));
             cursorInfo.cbSize = sizeof(cursorInfo);

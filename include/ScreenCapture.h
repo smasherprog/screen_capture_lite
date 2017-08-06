@@ -26,10 +26,12 @@ namespace SL
             int OffsetY = 0;
             char Name[128] = { 0 };
         };
+       
         struct Window {
             size_t Handle;
             int Height = 0;
             int Width = 0;
+            //Name will always be lower case. It is converted to lower case internally by the library for comparisons
             char Name[128] = { 0 };
         };
         struct ImageRect

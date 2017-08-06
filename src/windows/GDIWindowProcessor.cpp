@@ -25,6 +25,9 @@ namespace SL {
         }
 
 
+        //need to disable otherwise window appears not correct
+        // disable animate windows when minimizing and maximizing
+        //REG ADD "HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics" / v MinAnimate / t REG_SZ / d 0 / f >nul 2> & 1
 
         DUPL_RETURN GDIWindowProcessor::ProcessFrame(Window selectedwindow)
         {
@@ -43,7 +46,7 @@ namespace SL {
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
 
-            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
+            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY) == FALSE) {
                 //if the screen cannot be captured, return
                 SelectObject(CaptureDC.DC, originalBmp);
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue

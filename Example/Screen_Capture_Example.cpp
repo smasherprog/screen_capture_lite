@@ -50,7 +50,7 @@ void createframegrabber()
         auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
         auto size = RowStride(img) * Height(img);
 
-        //auto imgbuffer(std::make_unique<char[]>(size));
+        //auto imgbuffer(std::make_unique<unsigned char[]>(size));
         // you can extract the image as is in BGRA, or Convert
         // Extract(img, imgbuffer.get(), size);
        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
@@ -64,7 +64,7 @@ void createframegrabber()
         auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
 
         auto size = RowStride(img) * Height(img);
-        //auto imgbuffer(std::make_unique<char[]>(size));
+        //auto imgbuffer(std::make_unique<unsigned char[]>(size));
         // Extract(img, imgbuffer.get(), size);
        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
 
@@ -105,8 +105,19 @@ void createwindowgrabber()
     realcounter = 0;
     onNewFramecounter = 0;
     framgrabber = SL::Screen_Capture::CreateCaptureConfiguration([]() {
-
-        return SL::Screen_Capture::GetWindows("Screen_capture", SL::Screen_Capture::WindowStringMatch::CONTAINS);
+        auto tmp = SL::Screen_Capture::GetWindows("Screen_capture", SL::Screen_Capture::WindowStringMatch::CONTAINS);
+        //the get windows function might return multiple results so its best to make sure it is the right window.
+        decltype(tmp) filtereditems;
+        for (auto& a : tmp) {
+            std::string name = a.Name;
+            auto f = name.substr(0, 2);
+            auto tofind = std::string("c:");
+            if (f == tofind) {
+                filtereditems.push_back(a);
+            }
+            std::cout << a.Name << std::endl;
+        }
+        return filtereditems;
     })
 
         .onFrameChanged([&](const SL::Screen_Capture::Image& img) {
@@ -115,7 +126,7 @@ void createwindowgrabber()
         auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
         auto size = RowStride(img) * Height(img);
 
-        //auto imgbuffer(std::make_unique<char[]>(size));
+        //auto imgbuffer(std::make_unique<unsigned char[]>(size));
         // you can extract the image as is in BGRA, or Convert
         // Extract(img, imgbuffer.get(), size);
         // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
@@ -128,9 +139,9 @@ void createwindowgrabber()
         auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
 
         auto size = RowStride(img) * Height(img);
-        //auto imgbuffer(std::make_unique<char[]>(size));
+        //auto imgbuffer(std::make_unique<unsigned char[]>(size));
         // Extract(img, imgbuffer.get(), size);
-        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+       // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
 
         if (std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - onNewFramestart)
@@ -140,7 +151,7 @@ void createwindowgrabber()
             onNewFramestart = std::chrono::high_resolution_clock::now();
         }
         onNewFramecounter += 1;
-        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+       // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     })
         .onMouseChanged([&](const SL::Screen_Capture::Image* img, int x, int y) {
 
@@ -160,8 +171,7 @@ void createwindowgrabber()
     })
         .start_capturing();
 
-    framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));
-    framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
+    framgrabber->setFrameChangeInterval(std::chrono::seconds(100));
 }
 int
 main()

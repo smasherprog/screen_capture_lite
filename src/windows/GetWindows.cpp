@@ -19,21 +19,17 @@ namespace SL {
             GetWindowTextA(hwnd, buffer, sizeof(buffer));
             srch* s = (srch*)lParam;
             std::string name = buffer;
+            std::transform(name.begin(), name.end(), name.begin(), [](char c) {  return std::tolower(c, std::locale());  });//convert to lower
             bool found = false;
             if (s->searchby == WindowStringMatch::STARTSWITH) {
-                auto f = name.substr(s->Name.size());
-                std::transform(f.begin(), f.end(), f.begin(), [](char c) {  return std::tolower(c, std::locale());  });//convert to lower
+                auto f = name.substr(0, s->Name.size());
                 found = f == s->Name;
             }
             else if (s->searchby == WindowStringMatch::EXACT) {
-                auto f = name; 
-                std::transform(f.begin(), f.end(), f.begin(), [](char c) {  return std::tolower(c, std::locale());  });//convert to lower
-                found = f == s->Name;
+                found = name == s->Name;
             }
             else if (s->searchby == WindowStringMatch::CONTAINS) {
-                auto f = name;
-                std::transform(f.begin(), f.end(), f.begin(), [](char c) {  return std::tolower(c, std::locale());  });//convert to lower
-                found = f.find(s->Name) != std::string::npos;
+                found = name.find(s->Name) != std::string::npos;
             }
             if (found) {
                 Window w;

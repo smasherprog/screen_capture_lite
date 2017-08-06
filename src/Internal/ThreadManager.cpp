@@ -38,8 +38,18 @@ void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>&
     }
     else if (data->getWindowToWatch) {
 
-        m_ThreadHandles.resize(1 + (data->OnMouseChanged ? 1 : 0)); // add another thread for mouse capturing if needed
-        m_ThreadHandles[0] = std::thread(&SL::Screen_Capture::RunCaptureWindow, data);
+        auto framecapturting = data->OnWindowChanged || data->OnWindowNewFrame;
+        std::vector<Window> windows;
+        if (framecapturting) {
+            assert(data->getWindowToWatch);
+            windows = data->getWindowToWatch();
+        }
+
+        m_ThreadHandles.resize(windows.size() + (data->OnMouseChanged ? 1 : 0)); // add another thread for mouse capturing if needed
+
+        for (size_t i = 0; i < windows.size(); ++i) {
+            m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCaptureWindow, data, windows[i]);
+        }
     }
     if (data->OnMouseChanged) {
         m_ThreadHandles.back() = std::thread(&SL::Screen_Capture::RunCaptureMouse, data);

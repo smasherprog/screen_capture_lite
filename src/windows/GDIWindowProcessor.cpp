@@ -3,8 +3,8 @@
 namespace SL {
     namespace Screen_Capture {
 
-        DUPL_RETURN GDIWindowProcessor::Init(std::shared_ptr<Thread_Data> data) {
-            SelectedWindow = reinterpret_cast<HWND>(data->getWindowToWatch());
+        DUPL_RETURN GDIWindowProcessor::Init(std::shared_ptr<Thread_Data> data, Window selectedwindow) {
+            SelectedWindow = reinterpret_cast<HWND>(selectedwindow.Handle);
             auto Ret = DUPL_RETURN_SUCCESS;
 
             MonitorDC.DC = GetWindowDC(SelectedWindow);
@@ -23,10 +23,10 @@ namespace SL {
             Data = data;
             return Ret;
         }
-        //
-        // Process a given frame and its metadata
-        //
-        DUPL_RETURN GDIWindowProcessor::ProcessFrame()
+
+
+
+        DUPL_RETURN GDIWindowProcessor::ProcessFrame(Window selectedwindow)
         {
 
             auto Ret = DUPL_RETURN_SUCCESS;
@@ -36,7 +36,9 @@ namespace SL {
             ret.left = ret.top = 0;
             ret.bottom = r.bottom - r.top;
             ret.right = r.right - r.left;
-
+            if (selectedwindow.Height != ret.bottom || selectedwindow.Width != ret.right) {
+                return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
+            }
 
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
@@ -61,7 +63,7 @@ namespace SL {
                 bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride* ret.bottom;
                 GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
                 SelectObject(CaptureDC.DC, originalBmp);
-            //    ProcessMonitorCapture(*Data, *this, ret);
+                ProcessWindowCapture(*Data, *this, ret);
             }
 
             return Ret;

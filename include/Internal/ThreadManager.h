@@ -128,8 +128,51 @@ namespace SL
             return true;
         }
 
+        template <class T, class F> bool TryCaptureWindow(const F& data, Window& wnd)
+        {
+            T frameprocessor;
+            auto ret = frameprocessor.Init(data, wnd);
+            if (ret != DUPL_RETURN_SUCCESS) {
+                return false;
+            }
+
+            frameprocessor.ImageBufferSize = wnd.Width * wnd.Height * PixelStride;
+            if (data->OnWindowChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
+                                        // image is always new
+                frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
+                frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
+            }
+            if ((data->OnWindowNewFrame) && !frameprocessor.NewImageBuffer) {
+                frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
+            }
+            while (!data->TerminateThreadsEvent) {
+                // get a copy of the shared_ptr in a safe way
+                auto timer = std::atomic_load(&data->Monitor_Capture_Timer);
+                timer->start();
+                ret = frameprocessor.ProcessFrame(wnd);
+                if (ret != DUPL_RETURN_SUCCESS) {
+                    if (ret == DUPL_RETURN_ERROR_EXPECTED) {
+                        // The system is in a transition state so request the duplication be restarted
+                        data->ExpectedErrorEvent = true;
+                        std::cout << "Exiting Thread due to expected error " << std::endl;
+                    }
+                    else {
+                        // Unexpected error so exit the application
+                        data->UnexpectedErrorEvent = true;
+                        std::cout << "Exiting Thread due to Unexpected error " << std::endl;
+                    }
+                    return true;
+                }
+                timer->wait();
+                while (data->Paused) {
+                    std::this_thread::sleep_for(50ms);
+                }
+            }
+            return true;
+        }
+
         void RunCaptureMonitor(std::shared_ptr<Thread_Data> data, Monitor monitor);
-        void RunCaptureWindow(std::shared_ptr<Thread_Data> data);
+        void RunCaptureWindow(std::shared_ptr<Thread_Data> data, Window window);
 
         void RunCaptureMouse(std::shared_ptr<Thread_Data> data);
     }

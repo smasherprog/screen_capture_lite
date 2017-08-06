@@ -90,5 +90,37 @@ namespace SL {
             }
         }
 
+        template<class T>void ProcessWindowCapture(Thread_Data & data, T& base, ImageRect & imageract)
+        {
+            if (data.OnWindowNewFrame) {
+                auto wholeimg = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
+                data.OnWindowNewFrame(wholeimg);
+            }
+            if (data.OnWindowChanged) {
+                if (base.FirstRun) {
+                    //first time through, just send the whole image
+                    auto wholeimgfirst = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
+                    data.OnWindowChanged(wholeimgfirst);
+                    base.FirstRun = false;
+                }
+                else {
+                    //user wants difs, lets do it!
+                    auto newimg = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
+                    auto oldimg = Create(imageract, PixelStride, 0, base.OldImageBuffer.get());
+                    auto imgdifs = GetDifs(oldimg, newimg);
+
+                    for (auto& r : imgdifs) {
+                        auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
+                        auto startsrc = base.NewImageBuffer.get();
+                        startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
+
+                        auto difimg = Create(r, PixelStride, padding, startsrc);
+                        data.OnWindowChanged(difimg);
+                    }
+                }
+                std::swap(base.NewImageBuffer, base.OldImageBuffer);
+            }
+        }
+
     }
 }

@@ -8,6 +8,7 @@ endif()
 
 if(WIN32)
     set(SCREEN_CAPTURE_PLATFORM_SRC     
+		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GetWindows.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GetMonitors.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/DXFrameProcessor.h
 		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/DXFrameProcessor.cpp

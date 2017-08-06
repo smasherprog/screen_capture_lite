@@ -26,7 +26,12 @@ namespace SL
             int OffsetY = 0;
             char Name[128] = { 0 };
         };
-
+        struct Window {
+            size_t Handle;
+            int Height = 0;
+            int Width = 0;
+            char Name[128] = { 0 };
+        };
         struct ImageRect
         {
             int left = 0;
@@ -188,15 +193,23 @@ namespace SL
                 }
             }
         };
+        //string comparisons are all case insensitive
 
+        enum WindowStringMatch {
+            EXACT,
+            STARTSWITH,
+            CONTAINS
+        };
         std::vector<Monitor> GetMonitors();
+        std::vector<Window> GetWindows(const std::string& name, WindowStringMatch searchby);
+
         bool isMonitorInsideBounds(const std::vector<Monitor>& monitors, const Monitor& monitor);
 
         typedef std::function<void(const SL::Screen_Capture::Image& img)> WindowCaptureCallback;
         typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
         typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
         typedef std::function<std::vector<Monitor>()> MonitorCallback;
-        typedef std::function<size_t()> WindowCallback;
+        typedef std::function<std::vector<Window>()> WindowCallback;
 
         class IScreenCaptureManager
         {
@@ -231,7 +244,7 @@ namespace SL
         {
             std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
         public:
-            ScreenCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl): Impl_(impl){}
+            ScreenCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
             // When a new frame is available the callback is invoked
             ScreenCaptureConfiguration onNewFrame(const CaptureCallback& cb);
             // When a change in a frame is detected, the callback is invoked

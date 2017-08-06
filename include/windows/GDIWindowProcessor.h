@@ -11,11 +11,12 @@ namespace SL {
             HDCWrapper MonitorDC;
             HDCWrapper CaptureDC;
             HBITMAPWrapper CaptureBMP;
+            Window Window_;
             HWND SelectedWindow;
             std::shared_ptr<Thread_Data> Data;
         public:
-            DUPL_RETURN Init(std::shared_ptr<Thread_Data> data);
-            DUPL_RETURN ProcessFrame();
+            DUPL_RETURN Init(std::shared_ptr<Thread_Data> data, Window selectedwindow);
+            DUPL_RETURN ProcessFrame(Window selectedwindow);
 
         };
     }

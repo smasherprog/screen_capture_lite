@@ -2,6 +2,7 @@
 #include "DXFrameProcessor.h"
 #include "GDIFrameProcessor.h"
 #include "GDIMouseProcessor.h"
+#include "GDIWindowProcessor.h"
 #include "ThreadManager.h"
 
 #define NOMINMAX
@@ -73,9 +74,16 @@ namespace SL {
                 TryCaptureMonitor<GDIFrameProcessor>(data, monitor);
             }
         }
-        void RunCaptureWindow(std::shared_ptr<Thread_Data> data) {
+        void RunCaptureWindow(std::shared_ptr<Thread_Data> data, Window wnd) {
             //need to switch to the input desktop for capturing...
             if (!SwitchToInputDesktop(data)) return;
+            auto windowhandle = reinterpret_cast<HWND>(wnd.Handle);
+            RECT r;
+            GetWindowRect(windowhandle, &r);
+
+            wnd.Height = r.bottom - r.top;
+            wnd.Width = r.right - r.left;
+            TryCaptureWindow<GDIWindowProcessor>(data, wnd);
         }
     }
 }

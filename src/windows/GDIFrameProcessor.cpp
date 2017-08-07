@@ -19,6 +19,9 @@ namespace SL {
             return Ret;
         }
         DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<Thread_Data> data, const Window& selectedwindow) {
+            //this is needed to fix AERO BitBlt capturing issues 
+            system("REG ADD \"HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics\" /v MinAnimate /t REG_SZ /d 0 /f");
+
             SelectedWindow = reinterpret_cast<HWND>(selectedwindow.Handle);
             auto Ret = DUPL_RETURN_SUCCESS;
 
@@ -76,10 +79,6 @@ namespace SL {
 
             return Ret;
         }
-
-        //need to disable otherwise window appears not correct
-        // disable animate windows when minimizing and maximizing
-        //REG ADD "HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics" / v MinAnimate / t REG_SZ / d 0 / f >nul 2> & 1
 
         DUPL_RETURN GDIFrameProcessor::ProcessFrame(const Window& selectedwindow)
         {

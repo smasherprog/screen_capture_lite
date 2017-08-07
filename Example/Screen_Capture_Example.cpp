@@ -44,7 +44,7 @@ void createframegrabber()
     })->onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
         // std::cout << "Difference detected!  " << img.Bounds << std::endl;
         auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string(" D") + std::string(".jpg");
+        auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
         auto size = RowStride(img) * Height(img);
 
         //auto imgbuffer(std::make_unique<unsigned char[]>(size));
@@ -54,7 +54,7 @@ void createframegrabber()
         const SL::Screen_Capture::Monitor& monitor) {
 
         auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string(" E") + std::string(".jpg");
+        auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
 
         auto size = RowStride(img) * Height(img);
         //auto imgbuffer(std::make_unique<unsigned char[]>(size));
@@ -114,9 +114,9 @@ void createwindowgrabber()
         auto s = std::to_string(r) + std::string("WINNEW_") + std::string(".jpg");
 
         auto size = RowStride(img) * Height(img);
-        //auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+        auto imgbuffer(std::make_unique<unsigned char[]>(size));
+        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >= 1000) {
             std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
             onNewFramecounter = 0;
@@ -143,7 +143,7 @@ void createwindowgrabber()
 
 }
 int main()
-{
+{ 
     std::cout << "Starting Capture Demo/Test" << std::endl;
     std::cout << "Testing captured monitor bounds check" << std::endl;
     auto goodmonitors = SL::Screen_Capture::GetMonitors();

@@ -93,9 +93,7 @@ namespace SL {
             ImageRect ret = { 0 }; 
             ret.bottom = rect.bottom - rect.top;
             ret.right = rect.right - rect.left;
-            if (selectedwindow.Height != ret.bottom || selectedwindow.Width != ret.right) {
-                return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
-            }
+    
 
             RECT frame = { 0 };
             RECT border = { 0 };
@@ -106,8 +104,12 @@ namespace SL {
                 border.right = rect.right - frame.right;
                 border.bottom = rect.bottom - frame.bottom;
             }
-            ret.bottom -= border.bottom;
-            ret.right -= border.right;
+            ret.bottom -= border.bottom + border.top;
+            ret.right -= border.right + border.left;
+
+            if (selectedwindow.Height != ret.bottom || selectedwindow.Width != ret.right) {
+                return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
+            }
 
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);

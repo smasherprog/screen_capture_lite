@@ -24,7 +24,7 @@ if(WIN32)
        ${CMAKE_CURRENT_SOURCE_DIR}/../include/windows
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows
     )
-	
+	set(SCREEN_CAPTURE_PLATFORM_LIBS Dwmapi)
 
 elseif(APPLE)
 	find_library(corefoundation_lib CoreFoundation)

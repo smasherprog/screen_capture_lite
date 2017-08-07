@@ -1,4 +1,5 @@
 #include "GDIFrameProcessor.h"
+#include <Dwmapi.h>
 
 namespace SL {
     namespace Screen_Capture {
@@ -20,8 +21,11 @@ namespace SL {
         }
         DUPL_RETURN GDIFrameProcessor::Init(std::shared_ptr<Thread_Data> data, const Window& selectedwindow) {
             //this is needed to fix AERO BitBlt capturing issues 
-            system("REG ADD \"HKEY_CURRENT_USER\\Control Panel\\Desktop\\WindowMetrics\" /v MinAnimate /t REG_SZ /d 0 /f");
-
+            ANIMATIONINFO str;
+            str.cbSize = sizeof(str);
+            str.iMinAnimate = 0;
+            SystemParametersInfo(SPI_SETANIMATION, sizeof(str), (void*)&str, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+       
             SelectedWindow = reinterpret_cast<HWND>(selectedwindow.Handle);
             auto Ret = DUPL_RETURN_SUCCESS;
 
@@ -43,7 +47,7 @@ namespace SL {
         }
         DUPL_RETURN GDIFrameProcessor::ProcessFrame(const Monitor& currentmonitorinfo)
         {
-            
+
             auto Ret = DUPL_RETURN_SUCCESS;
 
             ImageRect ret;
@@ -84,20 +88,31 @@ namespace SL {
         {
 
             auto Ret = DUPL_RETURN_SUCCESS;
-            RECT r;
-            GetWindowRect(SelectedWindow, &r);
-            ImageRect ret;
-            ret.left = ret.top = 0;
-            ret.bottom = r.bottom - r.top;
-            ret.right = r.right - r.left;
+            RECT rect = { 0 };
+            GetWindowRect(SelectedWindow, &rect);
+            ImageRect ret = { 0 }; 
+            ret.bottom = rect.bottom - rect.top;
+            ret.right = rect.right - rect.left;
             if (selectedwindow.Height != ret.bottom || selectedwindow.Width != ret.right) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
             }
 
+            RECT frame = { 0 };
+            RECT border = { 0 };
+            if (SUCCEEDED(DwmGetWindowAttribute(SelectedWindow, DWMWA_EXTENDED_FRAME_BOUNDS, &frame, sizeof(frame)))) {
+        
+                border.left = frame.left - rect.left;
+                border.top = frame.top - rect.top;
+                border.right = rect.right - frame.right;
+                border.bottom = rect.bottom - frame.bottom;
+            }
+            ret.bottom -= border.bottom;
+            ret.right -= border.right;
+
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
 
-            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY) == FALSE) {
+            if (BitBlt(CaptureDC.DC, -border.left, -border.top, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY) == FALSE) {
                 //if the screen cannot be captured, return
                 SelectObject(CaptureDC.DC, originalBmp);
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
@@ -117,7 +132,7 @@ namespace SL {
                 bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride* ret.bottom;
                 GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
                 SelectObject(CaptureDC.DC, originalBmp);
-                ProcessCapture(Data->WindowCaptureData,  *this, selectedwindow, ret);
+                ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, ret);
             }
 
             return Ret;

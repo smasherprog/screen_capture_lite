@@ -15,8 +15,6 @@ if(WIN32)
 		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/GDIHelpers.h
 		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/GDIFrameProcessor.h
 		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GDIFrameProcessor.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/GDIWindowProcessor.h
-		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GDIWindowProcessor.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/../include/windows/GDIMouseProcessor.h
 		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/GDIMouseProcessor.cpp
 		${CMAKE_CURRENT_SOURCE_DIR}/../src/windows/ThreadRunner.cpp
@@ -26,11 +24,12 @@ if(WIN32)
        ${CMAKE_CURRENT_SOURCE_DIR}/../include/windows
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/windows
     )
+	
 
 elseif(APPLE)
-find_library(corefoundation_lib CoreFoundation)
-find_library(cocoa_lib Cocoa)
-set(SCREEN_CAPTURE_PLATFORM_LIBS ${corefoundation_lib} ${cocoa_lib})
+	find_library(corefoundation_lib CoreFoundation)
+	find_library(cocoa_lib Cocoa)
+	set(SCREEN_CAPTURE_PLATFORM_LIBS ${corefoundation_lib} ${cocoa_lib})
 
     set(SCREEN_CAPTURE_PLATFORM_SRC
        ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/NSMouseCapture.h

@@ -13,7 +13,10 @@ namespace SL
 {
     namespace Screen_Capture
     {
-
+        struct Point {
+            int x;
+            int y;
+        };
         struct Monitor
         {
             int Id = INT32_MAX;
@@ -26,7 +29,7 @@ namespace SL
             int OffsetY = 0;
             char Name[128] = { 0 };
         };
-       
+
         struct Window {
             size_t Handle;
             int Height = 0;
@@ -207,9 +210,13 @@ namespace SL
 
         bool isMonitorInsideBounds(const std::vector<Monitor>& monitors, const Monitor& monitor);
 
-        typedef std::function<void(const SL::Screen_Capture::Image& img)> WindowCaptureCallback;
-        typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)> CaptureCallback;
-        typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
+        typedef std::function<void(const SL::Screen_Capture::Image& img, const Window& window)> WindowCaptureCallback;
+        typedef std::function<void(const SL::Screen_Capture::Image& img, const Monitor& monitor)> ScreenCaptureCallback;
+
+        typedef std::function<void(const SL::Screen_Capture::Image* img, const Point& point)> ScreenMouseCallback;
+        typedef std::function<void(const SL::Screen_Capture::Image* img, const Point& point, const Window& window)> WindowMouseCallback;
+
+
         typedef std::function<std::vector<Monitor>()> MonitorCallback;
         typedef std::function<std::vector<Window>()> WindowCallback;
 
@@ -241,37 +248,24 @@ namespace SL
             // Will resume all capturing if paused, otherwise has no effect
             virtual void resume() = 0;
         };
-        class ScreenCaptureManagerImpl;
-        class ScreenCaptureConfiguration
+
+        template<typename CAPTURECALLBACK, typename MOUSECALLBACK> class ICaptureConfiguration
         {
-            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
         public:
-            ScreenCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
+            virtual ~ICaptureConfiguration() {}
             // When a new frame is available the callback is invoked
-            ScreenCaptureConfiguration onNewFrame(const CaptureCallback& cb);
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK, MOUSECALLBACK>> onNewFrame(const CAPTURECALLBACK& cb) = 0;
             // When a change in a frame is detected, the callback is invoked
-            ScreenCaptureConfiguration onFrameChanged(const CaptureCallback& cb);
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK, MOUSECALLBACK>> onFrameChanged(const CAPTURECALLBACK& cb) = 0;
             // When a mouse image changes or the mouse changes position, the callback is invoked.
-            ScreenCaptureConfiguration onMouseChanged(const MouseCallback& cb);
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK, MOUSECALLBACK>> onMouseChanged(const MOUSECALLBACK& cb) = 0;
             // start capturing
-            std::shared_ptr<IScreenCaptureManager> start_capturing();
+            virtual std::shared_ptr<IScreenCaptureManager> start_capturing() = 0;
         };
 
-        class WindowCaptureConfiguration
-        {
-            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
-        public:
-            WindowCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
-            // When a new frame is available the callback is invoked
-            WindowCaptureConfiguration onNewFrame(const WindowCaptureCallback& cb);
-            // When a change in a frame is detected, the callback is invoked
-            WindowCaptureConfiguration onFrameChanged(const WindowCaptureCallback& cb);
-            // When a mouse image changes or the mouse changes position, the callback is invoked.
-            WindowCaptureConfiguration onMouseChanged(const MouseCallback& cb);
-            // start capturing
-            std::shared_ptr<IScreenCaptureManager> start_capturing();
-        };
-        ScreenCaptureConfiguration CreateCaptureConfiguration(const MonitorCallback& monitorstocapture);
-        WindowCaptureConfiguration CreateCaptureConfiguration(const WindowCallback& windowtocapture);
+        //the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want to be captured
+        std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> CreateCaptureConfiguration(const MonitorCallback& monitorstocapture);
+        //the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to be captured
+        std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> CreateCaptureConfiguration(const WindowCallback& windowstocapture);
     }
 }

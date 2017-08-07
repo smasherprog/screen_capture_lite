@@ -23,12 +23,12 @@ namespace SL {
                 if (Ret == DUPL_RETURN_ERROR_EXPECTED)
                 {
                     // The system is in a transition state so request the duplication be restarted
-                    TData->ExpectedErrorEvent = true;
+                    TData->CommonData_.ExpectedErrorEvent = true;
                 }
                 else
                 {
                     // Unexpected error so exit the application
-                    TData->UnexpectedErrorEvent = true;
+                    TData->CommonData_.UnexpectedErrorEvent = true;
                 }
             }
         }
@@ -38,7 +38,7 @@ namespace SL {
             if (!CurrentDesktop)
             {
                 // We do not have access to the desktop so request a retry
-                data->ExpectedErrorEvent = true;
+                data->CommonData_.ExpectedErrorEvent = true;
                 ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
                 return false;
             }
@@ -50,7 +50,7 @@ namespace SL {
             if (!DesktopAttached)
             {
                 // We do not have access to the desktop so request a retry
-                data->ExpectedErrorEvent = true;
+                data->CommonData_.ExpectedErrorEvent = true;
                 ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
                 return false;
             }
@@ -74,16 +74,15 @@ namespace SL {
                 TryCaptureMonitor<GDIFrameProcessor>(data, monitor);
             }
         }
+
         void RunCaptureWindow(std::shared_ptr<Thread_Data> data, Window wnd) {
             //need to switch to the input desktop for capturing...
             if (!SwitchToInputDesktop(data)) return;
-            auto windowhandle = reinterpret_cast<HWND>(wnd.Handle);
-            RECT r;
-            GetWindowRect(windowhandle, &r);
-
-            wnd.Height = r.bottom - r.top;
-            wnd.Width = r.right - r.left;
-            TryCaptureWindow<GDIWindowProcessor>(data, wnd);
+            TryCaptureWindow<GDIFrameProcessor>(data, wnd);
+        }
+        void RunCaptureMouse(std::shared_ptr<Thread_Data> data, Window wnd) {
+            if (!SwitchToInputDesktop(data)) return;
+            TryCaptureMouse<GDIMouseProcessor>(data, wnd);
         }
     }
 }

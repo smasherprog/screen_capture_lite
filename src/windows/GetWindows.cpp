@@ -38,6 +38,7 @@ namespace SL {
                 GetWindowRect(hwnd, &r);
                 w.Height = r.bottom - r.top;
                 w.Width = r.right - r.left;
+
                 memcpy(w.Name, name.c_str(), name.size() + 1);
                 s->Found.push_back(w);
             }

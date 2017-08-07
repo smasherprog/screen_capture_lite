@@ -7,24 +7,15 @@
 namespace SL {
     namespace Screen_Capture {
 
-        struct Thread_Data {
-            //min interval between frames that are captured
-            std::shared_ptr<ITimer> Monitor_Capture_Timer;
-            //set this if you want to capture the entire monitor each interval
-            CaptureCallback OnNewFrame;
-            //set this if you want to receive difs each interval on what has changed
-            CaptureCallback OnFrameChanged;
-            //set this for new frames on a window
-            WindowCaptureCallback OnWindowNewFrame;
-            //set this if you want to receive difs each interval on what has changed
-            WindowCaptureCallback OnWindowChanged;
-            //min interval between mouse captures
-            std::shared_ptr<ITimer> Mouse_Capture_Timer;
-            //the function to be called on each mouse interval. If a the mouse image has changed, img will not be null, otherwise, the only change is new mouse coords
-            MouseCallback OnMouseChanged;
-            //get monitors to watch
-            MonitorCallback getMonitorsToWatch;    
-            WindowCallback getWindowToWatch;
+        template<typename F, typename M, typename W>struct CaptureData {
+            std::shared_ptr<ITimer> FrameTimer;
+            F OnNewFrame;
+            F OnFrameChanged;
+            std::shared_ptr<ITimer> MouseTimer;
+            M OnMouseChanged;
+            W getThingsToWatch;
+        };
+        struct CommonData {
             // Used to indicate abnormal error condition
             std::atomic<bool> UnexpectedErrorEvent;
             // Used to indicate a transition event occurred e.g. PnpStop, PnpStart, mode change, TDR, desktop switch and the application needs to recreate the duplication interface
@@ -33,8 +24,15 @@ namespace SL {
             std::atomic<bool> TerminateThreadsEvent;
             std::atomic<bool> Paused;
         };
+        struct Thread_Data {
 
-       
+            CaptureData<ScreenCaptureCallback, ScreenMouseCallback, MonitorCallback> ScreenCaptureData;
+            CaptureData<WindowCaptureCallback, WindowMouseCallback, WindowCallback> WindowCaptureData;
+            CommonData CommonData_;
+
+        };
+
+
         class BaseFrameProcessor {
         public:
             std::shared_ptr<Thread_Data> Data;
@@ -58,7 +56,7 @@ namespace SL {
 
         std::vector<ImageRect> GetDifs(const Image & oldimg, const Image & newimg);
 
-        template<class T>void ProcessMonitorCapture(Thread_Data & data, T& base, const Monitor& mointor, ImageRect & imageract)
+        template<class F, class T, class C>void ProcessCapture(const F& data, T& base, const C& mointor, ImageRect & imageract)
         {
             if (data.OnNewFrame) {
                 auto wholeimg = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
@@ -90,37 +88,6 @@ namespace SL {
             }
         }
 
-        template<class T>void ProcessWindowCapture(Thread_Data & data, T& base, ImageRect & imageract)
-        {
-            if (data.OnWindowNewFrame) {
-                auto wholeimg = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
-                data.OnWindowNewFrame(wholeimg);
-            }
-            if (data.OnWindowChanged) {
-                if (base.FirstRun) {
-                    //first time through, just send the whole image
-                    auto wholeimgfirst = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
-                    data.OnWindowChanged(wholeimgfirst);
-                    base.FirstRun = false;
-                }
-                else {
-                    //user wants difs, lets do it!
-                    auto newimg = Create(imageract, PixelStride, 0, base.NewImageBuffer.get());
-                    auto oldimg = Create(imageract, PixelStride, 0, base.OldImageBuffer.get());
-                    auto imgdifs = GetDifs(oldimg, newimg);
-
-                    for (auto& r : imgdifs) {
-                        auto padding = (r.left *PixelStride) + ((Width(newimg) - r.right)*PixelStride);
-                        auto startsrc = base.NewImageBuffer.get();
-                        startsrc += (r.left *PixelStride) + (r.top *PixelStride *Width(newimg));
-
-                        auto difimg = Create(r, PixelStride, padding, startsrc);
-                        data.OnWindowChanged(difimg);
-                    }
-                }
-                std::swap(base.NewImageBuffer, base.OldImageBuffer);
-            }
-        }
 
     }
 }

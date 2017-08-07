@@ -51,34 +51,33 @@ namespace SL
             ScreenCaptureManagerImpl()
             {
                 Thread_Data_ = std::make_shared<Thread_Data>();
-                Thread_Data_->Paused = false;
-                Thread_Data_->Monitor_Capture_Timer = std::make_shared<Timer<long long, std::milli> >(100ms);
-                Thread_Data_->Mouse_Capture_Timer = std::make_shared<Timer<long long, std::milli> >(50ms);
+                Thread_Data_->CommonData_.Paused = false;
+                Thread_Data_->ScreenCaptureData.FrameTimer = std::make_shared<Timer<long long, std::milli> >(100ms);
+                Thread_Data_->ScreenCaptureData.MouseTimer = std::make_shared<Timer<long long, std::milli> >(50ms);
+                Thread_Data_->WindowCaptureData.FrameTimer = std::make_shared<Timer<long long, std::milli> >(100ms);
+                Thread_Data_->WindowCaptureData.MouseTimer = std::make_shared<Timer<long long, std::milli> >(50ms);
             }
             ~ScreenCaptureManagerImpl()
             {
-                Thread_Data_->TerminateThreadsEvent = true; // set the exit flag for the threads
-                Thread_Data_->Paused = false;               // unpaused the threads to let everything exit
+                Thread_Data_->CommonData_.TerminateThreadsEvent = true; // set the exit flag for the threads
+                Thread_Data_->CommonData_.Paused = false;               // unpaused the threads to let everything exit
                 if (Thread_.joinable()) {
                     Thread_.join();
                 }
             }
             void start()
             {
-
-                // users must set at least one callback before starting
-                assert((Thread_Data_->OnNewFrame || Thread_Data_->OnFrameChanged || Thread_Data_->OnMouseChanged) && (Thread_Data_->getMonitorsToWatch || Thread_Data_->getWindowToWatch));
                 Thread_ = std::thread([&]() {
                     ThreadManager ThreadMgr;
 
                     ThreadMgr.Init(Thread_Data_);
 
-                    while (!Thread_Data_->TerminateThreadsEvent) {
+                    while (!Thread_Data_->CommonData_.TerminateThreadsEvent) {
 
-                        if (Thread_Data_->ExpectedErrorEvent) {
-                            Thread_Data_->TerminateThreadsEvent = true;
+                        if (Thread_Data_->CommonData_.ExpectedErrorEvent) {
+                            Thread_Data_->CommonData_.TerminateThreadsEvent = true;
                             ThreadMgr.Join();
-                            Thread_Data_->ExpectedErrorEvent = Thread_Data_->UnexpectedErrorEvent = Thread_Data_->TerminateThreadsEvent = false;
+                            Thread_Data_->CommonData_.ExpectedErrorEvent = Thread_Data_->CommonData_.UnexpectedErrorEvent = Thread_Data_->CommonData_.TerminateThreadsEvent = false;
                             // Clean up
                             std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep for 1 second since an error occcured
 
@@ -86,7 +85,7 @@ namespace SL
                         }
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     }
-                    Thread_Data_->TerminateThreadsEvent = true;
+                    Thread_Data_->CommonData_.TerminateThreadsEvent = true;
                     ThreadMgr.Join();
                 });
             }
@@ -100,81 +99,92 @@ namespace SL
             virtual ~ScreenCaptureManager() {}
 
             void setFrameChangeInterval(const std::shared_ptr<ITimer>& timer) {
-                std::atomic_store(&Impl_->Thread_Data_->Monitor_Capture_Timer, timer);
+                std::atomic_store(&Impl_->Thread_Data_->ScreenCaptureData.FrameTimer, timer);
+                std::atomic_store(&Impl_->Thread_Data_->WindowCaptureData.FrameTimer, timer);
             }
             void setMouseChangeInterval(const std::shared_ptr<ITimer>& timer) {
-                std::atomic_store(&Impl_->Thread_Data_->Mouse_Capture_Timer, timer);
+                std::atomic_store(&Impl_->Thread_Data_->ScreenCaptureData.MouseTimer, timer);
+                std::atomic_store(&Impl_->Thread_Data_->WindowCaptureData.MouseTimer, timer);
             }
             virtual  void pause() {
-                Impl_->Thread_Data_->Paused = true;
+                Impl_->Thread_Data_->CommonData_.Paused = true;
             }
             virtual bool isPaused() const {
-                return Impl_->Thread_Data_->Paused;
+                return Impl_->Thread_Data_->CommonData_.Paused;
             }
             virtual void resume() {
-                Impl_->Thread_Data_->Paused = false;
+                Impl_->Thread_Data_->CommonData_.Paused = false;
             }
         };
 
+        class ScreenCaptureConfiguration : public ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>
+        {
+            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
+        public:
+            ScreenCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
 
-        std::shared_ptr<IScreenCaptureManager> WindowCaptureConfiguration::start_capturing()
+            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> onNewFrame(const ScreenCaptureCallback& cb) override {
+                assert(!Impl_->Thread_Data_->ScreenCaptureData.OnNewFrame);
+                Impl_->Thread_Data_->ScreenCaptureData.OnNewFrame = cb;
+                return std::make_shared<ScreenCaptureConfiguration>(Impl_);
+            }
+            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> onFrameChanged(const ScreenCaptureCallback& cb) override {
+                assert(!Impl_->Thread_Data_->ScreenCaptureData.OnFrameChanged);
+                Impl_->Thread_Data_->ScreenCaptureData.OnFrameChanged = cb;
+                return std::make_shared<ScreenCaptureConfiguration>(Impl_);
+            }
+            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> onMouseChanged(const ScreenMouseCallback& cb)override {
+                assert(!Impl_->Thread_Data_->ScreenCaptureData.OnMouseChanged);
+                Impl_->Thread_Data_->ScreenCaptureData.OnMouseChanged = cb;
+                return std::make_shared<ScreenCaptureConfiguration>(Impl_);
+            }
+            virtual std::shared_ptr<IScreenCaptureManager> start_capturing() override {
+                assert(Impl_->Thread_Data_->ScreenCaptureData.OnMouseChanged || Impl_->Thread_Data_->ScreenCaptureData.OnFrameChanged || Impl_->Thread_Data_->ScreenCaptureData.OnNewFrame);
+                Impl_->start();
+                return std::make_shared<ScreenCaptureManager>(Impl_);
+            }
+        };
+
+        class WindowCaptureConfiguration : public ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>
         {
-            Impl_->start();
-            return std::make_shared<ScreenCaptureManager>(Impl_);
-        }
-        WindowCaptureConfiguration WindowCaptureConfiguration::onNewFrame(const WindowCaptureCallback& cb)
-        {
-            assert(!Impl_->Thread_Data_->OnWindowNewFrame);
-            Impl_->Thread_Data_->OnWindowNewFrame = cb;
-            return WindowCaptureConfiguration(Impl_);
-        }
-        WindowCaptureConfiguration WindowCaptureConfiguration::onFrameChanged(const WindowCaptureCallback& cb)
-        {
-            assert(!Impl_->Thread_Data_->OnWindowChanged);
-            Impl_->Thread_Data_->OnWindowChanged = cb;
-            return WindowCaptureConfiguration(Impl_);
-        }
-        WindowCaptureConfiguration WindowCaptureConfiguration::onMouseChanged(const MouseCallback& cb)
-        {
-            assert(!Impl_->Thread_Data_->OnMouseChanged);
-            Impl_->Thread_Data_->OnMouseChanged = cb;
-            return WindowCaptureConfiguration(Impl_);
-        }
-        std::shared_ptr<IScreenCaptureManager> ScreenCaptureConfiguration::start_capturing()
-        {
-            Impl_->start();
-            return std::make_shared<ScreenCaptureManager>(Impl_);
-        }
-        ScreenCaptureConfiguration ScreenCaptureConfiguration::onNewFrame(const CaptureCallback& cb)
-        {
-            assert(!Impl_->Thread_Data_->OnNewFrame);
-            Impl_->Thread_Data_->OnNewFrame = cb;
-            return ScreenCaptureConfiguration(Impl_);
-        }
-        ScreenCaptureConfiguration ScreenCaptureConfiguration::onFrameChanged(const CaptureCallback& cb)
-        {
-            assert(!Impl_->Thread_Data_->OnFrameChanged);
-            Impl_->Thread_Data_->OnFrameChanged = cb;
-            return ScreenCaptureConfiguration(Impl_);
-        }
-        ScreenCaptureConfiguration ScreenCaptureConfiguration::onMouseChanged(const MouseCallback& cb)
-        {
-            assert(!Impl_->Thread_Data_->OnMouseChanged);
-            Impl_->Thread_Data_->OnMouseChanged = cb;
-            return ScreenCaptureConfiguration(Impl_);
-        }
-        ScreenCaptureConfiguration CreateCaptureConfiguration(const MonitorCallback& monitorstocapture)
+            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
+        public:
+            WindowCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
+
+            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> onNewFrame(const WindowCaptureCallback& cb) override {
+                assert(!Impl_->Thread_Data_->WindowCaptureData.OnNewFrame);
+                Impl_->Thread_Data_->WindowCaptureData.OnNewFrame = cb;
+                return std::make_shared<WindowCaptureConfiguration>(Impl_);
+            }
+            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> onFrameChanged(const WindowCaptureCallback& cb) override {
+                assert(!Impl_->Thread_Data_->WindowCaptureData.OnFrameChanged);
+                Impl_->Thread_Data_->WindowCaptureData.OnFrameChanged = cb;
+                return std::make_shared<WindowCaptureConfiguration>(Impl_);
+            }
+            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> onMouseChanged(const WindowMouseCallback& cb)override {
+
+                assert(!Impl_->Thread_Data_->WindowCaptureData.OnMouseChanged);
+                Impl_->Thread_Data_->WindowCaptureData.OnMouseChanged = cb;
+                return std::make_shared<WindowCaptureConfiguration>(Impl_);
+            }
+            virtual std::shared_ptr<IScreenCaptureManager> start_capturing() override {
+                assert(Impl_->Thread_Data_->WindowCaptureData.OnMouseChanged || Impl_->Thread_Data_->WindowCaptureData.OnFrameChanged || Impl_->Thread_Data_->WindowCaptureData.OnNewFrame);
+                Impl_->start();
+                return std::make_shared<ScreenCaptureManager>(Impl_);
+            }
+        };
+        std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> CreateCaptureConfiguration(const MonitorCallback& monitorstocapture)
         {
             auto impl = std::make_shared<ScreenCaptureManagerImpl>();
-            impl->Thread_Data_->getMonitorsToWatch = monitorstocapture;
-            return ScreenCaptureConfiguration(impl);
+            impl->Thread_Data_->ScreenCaptureData.getThingsToWatch = monitorstocapture;
+            return std::make_shared<ScreenCaptureConfiguration>(impl);
         }
 
-        WindowCaptureConfiguration CreateCaptureConfiguration(const WindowCallback& windowtocapture)
+        std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> CreateCaptureConfiguration(const WindowCallback& windowtocapture)
         {
             auto impl = std::make_shared<ScreenCaptureManagerImpl>();
-            impl->Thread_Data_->getWindowToWatch = windowtocapture;
-            return WindowCaptureConfiguration(impl);
+            impl->Thread_Data_->WindowCaptureData.getThingsToWatch = windowtocapture;
+            return std::make_shared<WindowCaptureConfiguration>(impl);
         }
     }
 }

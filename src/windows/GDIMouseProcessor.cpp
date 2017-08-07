@@ -15,10 +15,12 @@ namespace SL {
             Data = data;
             return Ret;
         }
-        //
-        // Process a given frame and its metadata
-        //
-        DUPL_RETURN GDIMouseProcessor::ProcessFrame()
+        DUPL_RETURN GDIMouseProcessor::Init(std::shared_ptr<Thread_Data> data, const Window& selectedwindow) {
+            SelectedWindow = reinterpret_cast<HWND>(selectedwindow.Handle);
+            return Init(data);
+        }
+
+        DUPL_RETURN GDIMouseProcessor::Process(const Window* wnd)
         {
             auto Ret = DUPL_RETURN_SUCCESS;
             CURSORINFO cursorInfo;
@@ -87,23 +89,52 @@ namespace SL {
             //		}
             //	}
             //}
+            int lastx = static_cast<int>(cursorInfo.ptScreenPos.x - ii.xHotspot);
+            int lasty = static_cast<int>(cursorInfo.ptScreenPos.y - ii.yHotspot);
 
-            if (Data->OnMouseChanged) {
-                int lastx = static_cast<int>(cursorInfo.ptScreenPos.x - ii.xHotspot);
-                int lasty = static_cast<int>(cursorInfo.ptScreenPos.y - ii.yHotspot);
+            if (wnd == nullptr && Data->ScreenCaptureData.OnMouseChanged) {
                 //if the mouse image is different, send the new image and swap the data 
                 if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), bi.biSizeImage) != 0) {
-                    Data->OnMouseChanged(&wholeimg, lastx, lasty);
+                    Data->ScreenCaptureData.OnMouseChanged(&wholeimg, Point{ lastx, lasty  });
                     std::swap(NewImageBuffer, OldImageBuffer);
                 }
                 else if (Last_x != lastx || Last_y != lasty) {
-                    Data->OnMouseChanged(nullptr, lastx, lasty);
+                    Data->ScreenCaptureData.OnMouseChanged(nullptr, Point{ lastx, lasty });
                 }
-                Last_x = lastx;
-                Last_y = lasty;
+
             }
+            else if (wnd != nullptr && Data->WindowCaptureData.OnMouseChanged) {
+
+                RECT windowRect;
+                GetWindowRect(SelectedWindow, &windowRect);
+                POINT cursorPos = { cursorInfo.ptScreenPos.x , cursorInfo.ptScreenPos.y };
+      
+                //if the mouse is over the window continue!
+                if (PtInRect(&windowRect, cursorPos) == TRUE) {
+                    if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), bi.biSizeImage) != 0) {
+                        Data->WindowCaptureData.OnMouseChanged(&wholeimg, Point{ lastx - windowRect.left, lasty - windowRect.bottom }, *wnd);
+                        std::swap(NewImageBuffer, OldImageBuffer);
+                    } if (Last_x != lastx || Last_y != lasty) {
+                        Data->WindowCaptureData.OnMouseChanged(nullptr, Point{ lastx - windowRect.left, lasty - windowRect.bottom }, *wnd);
+                    }
+                }
+                else  if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), bi.biSizeImage) != 0) {
+                    Data->WindowCaptureData.OnMouseChanged(&wholeimg, Point{ lastx - windowRect.left, lasty - windowRect.bottom }, *wnd);
+                    std::swap(NewImageBuffer, OldImageBuffer);
+                }
+            }
+
+            Last_x = lastx;
+            Last_y = lasty;
             return Ret;
         }
-
+        DUPL_RETURN GDIMouseProcessor::ProcessFrame(const Window& selectedwindow)
+        {
+            return Process(&selectedwindow);
+        }
+        DUPL_RETURN GDIMouseProcessor::ProcessFrame()
+        {
+            return Process(nullptr);
+        }
     }
 }

@@ -165,10 +165,7 @@ namespace SL
         {
         public:
             ITimer() {};
-            virtual ~ITimer()
-            {
-            }
-
+            virtual ~ITimer(){  }
             virtual void start() = 0;
             virtual void wait() = 0;
         };
@@ -179,11 +176,8 @@ namespace SL
             std::chrono::time_point<std::chrono::high_resolution_clock> StopTime;
 
         public:
-            Timer(const std::chrono::duration<Rep, Period>& rel_time)
-                : Rel_Time(rel_time) {};
-            virtual ~Timer()
-            {
-            }
+            Timer(const std::chrono::duration<Rep, Period>& rel_time) : Rel_Time(rel_time) {};
+            virtual ~Timer() { }
             virtual void start()
             {
                 StartTime = std::chrono::high_resolution_clock::now();
@@ -198,14 +192,13 @@ namespace SL
                 }
             }
         };
-        //string comparisons are all case insensitive
-
         enum WindowStringMatch {
             EXACT,
             STARTSWITH,
             CONTAINS
         };
         std::vector<Monitor> GetMonitors();
+        //string comparisons are all case insensitive
         std::vector<Window> GetWindows(const std::string& name, WindowStringMatch searchby);
 
         bool isMonitorInsideBounds(const std::vector<Monitor>& monitors, const Monitor& monitor);

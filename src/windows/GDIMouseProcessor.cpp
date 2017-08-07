@@ -112,14 +112,14 @@ namespace SL {
                 //if the mouse is over the window continue!
                 if (PtInRect(&windowRect, cursorPos) == TRUE) {
                     if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), bi.biSizeImage) != 0) {
-                        Data->WindowCaptureData.OnMouseChanged(&wholeimg, Point{ lastx - windowRect.left, lasty - windowRect.bottom }, *wnd);
+                        Data->WindowCaptureData.OnMouseChanged(&wholeimg, Point{ lastx - windowRect.left, lasty - windowRect.top}, *wnd);
                         std::swap(NewImageBuffer, OldImageBuffer);
                     } if (Last_x != lastx || Last_y != lasty) {
-                        Data->WindowCaptureData.OnMouseChanged(nullptr, Point{ lastx - windowRect.left, lasty - windowRect.bottom }, *wnd);
+                        Data->WindowCaptureData.OnMouseChanged(nullptr, Point{ lastx - windowRect.left,  lasty - windowRect.top }, *wnd);
                     }
                 }
                 else  if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), bi.biSizeImage) != 0) {
-                    Data->WindowCaptureData.OnMouseChanged(&wholeimg, Point{ lastx - windowRect.left, lasty - windowRect.bottom }, *wnd);
+                    Data->WindowCaptureData.OnMouseChanged(&wholeimg, Point{ lastx - windowRect.left,  lasty - windowRect.top }, *wnd);
                     std::swap(NewImageBuffer, OldImageBuffer);
                 }
             }

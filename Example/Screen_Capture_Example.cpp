@@ -114,9 +114,9 @@ void createwindowgrabber()
         auto s = std::to_string(r) + std::string("WINNEW_") + std::string(".jpg");
 
         auto size = RowStride(img) * Height(img);
-        //auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+ /*       auto imgbuffer(std::make_unique<unsigned char[]>(size));
+        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());*/
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >= 1000) {
             std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
             onNewFramecounter = 0;

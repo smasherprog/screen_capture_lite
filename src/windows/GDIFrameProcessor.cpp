@@ -31,12 +31,8 @@ namespace SL {
 
             MonitorDC.DC = GetWindowDC(SelectedWindow);
             CaptureDC.DC = CreateCompatibleDC(MonitorDC.DC);
-            RECT r;
-            GetWindowRect(SelectedWindow, &r);
-            auto width = r.right - r.left;
-            auto height = r.bottom - r.top;
 
-            CaptureBMP.Bitmap = CreateCompatibleBitmap(MonitorDC.DC, width, height);
+            CaptureBMP.Bitmap = CreateCompatibleBitmap(MonitorDC.DC, selectedwindow.Size.x, selectedwindow.Size.y);
 
             if (!MonitorDC.DC || !CaptureDC.DC || !CaptureBMP.Bitmap) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
@@ -58,7 +54,7 @@ namespace SL {
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
 
-            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, OffsetX(SelectedMonitor), OffsetY(SelectedMonitor), SRCCOPY | CAPTUREBLT) == FALSE) {
+            if (BitBlt(CaptureDC.DC, 0, 0, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
                 //if the screen cannot be captured, return
                 SelectObject(CaptureDC.DC, originalBmp);
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
@@ -96,14 +92,16 @@ namespace SL {
             selectedwindow.Position.x = windowrect.ClientRect.left;
             selectedwindow.Position.y = windowrect.ClientRect.top;
 
-            if (selectedwindow.Size.x != Width(ret)|| selectedwindow.Size.y != Height(ret)) {
+            if (selectedwindow.Size.x != Width(ret) || selectedwindow.Size.y != Height(ret)) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
             }
 
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
-
-            if (BitBlt(CaptureDC.DC, -windowrect.ClientBorder.left, -windowrect.ClientBorder.top, Width(ret), Height(ret), MonitorDC.DC, 0, 0, SRCCOPY) == FALSE) {
+            auto left = -windowrect.ClientBorder.left;
+            auto top = -windowrect.ClientBorder.top;
+      
+            if (BitBlt(CaptureDC.DC, left, top, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY ) == FALSE) {
                 //if the screen cannot be captured, return
                 SelectObject(CaptureDC.DC, originalBmp);
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue

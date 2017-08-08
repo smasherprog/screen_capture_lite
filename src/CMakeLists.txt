@@ -47,11 +47,12 @@ elseif(APPLE)
     )
 else()
   set(SCREEN_CAPTURE_PLATFORM_SRC
-		${CMAKE_CURRENT_SOURCE_DIR}/../include/linux/X11MouseProcessor.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/linux/X11MouseProcessor.h
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/X11MouseProcessor.cpp
        ${CMAKE_CURRENT_SOURCE_DIR}/../include/linux/X11FrameProcessor.h
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/X11FrameProcessor.cpp
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/GetMonitors.cpp
+       ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/GetWindows.cpp
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/ThreadRunner.cpp
     )
   

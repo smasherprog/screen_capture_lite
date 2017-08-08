@@ -74,13 +74,13 @@ namespace Screen_Capture
             return DUPL_RETURN_ERROR_EXPECTED;
         }
 
-        if(Data->CaptureEntireMonitor && !Data->CaptureDifMonitor) {
+        if(Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
 
             auto wholeimg = Create(ret, PixelStride, 0, reinterpret_cast<unsigned char*>(Image->data));
-            Data->CaptureEntireMonitor(wholeimg, SelectedMonitor);
+            Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
         } else {
             memcpy(NewImageBuffer.get(), Image->data, PixelStride * ret.right * ret.bottom);
-            ProcessMonitorCapture(*Data, *this, SelectedMonitor, ret);
+            ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);
         }
         return Ret;
     }

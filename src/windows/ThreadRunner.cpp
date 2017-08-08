@@ -80,10 +80,6 @@ namespace SL {
             if (!SwitchToInputDesktop(data)) return;
             TryCaptureWindow<GDIFrameProcessor>(data, wnd);
         }
-        void RunCaptureMouse(std::shared_ptr<Thread_Data> data, Window wnd) {
-            if (!SwitchToInputDesktop(data)) return;
-            TryCaptureMouse<GDIMouseProcessor>(data, wnd);
-        }
     }
 }
 

@@ -117,23 +117,23 @@ namespace SL
             }
         };
 
-        class ScreenCaptureConfiguration : public ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>
+        class ScreenCaptureConfiguration : public ICaptureConfiguration<ScreenCaptureCallback>
         {
             std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
         public:
             ScreenCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
 
-            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> onNewFrame(const ScreenCaptureCallback& cb) override {
+            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> onNewFrame(const ScreenCaptureCallback& cb) override {
                 assert(!Impl_->Thread_Data_->ScreenCaptureData.OnNewFrame);
                 Impl_->Thread_Data_->ScreenCaptureData.OnNewFrame = cb;
                 return std::make_shared<ScreenCaptureConfiguration>(Impl_);
             }
-            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> onFrameChanged(const ScreenCaptureCallback& cb) override {
+            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> onFrameChanged(const ScreenCaptureCallback& cb) override {
                 assert(!Impl_->Thread_Data_->ScreenCaptureData.OnFrameChanged);
                 Impl_->Thread_Data_->ScreenCaptureData.OnFrameChanged = cb;
                 return std::make_shared<ScreenCaptureConfiguration>(Impl_);
             }
-            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> onMouseChanged(const ScreenMouseCallback& cb)override {
+            virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> onMouseChanged(const MouseCallback& cb)override {
                 assert(!Impl_->Thread_Data_->ScreenCaptureData.OnMouseChanged);
                 Impl_->Thread_Data_->ScreenCaptureData.OnMouseChanged = cb;
                 return std::make_shared<ScreenCaptureConfiguration>(Impl_);
@@ -145,23 +145,23 @@ namespace SL
             }
         };
 
-        class WindowCaptureConfiguration : public ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>
+        class WindowCaptureConfiguration : public ICaptureConfiguration<WindowCaptureCallback>
         {
             std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
         public:
             WindowCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
 
-            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> onNewFrame(const WindowCaptureCallback& cb) override {
+            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> onNewFrame(const WindowCaptureCallback& cb) override {
                 assert(!Impl_->Thread_Data_->WindowCaptureData.OnNewFrame);
                 Impl_->Thread_Data_->WindowCaptureData.OnNewFrame = cb;
                 return std::make_shared<WindowCaptureConfiguration>(Impl_);
             }
-            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> onFrameChanged(const WindowCaptureCallback& cb) override {
+            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> onFrameChanged(const WindowCaptureCallback& cb) override {
                 assert(!Impl_->Thread_Data_->WindowCaptureData.OnFrameChanged);
                 Impl_->Thread_Data_->WindowCaptureData.OnFrameChanged = cb;
                 return std::make_shared<WindowCaptureConfiguration>(Impl_);
             }
-            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> onMouseChanged(const WindowMouseCallback& cb)override {
+            virtual std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> onMouseChanged(const MouseCallback& cb)override {
 
                 assert(!Impl_->Thread_Data_->WindowCaptureData.OnMouseChanged);
                 Impl_->Thread_Data_->WindowCaptureData.OnMouseChanged = cb;
@@ -173,14 +173,14 @@ namespace SL
                 return std::make_shared<ScreenCaptureManager>(Impl_);
             }
         };
-        std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> CreateCaptureConfiguration(const MonitorCallback& monitorstocapture)
+        std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback& monitorstocapture)
         {
             auto impl = std::make_shared<ScreenCaptureManagerImpl>();
             impl->Thread_Data_->ScreenCaptureData.getThingsToWatch = monitorstocapture;
             return std::make_shared<ScreenCaptureConfiguration>(impl);
         }
 
-        std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> CreateCaptureConfiguration(const WindowCallback& windowtocapture)
+        std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback& windowtocapture)
         {
             auto impl = std::make_shared<ScreenCaptureManagerImpl>();
             impl->Thread_Data_->WindowCaptureData.getThingsToWatch = windowtocapture;

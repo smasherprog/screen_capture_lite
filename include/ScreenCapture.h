@@ -32,8 +32,8 @@ namespace SL
 
         struct Window {
             size_t Handle;
-            int Height = 0;
-            int Width = 0;
+            Point Position;
+            Point Size;
             //Name will always be lower case. It is converted to lower case internally by the library for comparisons
             char Name[128] = { 0 };
         };
@@ -206,9 +206,7 @@ namespace SL
         typedef std::function<void(const SL::Screen_Capture::Image& img, const Window& window)> WindowCaptureCallback;
         typedef std::function<void(const SL::Screen_Capture::Image& img, const Monitor& monitor)> ScreenCaptureCallback;
 
-        typedef std::function<void(const SL::Screen_Capture::Image* img, const Point& point)> ScreenMouseCallback;
-        typedef std::function<void(const SL::Screen_Capture::Image* img, const Point& point, const Window& window)> WindowMouseCallback;
-
+        typedef std::function<void(const SL::Screen_Capture::Image* img, const Point& point)> MouseCallback;
 
         typedef std::function<std::vector<Monitor>()> MonitorCallback;
         typedef std::function<std::vector<Window>()> WindowCallback;
@@ -242,23 +240,23 @@ namespace SL
             virtual void resume() = 0;
         };
 
-        template<typename CAPTURECALLBACK, typename MOUSECALLBACK> class ICaptureConfiguration
+        template<typename CAPTURECALLBACK> class ICaptureConfiguration
         {
         public:
             virtual ~ICaptureConfiguration() {}
             // When a new frame is available the callback is invoked
-            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK, MOUSECALLBACK>> onNewFrame(const CAPTURECALLBACK& cb) = 0;
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK>> onNewFrame(const CAPTURECALLBACK& cb) = 0;
             // When a change in a frame is detected, the callback is invoked
-            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK, MOUSECALLBACK>> onFrameChanged(const CAPTURECALLBACK& cb) = 0;
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK>> onFrameChanged(const CAPTURECALLBACK& cb) = 0;
             // When a mouse image changes or the mouse changes position, the callback is invoked.
-            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK, MOUSECALLBACK>> onMouseChanged(const MOUSECALLBACK& cb) = 0;
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK>> onMouseChanged(const MouseCallback& cb) = 0;
             // start capturing
             virtual std::shared_ptr<IScreenCaptureManager> start_capturing() = 0;
         };
 
         //the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want to be captured
-        std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback, ScreenMouseCallback>> CreateCaptureConfiguration(const MonitorCallback& monitorstocapture);
+        std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback& monitorstocapture);
         //the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to be captured
-        std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback, WindowMouseCallback>> CreateCaptureConfiguration(const WindowCallback& windowstocapture);
+        std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback& windowstocapture);
     }
 }

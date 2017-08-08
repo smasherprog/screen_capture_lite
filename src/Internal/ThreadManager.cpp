@@ -31,19 +31,18 @@ void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>&
                 SL::Screen_Capture::RunCaptureMouse(data);
             });
         }
-        
+
     }
-    else  if (data->WindowCaptureData.getThingsToWatch) { 
+    else  if (data->WindowCaptureData.getThingsToWatch) {
         auto windows = data->WindowCaptureData.getThingsToWatch();
-        m_ThreadHandles.resize(windows.size() * (data->WindowCaptureData.OnMouseChanged ? 2 : 1)); // add another thread for mouse capturing if needed
+        m_ThreadHandles.resize(windows.size() + (data->WindowCaptureData.OnMouseChanged ? 1 : 0)); // add another thread for mouse capturing if needed
         for (size_t i = 0; i < windows.size(); ++i) {
             m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCaptureWindow, data, windows[i]);
         }
         if (data->WindowCaptureData.OnMouseChanged) {
-            for (size_t i = 0; i < windows.size(); ++i) {
-                auto wnd = windows[i];
-                m_ThreadHandles[i + windows.size()] = std::thread([data, wnd] { SL::Screen_Capture::RunCaptureMouse(data, wnd); });
-            }
+            m_ThreadHandles.back() = std::thread([data] {
+                SL::Screen_Capture::RunCaptureMouse(data);
+            });
         }
     }
 }

@@ -90,12 +90,12 @@ void createwindowgrabber()
     realcounter = 0;
     onNewFramecounter = 0;
     framgrabber = SL::Screen_Capture::CreateCaptureConfiguration([]() {
-        auto tmp = SL::Screen_Capture::GetWindows("Screen_capture_example", SL::Screen_Capture::WindowStringMatch::CONTAINS);
+        auto tmp = SL::Screen_Capture::GetWindows("screen_capture_example", SL::Screen_Capture::WindowStringMatch::CONTAINS);
         //the get windows function might return multiple results so its best to make sure it is the right window.
         decltype(tmp) filtereditems;
         for (auto& a : tmp) {
             filtereditems.push_back(a);
-            std::cout << "ADDING WINDOW  Height " << a.Height << "  Width  " << a.Width << "   " << a.Name << std::endl;
+            std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
         }
 
         return filtereditems;
@@ -114,9 +114,9 @@ void createwindowgrabber()
         auto s = std::to_string(r) + std::string("WINNEW_") + std::string(".jpg");
 
         auto size = RowStride(img) * Height(img);
-  /*      auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());*/
+        //auto imgbuffer(std::make_unique<unsigned char[]>(size));
+        //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >= 1000) {
             std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
             onNewFramecounter = 0;
@@ -124,7 +124,7 @@ void createwindowgrabber()
         }
         onNewFramecounter += 1;
 
-    })->onMouseChanged([&](const SL::Screen_Capture::Image* img, const SL::Screen_Capture::Point& point, const SL::Screen_Capture::Window& window) {
+    })->onMouseChanged([&](const SL::Screen_Capture::Image* img, const SL::Screen_Capture::Point& point) {
 
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string(" M") + std::string(".png");

@@ -1,5 +1,7 @@
 #include "ScreenCapture.h"
 #include "SCCommon.h"
+#include "GDIHelpers.h"
+
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
@@ -35,27 +37,12 @@ namespace SL {
             if (found) {
                 Window w;
                 w.Handle = reinterpret_cast<size_t>(hwnd);
+                auto windowrect = SL::Screen_Capture::GetWindowRect(hwnd);
+                w.Position.x = windowrect.ClientRect.left;
+                w.Position.y = windowrect.ClientRect.top;
+                w.Size.x = windowrect.ClientRect.right - windowrect.ClientRect.left;
+                w.Size.y = windowrect.ClientRect.bottom - windowrect.ClientRect.top;
 
-                RECT rect = { 0 };
-                GetWindowRect(hwnd, &rect);
-                ImageRect ret = { 0 };
-                ret.bottom = rect.bottom - rect.top;
-                ret.right = rect.right - rect.left;
-
-
-                RECT frame = { 0 };
-                RECT border = { 0 };
-                if (SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &frame, sizeof(frame)))) {
-
-                    border.left = frame.left - rect.left;
-                    border.top = frame.top - rect.top;
-                    border.right = rect.right - frame.right;
-                    border.bottom = rect.bottom - frame.bottom;
-                }
-                ret.bottom -= border.bottom + border.top;
-                ret.right -= border.right + border.left;
-                w.Height = ret.bottom;
-                w.Width = ret.right;
                 memcpy(w.Name, name.c_str(), name.size() + 1);
                 s->Found.push_back(w);
             }

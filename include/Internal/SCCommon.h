@@ -26,8 +26,8 @@ namespace SL {
         };
         struct Thread_Data {
 
-            CaptureData<ScreenCaptureCallback, ScreenMouseCallback, MonitorCallback> ScreenCaptureData;
-            CaptureData<WindowCaptureCallback, WindowMouseCallback, WindowCallback> WindowCaptureData;
+            CaptureData<ScreenCaptureCallback, MouseCallback, MonitorCallback> ScreenCaptureData;
+            CaptureData<WindowCaptureCallback, MouseCallback, WindowCallback> WindowCaptureData;
             CommonData CommonData_;
 
         };

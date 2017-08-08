@@ -38,7 +38,7 @@ namespace SL
         template <class T, class F, class...E> bool TryCaptureMouse(const F& data, E... args)
         {
             T frameprocessor;
-            auto ret = frameprocessor.Init(data, args...);
+            auto ret = frameprocessor.Init(data);
             if (ret != DUPL_RETURN_SUCCESS) {
                 return false;
             }
@@ -54,7 +54,7 @@ namespace SL
 
                 timer->start();
                 // Process Frame
-                ret = frameprocessor.ProcessFrame(args...);
+                ret = frameprocessor.ProcessFrame();
                 if (ret != DUPL_RETURN_SUCCESS) {
                     if (ret == DUPL_RETURN_ERROR_EXPECTED) {
                         // The system is in a transition state so request the duplication be restarted
@@ -149,7 +149,7 @@ namespace SL
                 return false;
             }
 
-            frameprocessor.ImageBufferSize = wnd.Width * wnd.Height * PixelStride;
+            frameprocessor.ImageBufferSize = wnd.Size.x * wnd.Size.y * PixelStride;
             if (data->WindowCaptureData.OnFrameChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
                                         // image is always new
                 frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
@@ -187,7 +187,6 @@ namespace SL
         void RunCaptureMonitor(std::shared_ptr<Thread_Data> data, Monitor monitor);
         void RunCaptureWindow(std::shared_ptr<Thread_Data> data, Window window);
 
-        void RunCaptureMouse(std::shared_ptr<Thread_Data> data, Window window);
         void RunCaptureMouse(std::shared_ptr<Thread_Data> data);
     }
 }

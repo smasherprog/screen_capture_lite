@@ -25,7 +25,7 @@ namespace SL {
             str.cbSize = sizeof(str);
             str.iMinAnimate = 0;
             SystemParametersInfo(SPI_SETANIMATION, sizeof(str), (void*)&str, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
-       
+
             SelectedWindow = reinterpret_cast<HWND>(selectedwindow.Handle);
             auto Ret = DUPL_RETURN_SUCCESS;
 
@@ -84,37 +84,26 @@ namespace SL {
             return Ret;
         }
 
-        DUPL_RETURN GDIFrameProcessor::ProcessFrame(const Window& selectedwindow)
+        DUPL_RETURN GDIFrameProcessor::ProcessFrame(Window& selectedwindow)
         {
-
             auto Ret = DUPL_RETURN_SUCCESS;
-            RECT rect = { 0 };
-            GetWindowRect(SelectedWindow, &rect);
-            ImageRect ret = { 0 }; 
-            ret.bottom = rect.bottom - rect.top;
-            ret.right = rect.right - rect.left;
-    
+            auto windowrect = SL::Screen_Capture::GetWindowRect(SelectedWindow);
+            ImageRect ret = { 0 };
+            ret.bottom = windowrect.ClientRect.bottom;
+            ret.left = windowrect.ClientRect.left;
+            ret.right = windowrect.ClientRect.right;
+            ret.top = windowrect.ClientRect.top;
+            selectedwindow.Position.x = windowrect.ClientRect.left;
+            selectedwindow.Position.y = windowrect.ClientRect.top;
 
-            RECT frame = { 0 };
-            RECT border = { 0 };
-            if (SUCCEEDED(DwmGetWindowAttribute(SelectedWindow, DWMWA_EXTENDED_FRAME_BOUNDS, &frame, sizeof(frame)))) {
-        
-                border.left = frame.left - rect.left;
-                border.top = frame.top - rect.top;
-                border.right = rect.right - frame.right;
-                border.bottom = rect.bottom - frame.bottom;
-            }
-            ret.bottom -= border.bottom + border.top;
-            ret.right -= border.right + border.left;
-
-            if (selectedwindow.Height != ret.bottom || selectedwindow.Width != ret.right) {
+            if (selectedwindow.Size.x != Width(ret)|| selectedwindow.Size.y != Height(ret)) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
             }
 
             // Selecting an object into the specified DC
             auto originalBmp = SelectObject(CaptureDC.DC, CaptureBMP.Bitmap);
 
-            if (BitBlt(CaptureDC.DC, -border.left, -border.top, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY) == FALSE) {
+            if (BitBlt(CaptureDC.DC, -windowrect.ClientBorder.left, -windowrect.ClientBorder.top, Width(ret), Height(ret), MonitorDC.DC, 0, 0, SRCCOPY) == FALSE) {
                 //if the screen cannot be captured, return
                 SelectObject(CaptureDC.DC, originalBmp);
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//likely a permission issue
@@ -126,13 +115,13 @@ namespace SL {
 
                 bi.biSize = sizeof(BITMAPINFOHEADER);
 
-                bi.biWidth = ret.right;
-                bi.biHeight = -ret.bottom;
+                bi.biWidth = Width(ret);
+                bi.biHeight = -Height(ret);
                 bi.biPlanes = 1;
                 bi.biBitCount = PixelStride * 8; //always 32 bits damnit!!!
                 bi.biCompression = BI_RGB;
-                bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride* ret.bottom;
-                GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+                bi.biSizeImage = ((Width(ret)* bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride*Height(ret);
+                GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)Height(ret), NewImageBuffer.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
                 SelectObject(CaptureDC.DC, originalBmp);
                 ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, ret);
             }

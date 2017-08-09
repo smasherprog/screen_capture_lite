@@ -123,7 +123,13 @@ namespace Screen_Capture
         ret.left = ret.top = 0;
         ret.right = selectedwindow.Size.x;
         ret.bottom = selectedwindow.Size.y;
-        
+        XWindowAttributes wndattr;
+        if(XGetWindowAttributes(SelectedDisplay, SelectedWindow, &wndattr) ==0){
+            return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window might not be valid any more
+        }
+        if(wndattr.width != ret.right || wndattr.height != ret.bottom){
+            return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
+        }
         if(!XShmGetImage(SelectedDisplay,
                          selectedwindow.Handle,
                          Image,

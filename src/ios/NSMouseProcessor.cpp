@@ -20,7 +20,7 @@ namespace SL {
         {
             auto Ret = DUPL_RETURN_SUCCESS;
         
-            if(Data->CaptureMouse){
+            if(Data->ScreenCaptureData.OnMouseChanged || Data->WindowCaptureData.OnMouseChanged ){
                 auto mouseev = CGEventCreate(NULL);
                 auto loc = CGEventGetLocation(mouseev);
                 CFRelease(mouseev);
@@ -55,17 +55,28 @@ namespace SL {
                 auto wholeimgfirst = Create(imgrect, PixelStride, 0, NewImageBuffer.get());
                 
               
-                auto lastx =loc.x;
-                auto lasty = loc.y;
+                auto lastx = static_cast<int>(loc.x);
+                auto lasty = static_cast<int>(loc.y);
                     //if the mouse image is different, send the new image and swap the data
-                if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), datalen) != 0) {
-                    Data->CaptureMouse(&wholeimgfirst, lastx, lasty);
-                    std::swap(NewImageBuffer, OldImageBuffer);
-        
-                }
-                else if(Last_x != lastx || Last_y != lasty){
-                    Data->CaptureMouse(nullptr, lastx, lasty);
-                }
+         
+                    if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), datalen) != 0) {
+                        if(Data->ScreenCaptureData.OnMouseChanged){
+                           Data->ScreenCaptureData.OnMouseChanged(&wholeimgfirst, Point{ lastx, lasty });
+                        }
+                        if(Data->WindowCaptureData.OnMouseChanged){
+                            Data->WindowCaptureData.OnMouseChanged(&wholeimgfirst, Point{ lastx, lasty });
+                        }
+                        std::swap(NewImageBuffer, OldImageBuffer);
+                        
+                    }
+                    else if(Last_x != lastx || Last_y != lasty){
+                        if(Data->ScreenCaptureData.OnMouseChanged){
+                            Data->ScreenCaptureData.OnMouseChanged(nullptr, Point{ lastx, lasty });
+                        }
+                        if(Data->WindowCaptureData.OnMouseChanged){
+                            Data->WindowCaptureData.OnMouseChanged(nullptr, Point{ lastx, lasty });
+                        }
+                    }
                 Last_x = lastx;
                 Last_y = lasty;
           

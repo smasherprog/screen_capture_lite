@@ -6,6 +6,7 @@
 #include <atomic>
 #include <string>
 #include <iostream>
+#include <memory>
 
 using namespace std::chrono_literals;
 
@@ -26,15 +27,6 @@ namespace SL
             void Join();
         };
 
-        template<class F>constexpr std::shared_ptr<ITimer> getTimer(const F& data, size_t count) {
-            if (count == 1) {
-               return  std::atomic_load(&data->WindowCaptureData.FrameTimer);
-            }
-            else {
-                return std::atomic_load(&data->ScreenCaptureData.FrameTimer);
-            }
-        }
-
         template <class T, class F, class...E> bool TryCaptureMouse(const F& data, E... args)
         {
             T frameprocessor;
@@ -50,8 +42,14 @@ namespace SL
             while (!data->CommonData_.TerminateThreadsEvent) {
                 // get a copy of the shared_ptr in a safe way
 
-                auto timer = getTimer(data, sizeof...(args));
-
+                std::shared_ptr<ITimer> timer;
+                if (sizeof...(args) == 1) {
+                     timer = std::atomic_load(&data->WindowCaptureData.FrameTimer);
+                }
+                else {
+                    timer= std::atomic_load(&data->ScreenCaptureData.FrameTimer);
+                }
+                
                 timer->start();
                 // Process Frame
                 ret = frameprocessor.ProcessFrame();

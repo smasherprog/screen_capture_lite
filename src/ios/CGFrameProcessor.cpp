@@ -58,10 +58,10 @@ namespace SL {
             ret.left =  ret.top=0;
             ret.right =width;
             ret.bottom = height;
-            if(Data->CaptureEntireMonitor && !Data->CaptureDifMonitor) {
+            if(Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
                 
                 auto wholeimg = SL::Screen_Capture::Create(ret, PixelStride, bytesperrow - PixelStride*width, buf);
-                Data->CaptureEntireMonitor(wholeimg, SelectedMonitor);
+                Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
                 
             } else {
                 if(bytesperrow == PixelStride*width){
@@ -78,7 +78,7 @@ namespace SL {
                     }
                 }
                 
-                ProcessMonitorCapture(*Data, *this, SelectedMonitor ,ret);
+                ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor ,ret);
             }
             
             CFRelease(rawdatas);

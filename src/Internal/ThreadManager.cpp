@@ -33,7 +33,7 @@ void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>&
         }
 
     }
-    else  if (data->WindowCaptureData.getThingsToWatch) {
+    else if (data->WindowCaptureData.getThingsToWatch) {
         auto windows = data->WindowCaptureData.getThingsToWatch();
         m_ThreadHandles.resize(windows.size() + (data->WindowCaptureData.OnMouseChanged ? 1 : 0)); // add another thread for mouse capturing if needed
         for (size_t i = 0; i < windows.size(); ++i) {

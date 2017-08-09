@@ -32,14 +32,15 @@ elseif(APPLE)
 	set(SCREEN_CAPTURE_PLATFORM_LIBS ${corefoundation_lib} ${cocoa_lib})
 
     set(SCREEN_CAPTURE_PLATFORM_SRC
-       ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/NSMouseCapture.h
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/NSMouseCapture.m
-       ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/NSMouseProcessor.h
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/NSMouseProcessor.cpp
-       ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/CGFrameProcessor.h
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/CGFrameProcessor.cpp
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/GetMonitors.cpp
-       ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/ThreadRunner.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/GetWindows.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/NSMouseCapture.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/NSMouseCapture.m
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/NSMouseProcessor.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/NSMouseProcessor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios/CGFrameProcessor.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/CGFrameProcessor.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/GetMonitors.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/ios/ThreadRunner.cpp
     )
     set(SCREEN_CAPTURE_PLATFORM_INC
        ${CMAKE_CURRENT_SOURCE_DIR}/../include/ios
@@ -47,11 +48,12 @@ elseif(APPLE)
     )
 else()
   set(SCREEN_CAPTURE_PLATFORM_SRC
-		${CMAKE_CURRENT_SOURCE_DIR}/../include/linux/X11MouseProcessor.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../include/linux/X11MouseProcessor.h
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/X11MouseProcessor.cpp
        ${CMAKE_CURRENT_SOURCE_DIR}/../include/linux/X11FrameProcessor.h
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/X11FrameProcessor.cpp
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/GetMonitors.cpp
+       ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/GetWindows.cpp
        ${CMAKE_CURRENT_SOURCE_DIR}/../src/linux/ThreadRunner.cpp
     )
   

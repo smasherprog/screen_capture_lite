@@ -174,7 +174,6 @@ namespace SL
             std::chrono::duration<Rep, Period> Rel_Time;
             std::chrono::time_point<std::chrono::high_resolution_clock> StartTime;
             std::chrono::time_point<std::chrono::high_resolution_clock> StopTime;
-
         public:
             Timer(const std::chrono::duration<Rep, Period>& rel_time) : Rel_Time(rel_time) {};
             virtual ~Timer() { }
@@ -184,8 +183,7 @@ namespace SL
             }
             virtual void wait()
             {
-                auto duration = std::chrono::duration_cast<std::chrono::duration<Rep, Period>>(
-                    std::chrono::high_resolution_clock::now() - StartTime);
+                auto duration = std::chrono::duration_cast<std::chrono::duration<Rep, Period>>(std::chrono::high_resolution_clock::now() - StartTime);
                 auto timetowait = Rel_Time - duration;
                 if (timetowait.count() > 0) {
                     std::this_thread::sleep_for(timetowait);

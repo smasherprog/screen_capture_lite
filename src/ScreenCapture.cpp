@@ -61,7 +61,10 @@ namespace SL
             {
                 Thread_Data_->CommonData_.TerminateThreadsEvent = true; // set the exit flag for the threads
                 Thread_Data_->CommonData_.Paused = false;               // unpaused the threads to let everything exit
-                if (Thread_.joinable()) {
+                if (Thread_.get_id() == std::this_thread::get_id()) {
+                    Thread_.detach();
+                }
+                else if (Thread_.joinable()) {
                     Thread_.join();
                 }
             }

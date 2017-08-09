@@ -92,7 +92,7 @@ namespace SL {
             selectedwindow.Position.x = windowrect.ClientRect.left;
             selectedwindow.Position.y = windowrect.ClientRect.top;
 
-            if (selectedwindow.Size.x != Width(ret) || selectedwindow.Size.y != Height(ret)) {
+            if (!IsWindow(SelectedWindow) || selectedwindow.Size.x != Width(ret) || selectedwindow.Size.y != Height(ret)) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
             }
 

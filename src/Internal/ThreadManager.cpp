@@ -51,7 +51,12 @@ void SL::Screen_Capture::ThreadManager::Join()
 {
     for (auto& t : m_ThreadHandles) {
         if (t.joinable()) {
-            t.join();
+            if (t.get_id() == std::this_thread::get_id()) {
+                t.detach();// will run to completion
+            }
+            else {
+                t.join();
+            }
         }
     }
     m_ThreadHandles.clear();

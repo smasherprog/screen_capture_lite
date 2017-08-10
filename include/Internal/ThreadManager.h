@@ -74,7 +74,7 @@ namespace SL
             return true;
         }
 
-        inline bool MonitorsChanged(const std::vector<Monitor>& startmonitors, const std::vector<Monitor>& nowmonitors) {
+        inline bool HasMonitorsChanged(const std::vector<Monitor>& startmonitors, const std::vector<Monitor>& nowmonitors) {
             if (startmonitors.size() != nowmonitors.size()) return true;
             for (size_t i = 0; i < startmonitors.size(); i++) {
                 if (startmonitors[i].Height != nowmonitors[i].Height ||

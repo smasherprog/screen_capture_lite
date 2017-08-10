@@ -15,6 +15,7 @@ matrix:
             - libx11-dev
             - libxfixes-dev 
             - libxtst-dev
+            - libxinerama-dev
           sources: 
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise

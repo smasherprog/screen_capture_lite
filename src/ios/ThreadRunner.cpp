@@ -11,6 +11,9 @@ namespace SL{
         void RunCaptureMonitor(std::shared_ptr<Thread_Data> data, Monitor monitor){
             TryCaptureMonitor<CGFrameProcessor>(data, monitor);
         }
+        void RunCaptureWindow(std::shared_ptr<Thread_Data> data, Window window){
+            TryCaptureWindow<CGFrameProcessor>(data, window);
+        }
     }
 }
 

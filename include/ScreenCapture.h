@@ -13,7 +13,10 @@ namespace SL
 {
     namespace Screen_Capture
     {
-
+        struct Point {
+            int x;
+            int y;
+        };
         struct Monitor
         {
             int Id = INT32_MAX;
@@ -27,6 +30,13 @@ namespace SL
             char Name[128] = { 0 };
         };
 
+        struct Window {
+            size_t Handle;
+            Point Position;
+            Point Size;
+            //Name will always be lower case. It is converted to lower case internally by the library for comparisons
+            char Name[128] = { 0 };
+        };
         struct ImageRect
         {
             int left = 0;
@@ -105,7 +115,7 @@ namespace SL
 
         inline void ExtractAndConvertToRGBA(const Image& img, unsigned char* dst, size_t dst_size)
         {
-      
+
             assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
             auto imgsrc = StartSrc(img);
             auto imgdist = dst;
@@ -155,10 +165,7 @@ namespace SL
         {
         public:
             ITimer() {};
-            virtual ~ITimer()
-            {
-            }
-
+            virtual ~ITimer(){  }
             virtual void start() = 0;
             virtual void wait() = 0;
         };
@@ -167,101 +174,87 @@ namespace SL
             std::chrono::duration<Rep, Period> Rel_Time;
             std::chrono::time_point<std::chrono::high_resolution_clock> StartTime;
             std::chrono::time_point<std::chrono::high_resolution_clock> StopTime;
-
         public:
-            Timer(const std::chrono::duration<Rep, Period>& rel_time)
-                : Rel_Time(rel_time) {};
-            virtual ~Timer()
-            {
-            }
+            Timer(const std::chrono::duration<Rep, Period>& rel_time) : Rel_Time(rel_time) {};
+            virtual ~Timer() { }
             virtual void start()
             {
                 StartTime = std::chrono::high_resolution_clock::now();
             }
             virtual void wait()
             {
-                auto duration = std::chrono::duration_cast<std::chrono::duration<Rep, Period>>(
-                    std::chrono::high_resolution_clock::now() - StartTime);
+                auto duration = std::chrono::duration_cast<std::chrono::duration<Rep, Period>>(std::chrono::high_resolution_clock::now() - StartTime);
                 auto timetowait = Rel_Time - duration;
                 if (timetowait.count() > 0) {
                     std::this_thread::sleep_for(timetowait);
                 }
             }
         };
-
+        enum WindowStringMatch {
+            EXACT,
+            STARTSWITH,
+            CONTAINS
+        };
         std::vector<Monitor> GetMonitors();
+        //string comparisons are all case insensitive
+        std::vector<Window> GetWindows(const std::string& name, WindowStringMatch searchby);
+
         bool isMonitorInsideBounds(const std::vector<Monitor>& monitors, const Monitor& monitor);
 
-        typedef std::function<void(const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor)>
-            CaptureCallback;
-        typedef std::function<void(const SL::Screen_Capture::Image* img, int x, int y)> MouseCallback;
+        typedef std::function<void(const SL::Screen_Capture::Image& img, const Window& window)> WindowCaptureCallback;
+        typedef std::function<void(const SL::Screen_Capture::Image& img, const Monitor& monitor)> ScreenCaptureCallback;
+
+        typedef std::function<void(const SL::Screen_Capture::Image* img, const Point& point)> MouseCallback;
+
         typedef std::function<std::vector<Monitor>()> MonitorCallback;
+        typedef std::function<std::vector<Window>()> WindowCallback;
 
-        class ScreenCaptureManagerImpl;
-        class ScreenCaptureManager
+        class IScreenCaptureManager
         {
-            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
-
-            void setFrameChangeInterval_(const std::shared_ptr<ITimer>& timer);
-            void setMouseChangeInterval_(const std::shared_ptr<ITimer>& timer);
-
         public:
-            ScreenCaptureManager(const std::shared_ptr<ScreenCaptureManagerImpl>& impl)
-                : Impl_(impl)
-            {
-            }
-            ScreenCaptureManager()
-            {
-            }
+            virtual ~IScreenCaptureManager() {}
 
             // Used by the library to determine the callback frequency
             template <class Rep, class Period>
             void setFrameChangeInterval(const std::chrono::duration<Rep, Period>& rel_time)
             {
-                setFrameChangeInterval_(std::make_shared<Timer<Rep, Period> >(rel_time));
+                setFrameChangeInterval(std::make_shared<Timer<Rep, Period> >(rel_time));
             }
             // Used by the library to determine the callback frequency
             template <class Rep, class Period>
             void setMouseChangeInterval(const std::chrono::duration<Rep, Period>& rel_time)
             {
-                setMouseChangeInterval_(std::make_shared<Timer<Rep, Period> >(rel_time));
+                setMouseChangeInterval(std::make_shared<Timer<Rep, Period> >(rel_time));
             }
+
+            virtual void setFrameChangeInterval(const std::shared_ptr<ITimer>& timer) = 0;
+            virtual void setMouseChangeInterval(const std::shared_ptr<ITimer>& timer) = 0;
 
             // Will pause all capturing
-            void pause();
+            virtual void pause() = 0;
             // Will return whether the library is paused
-            bool isPaused() const;
+            virtual bool isPaused() const = 0;
             // Will resume all capturing if paused, otherwise has no effect
-            void resume();
-
-            operator bool() const
-            {
-                return Impl_.operator bool();
-            }
-            // the library will stop processing frames and release all memory
-            void destroy()
-            {
-                Impl_.reset();
-            }
+            virtual void resume() = 0;
         };
-        class ScreenCaptureConfiguration
+
+        template<typename CAPTURECALLBACK> class ICaptureConfiguration
         {
-            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
-
         public:
-            ScreenCaptureConfiguration(const std::shared_ptr<ScreenCaptureManagerImpl>& impl)
-                : Impl_(impl)
-            {
-            }
+            virtual ~ICaptureConfiguration() {}
             // When a new frame is available the callback is invoked
-            ScreenCaptureConfiguration onNewFrame(const CaptureCallback& cb);
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK>> onNewFrame(const CAPTURECALLBACK& cb) = 0;
             // When a change in a frame is detected, the callback is invoked
-            ScreenCaptureConfiguration onFrameChanged(const CaptureCallback& cb);
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK>> onFrameChanged(const CAPTURECALLBACK& cb) = 0;
             // When a mouse image changes or the mouse changes position, the callback is invoked.
-            ScreenCaptureConfiguration onMouseChanged(const MouseCallback& cb);
+            virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK>> onMouseChanged(const MouseCallback& cb) = 0;
             // start capturing
-            ScreenCaptureManager start_capturing();
+            virtual std::shared_ptr<IScreenCaptureManager> start_capturing() = 0;
         };
-        ScreenCaptureConfiguration CreateScreeCapture(const MonitorCallback& monitorstocapture);
+
+        //the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want to be captured
+        std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback& monitorstocapture);
+        //the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to be captured
+        std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback& windowstocapture);
     }
 }

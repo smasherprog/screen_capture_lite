@@ -2,6 +2,7 @@
 #include "DXFrameProcessor.h"
 #include "GDIFrameProcessor.h"
 #include "GDIMouseProcessor.h"
+#include "GDIWindowProcessor.h"
 #include "ThreadManager.h"
 
 #define NOMINMAX
@@ -22,12 +23,12 @@ namespace SL {
                 if (Ret == DUPL_RETURN_ERROR_EXPECTED)
                 {
                     // The system is in a transition state so request the duplication be restarted
-                    TData->ExpectedErrorEvent = true;
+                    TData->CommonData_.ExpectedErrorEvent = true;
                 }
                 else
                 {
                     // Unexpected error so exit the application
-                    TData->UnexpectedErrorEvent = true;
+                    TData->CommonData_.UnexpectedErrorEvent = true;
                 }
             }
         }
@@ -37,7 +38,7 @@ namespace SL {
             if (!CurrentDesktop)
             {
                 // We do not have access to the desktop so request a retry
-                data->ExpectedErrorEvent = true;
+                data->CommonData_.ExpectedErrorEvent = true;
                 ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
                 return false;
             }
@@ -49,7 +50,7 @@ namespace SL {
             if (!DesktopAttached)
             {
                 // We do not have access to the desktop so request a retry
-                data->ExpectedErrorEvent = true;
+                data->CommonData_.ExpectedErrorEvent = true;
                 ProcessExit(DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED, data.get());
                 return false;
             }
@@ -72,6 +73,12 @@ namespace SL {
 #endif
                 TryCaptureMonitor<GDIFrameProcessor>(data, monitor);
             }
+        }
+
+        void RunCaptureWindow(std::shared_ptr<Thread_Data> data, Window wnd) {
+            //need to switch to the input desktop for capturing...
+            if (!SwitchToInputDesktop(data)) return;
+            TryCaptureWindow<GDIFrameProcessor>(data, wnd);
         }
     }
 }

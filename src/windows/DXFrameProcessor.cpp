@@ -427,10 +427,10 @@ namespace SL {
 
             auto rowstride = PixelStride*Width(SelectedMonitor);
 
-            if (Data->CaptureEntireMonitor && !Data->CaptureDifMonitor) {
+            if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
 
                 auto wholeimg = Create(ret, PixelStride, static_cast<int>(MappingDesc.RowPitch) - rowstride, startsrc);
-                Data->CaptureEntireMonitor(wholeimg, SelectedMonitor);
+                Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
 
             }
             else {
@@ -443,7 +443,7 @@ namespace SL {
                         memcpy(startdst + (i* rowstride), startsrc + (i* MappingDesc.RowPitch), rowstride);
                     }
                 }
-                ProcessMonitorCapture(*Data, *this, SelectedMonitor, ret);
+                ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);
             }
 
 

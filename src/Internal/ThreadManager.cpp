@@ -13,35 +13,50 @@ SL::Screen_Capture::ThreadManager::~ThreadManager()
 void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>& data)
 {
     assert(m_ThreadHandles.empty());
-    auto monitorcapturing = data->CaptureDifMonitor || data->CaptureEntireMonitor;
-    std::vector<Monitor> monitors;
-    if(monitorcapturing) {
-        assert(data->MonitorsChanged);
-        monitors = data->MonitorsChanged();
-    }
-    // veryify the captured area exists within the monitors
-    // inefficent below, but its only called when the library is restarting so the cost is ZERO!!!
-    auto mons = GetMonitors();
-    for(auto& m : monitors) {
-        assert(isMonitorInsideBounds(mons, m));
-    }
 
-    m_ThreadHandles.resize(monitors.size() +   (data->CaptureMouse ? 1 : 0)); // add another thread for mouse capturing if needed
+    if (data->ScreenCaptureData.getThingsToWatch) {
+        auto monitors = data->ScreenCaptureData.getThingsToWatch();
+        auto mons = GetMonitors();
+        for (auto& m : monitors) {
+            assert(isMonitorInsideBounds(mons, m));
+        }
 
-    for(size_t i = 0; i < monitors.size(); ++i) {
-        m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCaptureMonitor, data, monitors[i]);
+        m_ThreadHandles.resize(monitors.size() + (data->ScreenCaptureData.OnMouseChanged ? 1 : 0)); // add another thread for mouse capturing if needed
+
+        for (size_t i = 0; i < monitors.size(); ++i) {
+            m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCaptureMonitor, data, monitors[i]);
+        }
+        if (data->ScreenCaptureData.OnMouseChanged) {
+            m_ThreadHandles.back() = std::thread([data] {
+                SL::Screen_Capture::RunCaptureMouse(data);
+            });
+        }
+
     }
-
-    if(data->CaptureMouse) {
-        m_ThreadHandles.back() = std::thread(&SL::Screen_Capture::RunCaptureMouse, data);
+    else if (data->WindowCaptureData.getThingsToWatch) {
+        auto windows = data->WindowCaptureData.getThingsToWatch();
+        m_ThreadHandles.resize(windows.size() + (data->WindowCaptureData.OnMouseChanged ? 1 : 0)); // add another thread for mouse capturing if needed
+        for (size_t i = 0; i < windows.size(); ++i) {
+            m_ThreadHandles[i] = std::thread(&SL::Screen_Capture::RunCaptureWindow, data, windows[i]);
+        }
+        if (data->WindowCaptureData.OnMouseChanged) {
+            m_ThreadHandles.back() = std::thread([data] {
+                SL::Screen_Capture::RunCaptureMouse(data);
+            });
+        }
     }
 }
 
 void SL::Screen_Capture::ThreadManager::Join()
 {
-    for(auto& t : m_ThreadHandles) {
-        if(t.joinable()) {
-            t.join();
+    for (auto& t : m_ThreadHandles) {
+        if (t.joinable()) {
+            if (t.get_id() == std::this_thread::get_id()) {
+                t.detach();// will run to completion
+            }
+            else {
+                t.join();
+            }
         }
     }
     m_ThreadHandles.clear();

@@ -12,7 +12,7 @@ namespace SL {
             HDCWrapper MonitorDC;
             HDCWrapper CaptureDC;
             std::shared_ptr<Thread_Data> Data;
-       
+
             int Last_x = 0;
             int Last_y = 0;
 
@@ -22,6 +22,7 @@ namespace SL {
             DUPL_RETURN Init(std::shared_ptr<Thread_Data> data);
             DUPL_RETURN ProcessFrame();
 
+      
         };
     }
 }

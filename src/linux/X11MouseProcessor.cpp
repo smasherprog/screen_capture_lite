@@ -61,7 +61,7 @@ namespace SL {
                 // Get the mouse cursor position
             int x, y, root_x, root_y = 0;
             unsigned int mask = 0;
-            Window child_win, root_win;
+            XID child_win, root_win;
             XQueryPointer(SelectedDisplay, RootWindow, &child_win, &root_win, &root_x, &root_y, &x, &y, &mask);
             x -= img->xhot;
             y -= img->yhot;
@@ -69,17 +69,17 @@ namespace SL {
             XFree(img);
 
 
-            if (Data->CaptureMouse) {
+            if (Data->ScreenCaptureData.OnMouseChanged) {
 
                 auto wholeimg = Create(imgrect, PixelStride, 0, OldImageBuffer.get());
                     
                 //if the mouse image is different, send the new image and swap the data 
                 if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), newsize) != 0) {
-                    Data->CaptureMouse(&wholeimg, x, y);
+                    Data->ScreenCaptureData.OnMouseChanged(&wholeimg, Point{x, y});
                     std::swap(NewImageBuffer, OldImageBuffer);
                 }
                 else if(Last_x != x || Last_y != y){
-                    Data->CaptureMouse(nullptr, x, y);
+                    Data->ScreenCaptureData.OnMouseChanged(nullptr, Point{x, y});
                 }
                 Last_x = x;
                 Last_y = y;

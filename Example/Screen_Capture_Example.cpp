@@ -90,7 +90,7 @@ void createwindowgrabber()
     realcounter = 0;
     onNewFramecounter = 0;
     framgrabber = SL::Screen_Capture::CreateCaptureConfiguration([]() {
-        auto tmp = SL::Screen_Capture::GetWindows("screen_capture_example", SL::Screen_Capture::WindowStringMatch::CONTAINS);
+        auto tmp = SL::Screen_Capture::GetWindows("cmake 3.8", SL::Screen_Capture::WindowStringMatch::CONTAINS);
         //the get windows function might return multiple results so its best to make sure it is the right window.
         decltype(tmp) filtereditems;
         for (auto& a : tmp) {

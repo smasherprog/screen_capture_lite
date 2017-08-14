@@ -209,10 +209,13 @@ namespace SL
         typedef std::function<std::vector<Monitor>()> MonitorCallback;
         typedef std::function<std::vector<Window>()> WindowCallback;
 
-        class IScreenCaptureManager
+        class ScreenCaptureManagerImpl;
+        class ScreenCaptureManager
         {
+            std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
         public:
-            virtual ~IScreenCaptureManager() {}
+            ScreenCaptureManager(const std::shared_ptr<ScreenCaptureManagerImpl>& impl) : Impl_(impl) {}
+            ~ScreenCaptureManager() {}
 
             // Used by the library to determine the callback frequency
             template <class Rep, class Period>
@@ -227,15 +230,15 @@ namespace SL
                 setMouseChangeInterval(std::make_shared<Timer<Rep, Period> >(rel_time));
             }
 
-            virtual void setFrameChangeInterval(const std::shared_ptr<ITimer>& timer) = 0;
-            virtual void setMouseChangeInterval(const std::shared_ptr<ITimer>& timer) = 0;
+            void setFrameChangeInterval(const std::shared_ptr<ITimer>& timer);
+            void setMouseChangeInterval(const std::shared_ptr<ITimer>& timer);
 
             // Will pause all capturing
-            virtual void pause() = 0;
+            void pause();
             // Will return whether the library is paused
-            virtual bool isPaused() const = 0;
+            bool isPaused() const;
             // Will resume all capturing if paused, otherwise has no effect
-            virtual void resume() = 0;
+            void resume();
         };
 
         template<typename CAPTURECALLBACK> class ICaptureConfiguration
@@ -249,7 +252,7 @@ namespace SL
             // When a mouse image changes or the mouse changes position, the callback is invoked.
             virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK>> onMouseChanged(const MouseCallback& cb) = 0;
             // start capturing
-            virtual std::shared_ptr<IScreenCaptureManager> start_capturing() = 0;
+            virtual std::shared_ptr<ScreenCaptureManager> start_capturing() = 0;
         };
 
         //the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want to be captured

@@ -16,7 +16,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 using namespace std::chrono_literals;
-std::shared_ptr<SL::Screen_Capture::IScreenCaptureManager> framgrabber;
+std::shared_ptr<SL::Screen_Capture::ScreenCaptureManager> framgrabber;
 std::atomic<int> realcounter;
 std::atomic<int> onNewFramecounter;
 

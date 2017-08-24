@@ -138,8 +138,8 @@ void createwindowgrabber()
                 auto r = realcounter.fetch_add(1);
                 auto s = std::to_string(r) + std::string("WINNEW_") + std::string(".jpg");
                 auto size = RowStride(img) * Height(img);
-
-                /* auto imgbuffer(std::make_unique<unsigned char[]>(size));
+ /*
+                auto imgbuffer(std::make_unique<unsigned char[]>(size));
                  ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
                  tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
                  */
@@ -193,11 +193,11 @@ int main()
         std::cout << m << std::endl;
         assert(!isMonitorInsideBounds(goodmonitors, m));
     }
-    std::cout << "Running standard capturing for 10 seconds" << std::endl;
+    std::cout << "Running window capturing for 10 seconds" << std::endl;
     createwindowgrabber();
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    std::cout << "Running standard capturing for 10 seconds" << std::endl;
+    std::cout << "Running display capturing for 10 seconds" << std::endl;
     createframegrabber();
     std::this_thread::sleep_for(std::chrono::seconds(10));
 

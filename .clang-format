@@ -1,0 +1,8 @@
+BasedOnStyle: LLVM 
+Language: Cpp
+IndentWidth: 4 
+TabWidth: 8
+UseTab: Never
+BreakBeforeBraces: Stroustrup
+NamespaceIndentation: Inner
+ColumnLimit: 150 

@@ -110,6 +110,9 @@ void createwindowgrabber()
                 decltype(windows) filtereditems;
                 for(auto& a : windows) {
                     std::string name = a.Name;
+                    std::transform(name.begin(), name.end(), name.begin(), [](char c) {
+                        return std::tolower(c, std::locale());
+                    });
                     if(name.find(srchterm) != std::string::npos) {
                         filtereditems.push_back(a);
                         std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name

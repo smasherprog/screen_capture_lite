@@ -81,27 +81,17 @@ namespace SL {
         DUPL_RETURN CGFrameProcessor::ProcessFrame(const Window& window){
             
             auto Ret = DUPL_RETURN_SUCCESS;
-            CGRect rect;
-            uint32_t windowid[1] = {static_cast<uint32_t>(window.Handle)};
-            auto windowArray = CFArrayCreate ( NULL, (const void **)windowid, 1 ,NULL);
-            auto windowsdescription = CGWindowListCreateDescriptionFromArray(windowArray);
-            auto windowdescription = static_cast<CFDictionaryRef>(CFArrayGetValueAtIndex ((CFArrayRef)windowsdescription, 0));
-       
-            auto bounds = static_cast<CFDictionaryRef>(CFDictionaryGetValue (windowdescription, kCGWindowBounds));
-            CGRectMakeWithDictionaryRepresentation(bounds, &rect);
-            
-            CFRelease(windowArray);
-            
-            if(rect.size.width != window.Size.x || rect.size.height != window.Size.y ){
-                 return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
-            }
-
+        
             auto imageRef = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow ,static_cast<uint32_t>(window.Handle), kCGWindowImageBoundsIgnoreFraming);
             if(!imageRef) return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
             
             auto width = CGImageGetWidth(imageRef);
             auto height = CGImageGetHeight(imageRef);
             
+            if( width != window.Size.x ||  height != window.Size.y ){
+                 CGImageRelease(imageRef);
+                 return DUPL_RETURN_ERROR_EXPECTED;//this happens when the window sizes change.
+            }
             auto prov = CGImageGetDataProvider(imageRef);
             if(!prov){
                 CGImageRelease(imageRef);

@@ -9,50 +9,27 @@ namespace SL
 namespace Screen_Capture
 {
 
-    void AddMatch(Display* display,
-                  XID& window,
-                  std::vector<Window>& wnd,
-                  const std::string& searchfor,
-                  WindowStringMatch searchby)
+    void AddWindow(Display* display, XID& window, std::vector<Window>& wnd)
     {
         std::string name;
         char* n = NULL;
         if(XFetchName(display, window, &n) > 0) {
             name = n;
             XFree(n);
-        }
+        } 
+        Window w;
+        w.Handle = reinterpret_cast<size_t>(window);
+        XWindowAttributes wndattr;
+        XGetWindowAttributes(display, window, &wndattr);
+        w.Position = Point{ wndattr.x, wndattr.y };
+        w.Size = Point{ wndattr.width, wndattr.height };
 
-        std::transform(name.begin(), name.end(), name.begin(), [](char c) {
-            return std::tolower(c, std::locale());
-        }); // convert to lower
-        bool found = false;
-        if(searchby == WindowStringMatch::STARTSWITH) {
-            auto f = name.substr(0, searchfor.size());
-            found = f == searchfor;
-        } else if(searchby == WindowStringMatch::EXACT) {
-            found = name == searchfor;
-        } else if(searchby == WindowStringMatch::CONTAINS) {
-            found = name.find(searchfor) != std::string::npos;
-        }
-        if(found) {
-            Window w;
-            w.Handle = reinterpret_cast<size_t>(window);
-            XWindowAttributes wndattr;
-            XGetWindowAttributes(display, window, &wndattr);
-            w.Position = Point{ wndattr.x, wndattr.y };
-            w.Size = Point{ wndattr.width, wndattr.height };
-
-            memcpy(w.Name, name.c_str(), name.size() + 1);
-            wnd.push_back(w);
-        }
+        memcpy(w.Name, name.c_str(), name.size() + 1);
+        wnd.push_back(w);
     }
 
-    std::vector<Window> GetWindows(const std::string& name, WindowStringMatch searchby)
+    std::vector<Window> GetWindows()
     {
-        auto nametofind = name;
-        std::transform(nametofind.begin(), nametofind.end(), nametofind.begin(), [](char c) {
-            return std::tolower(c, std::locale());
-        }); // convert to lower
         auto* display = XOpenDisplay(NULL);
         Atom a = XInternAtom(display, "_NET_CLIENT_LIST", true);
         Atom actualType;
@@ -76,7 +53,7 @@ namespace Screen_Capture
             auto array = (XID*)data;
             for(decltype(numItems) k = 0; k < numItems; k++) {
                 auto w = array[k];
-                AddMatch(display, w, ret, name, searchby);
+                AddWindow(display, w, ret);
             }
             XFree(data);
         }

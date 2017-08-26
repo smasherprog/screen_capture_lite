@@ -21,6 +21,7 @@ https://github.com/smasherprog/screen_capture_lite/blob/master/Example/Screen_Ca
 ```c++
 //Setup Screen Capture for all monitors
 auto framgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
+//add your own custom filtering here if you want to capture only some monitors
     return SL::Screen_Capture::GetMonitors();
   })->onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
   
@@ -34,9 +35,21 @@ framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
 framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
 
 
-//Setup Screen Capture for windows that have the title "screen_capture_example" in it
+//Setup Screen Capture for windows that have the title "cmake 3.8" in it
 auto windowframgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
-    return SL::Screen_Capture::GetWindows("screen_capture_example", SL::Screen_Capture::WindowStringMatch::CONTAINS);
+  auto windows = SL::Screen_Capture::GetWindows();
+  std::string srchterm = "cmake 3.8";
+  // convert to lower case for easier comparisons
+  std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale());});
+  decltype(windows) filtereditems;
+  for(auto& a : windows) {
+    std::string name = a.Name;
+    std::transform(name.begin(), name.end(), name.begin(), [](char c) {return std::tolower(c, std::locale()); });
+    if(name.find(srchterm) != std::string::npos) {
+      filtereditems.push_back(a);
+    }
+  }
+  return filtereditems;
   })->onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Window& window) {
   
   })->onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Window& window) {

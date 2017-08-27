@@ -14,18 +14,17 @@ namespace Screen_Capture {
     };
     BOOL CALLBACK EnumWindowsProc(_In_ HWND hwnd, _In_ LPARAM lParam)
     {
-        char buffer[255];
+        Window w;
+        char buffer[sizeof(w.Name)];
         GetWindowTextA(hwnd, buffer, sizeof(buffer));
         srch *s = (srch *)lParam;
         std::string name = buffer;
-        Window w;
         w.Handle = reinterpret_cast<size_t>(hwnd);
         auto windowrect = SL::Screen_Capture::GetWindowRect(hwnd);
         w.Position.x = windowrect.ClientRect.left;
         w.Position.y = windowrect.ClientRect.top;
         w.Size.x = windowrect.ClientRect.right - windowrect.ClientRect.left;
         w.Size.y = windowrect.ClientRect.bottom - windowrect.ClientRect.top;
-
         memcpy(w.Name, name.c_str(), name.size() + 1);
         s->Found.push_back(w);
         return TRUE;

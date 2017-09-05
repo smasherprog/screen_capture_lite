@@ -61,30 +61,24 @@ else()
        src/linux
 		${X11_INCLUDE_DIR}
     )
-	find_package(Threads REQUIRED)
 endif()
 
-set(SCREEN_CAPTURE_COMMON_SRC  
-   src/ScreenCapture.cpp 
-   src/SCCommon.cpp 
-   src/ThreadManager.cpp
-)
 
 include_directories(
 	include 
 	${SCREEN_CAPTURE_PLATFORM_INC} 
 )
-add_library(${PROJECT_NAME} ${SCREEN_CAPTURE_COMMON_SRC} ${SCREEN_CAPTURE_PLATFORM_SRC})
+add_library(${PROJECT_NAME} 
+	src/ScreenCapture.cpp 
+	src/SCCommon.cpp 
+	src/ThreadManager.cpp
+	${SCREEN_CAPTURE_PLATFORM_SRC}
+ )
 
-if(BUILD_SHARED_LIBS)
-	install (TARGETS ${PROJECT_NAME}  
-		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	)
-else()
-	install (TARGETS ${PROJECT_NAME}
-		ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	)
-endif()
+install (TARGETS ${PROJECT_NAME}  
+	ARCHIVE DESTINATION lib
+	LIBRARY DESTINATION lib
+)
 
 install (FILES 
 	include/ScreenCapture.h 

@@ -23,8 +23,7 @@ if(WIN32)
 		src/windows/ThreadRunner.cpp
     )
     set(SCREEN_CAPTURE_PLATFORM_INC     
-       include/windows
-       src/windows
+       include/windows 
     )
 elseif(APPLE)
 	find_library(corefoundation_lib CoreFoundation)
@@ -38,8 +37,7 @@ elseif(APPLE)
         src/ios/ThreadRunner.cpp
     )
     set(SCREEN_CAPTURE_PLATFORM_INC
-       include/ios
-       src/ios
+       include/ios 
     )
 else()
   set(SCREEN_CAPTURE_PLATFORM_SRC 
@@ -57,8 +55,7 @@ else()
  		message(FATAL_ERROR "X11 fixes extension is required, but not found!")
 	endif()
 	set(SCREEN_CAPTURE_PLATFORM_INC
-       include/linux
-       src/linux
+       include/linux 
 		${X11_INCLUDE_DIR}
     )
 endif()

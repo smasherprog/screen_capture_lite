@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(screen_capture)
+project(screen_capture_lite)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -77,11 +77,11 @@ include_directories(
 add_library(${PROJECT_NAME} ${SCREEN_CAPTURE_COMMON_SRC} ${SCREEN_CAPTURE_PLATFORM_SRC})
 
 if(BUILD_SHARED_LIBS)
-	install (TARGETS screen_capture  
+	install (TARGETS ${PROJECT_NAME}  
 		LIBRARY DESTINATION bin
 	)
 else()
-	install (TARGETS screen_capture 
+	install (TARGETS ${PROJECT_NAME} 
 		ARCHIVE DESTINATION lib
 	)
 endif()

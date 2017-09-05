@@ -28,5 +28,5 @@ add_executable(${PROJECT_NAME}
 	lodepng.cpp
 	Screen_Capture_Example.cpp
 )
-target_link_libraries(${PROJECT_NAME} screen_capture ${${PROJECT_NAME}_PLATFORM_LIBS}) 
+target_link_libraries(${PROJECT_NAME} screen_capture_lite ${${PROJECT_NAME}_PLATFORM_LIBS}) 
 

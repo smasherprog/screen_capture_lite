@@ -4,7 +4,6 @@
 #include <cstring>
 #include <functional>
 #include <memory>
-#include <ostream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -67,105 +66,35 @@ namespace Screen_Capture {
     {
         return b.left == a.left && b.right == a.right && b.top == a.top && b.bottom == a.bottom;
     }
-    inline std::ostream &operator<<(std::ostream &os, const ImageRect &p)
-    {
-        return os << "left=" << p.left << " top=" << p.top << " right=" << p.right << " bottom=" << p.bottom;
-    }
-    inline std::ostream &operator<<(std::ostream &os, const Monitor &p)
-    {
-        return os << "Id=" << p.Id << " Index=" << p.Index << " Height=" << p.Height << " Width=" << p.Width << " OffsetX=" << p.OffsetX
-                  << " OffsetY=" << p.OffsetY << " Name=" << p.Name;
-    }
     // index to self in the GetMonitors() function
-    int Index(const Monitor &mointor);
+    SC_LITE_EXTERN int Index(const Monitor &mointor);
     // unique identifier
-    int Id(const Monitor &mointor);
-    int OffsetX(const Monitor &mointor);
-    int OffsetY(const Monitor &mointor);
-    const char *Name(const Monitor &mointor);
-    int Height(const Monitor &mointor);
-    int Width(const Monitor &mointor);
+    SC_LITE_EXTERN int Id(const Monitor &mointor);
+    SC_LITE_EXTERN int OffsetX(const Monitor &mointor);
+    SC_LITE_EXTERN int OffsetY(const Monitor &mointor);
+    SC_LITE_EXTERN const char *Name(const Monitor &mointor);
+    SC_LITE_EXTERN int Height(const Monitor &mointor);
+    SC_LITE_EXTERN int Width(const Monitor &mointor);
 
-    int Height(const ImageRect &rect);
-    int Width(const ImageRect &rect);
+    SC_LITE_EXTERN int Height(const ImageRect &rect);
+    SC_LITE_EXTERN int Width(const ImageRect &rect);
 
-    int Height(const Image &img);
-    int Width(const Image &img);
-    const ImageRect &Rect(const Image &img);
+    SC_LITE_EXTERN int Height(const Image &img);
+    SC_LITE_EXTERN int Width(const Image &img);
+    SC_LITE_EXTERN const ImageRect &Rect(const Image &img);
 
     // number of bytes per row, NOT including the Rowpadding
-    int RowStride(const Image &img);
+    SC_LITE_EXTERN int RowStride(const Image &img);
     // number of bytes per row of padding
-    int RowPadding(const Image &img);
+    SC_LITE_EXTERN int RowPadding(const Image &img);
     // the start of the image data, this is not guarenteed to be contiguos. You must use the Rowstride and rowpadding to
     // examine the image
-    const unsigned char *StartSrc(const Image &img);
+    SC_LITE_EXTERN const unsigned char *StartSrc(const Image &img);
+    SC_LITE_EXTERN void Extract(const Image &img, unsigned char *dst, size_t dst_size);
+    SC_LITE_EXTERN void ExtractAndConvertToRGBA(const Image &img, unsigned char *dst, size_t dst_size);
+    SC_LITE_EXTERN void ExtractAndConvertToRGB(const Image &img, unsigned char *dst, size_t dst_size);
+    SC_LITE_EXTERN void ExtractAndConvertToRGB565(const Image &img, unsigned char *dst, size_t dst_size);
 
-    inline void Extract(const Image &img, unsigned char *dst, size_t dst_size)
-    {
-        assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
-        auto startdst = dst;
-        auto startsrc = StartSrc(img);
-        if (RowPadding(img) == 0) { // no padding, the entire copy can be a single memcpy call
-            memcpy(startdst, startsrc, RowStride(img) * Height(img));
-        }
-        else {
-            for (auto i = 0; i < Height(img); i++) {
-                memcpy(startdst, startsrc, RowStride(img));
-                startdst += RowStride(img);                   // advance to the next row
-                startsrc += RowStride(img) + RowPadding(img); // advance to the next row
-            }
-        }
-    }
-
-    inline void ExtractAndConvertToRGBA(const Image &img, unsigned char *dst, size_t dst_size)
-    {
-
-        assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
-        auto imgsrc = StartSrc(img);
-        auto imgdist = dst;
-        for (auto h = 0; h < Height(img); h++) {
-            for (auto w = 0; w < Width(img); w++) {
-                *imgdist++ = *(imgsrc + 2);
-                *imgdist++ = *(imgsrc + 1);
-                *imgdist++ = *(imgsrc);
-                *imgdist++ = 0; // alpha should be zero
-                imgsrc += img.Pixelstride;
-            }
-            imgsrc += RowPadding(img);
-        }
-    }
-    inline void ExtractAndConvertToRGB(const Image &img, unsigned char *dst, size_t dst_size)
-    {
-        assert(dst_size >= static_cast<size_t>(Width(img) * 3 * Height(img)));
-        auto imgsrc = StartSrc(img);
-        auto imgdist = dst;
-        for (auto h = 0; h < Height(img); h++) {
-            for (auto w = 0; w < Width(img); w++) {
-                *imgdist++ = *(imgsrc + 2);
-                *imgdist++ = *(imgsrc + 1);
-                *imgdist++ = *(imgsrc);
-                imgsrc += img.Pixelstride;
-            }
-            imgsrc += RowPadding(img);
-        }
-    }
-
-    inline void ExtractAndConvertToRGB565(const Image &img, unsigned char *dst, size_t dst_size)
-    {
-        assert(dst_size >= static_cast<size_t>(Width(img) * 2 * Height(img)));
-        auto imgsrc = StartSrc(img);
-        auto imgdist = dst;
-        for (auto h = 0; h < Height(img); h++) {
-            for (auto w = 0; w < Width(img); w++) {
-                int short rgb = (*(imgsrc + 2) << 11) | (*(imgsrc + 1) << 5) | *(imgsrc);
-                *imgdist++ = static_cast<unsigned char>(rgb);
-                *imgdist++ = static_cast<unsigned char>(rgb << 8);
-                imgsrc += img.Pixelstride;
-            }
-            imgsrc += RowPadding(img);
-        }
-    }
     class ITimer {
       public:
         ITimer(){};
@@ -192,11 +121,11 @@ namespace Screen_Capture {
         }
     };
     // will return all attached monitors
-    std::vector<Monitor> SC_LITE_EXTERN GetMonitors();
+    SC_LITE_EXTERN std::vector<Monitor> GetMonitors();
     // will return all windows
-    std::vector<Window> SC_LITE_EXTERN GetWindows();
+    SC_LITE_EXTERN std::vector<Window> GetWindows();
 
-    bool SC_LITE_EXTERN isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
+    SC_LITE_EXTERN bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
 
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Monitor &monitor)> ScreenCaptureCallback;
@@ -251,10 +180,10 @@ namespace Screen_Capture {
 
     // the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want
     // to be captured
-    std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> SC_LITE_EXTERN CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
+    SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
     // the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to
     // be captured
-    std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> SC_LITE_EXTERN CreateCaptureConfiguration(const WindowCallback &windowstocapture);
+    SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback &windowstocapture);
 } // namespace Screen_Capture
 } // namespace SL
 SC_EXPIMP_TEMPLATE template class SC_LITE_EXTERN std::shared_ptr<SL::Screen_Capture::ScreenCaptureManagerImpl>;

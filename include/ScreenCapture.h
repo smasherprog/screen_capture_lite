@@ -9,6 +9,19 @@
 #include <thread>
 #include <vector>
 
+#if defined(WINDOWS) || defined(WIN32)
+#if defined(SC_LITE_DLL)
+#define SC_LITE_EXTERN __declspec(dllexport)
+#define SC_EXPIMP_TEMPLATE
+#else
+#define SC_LITE_EXTERN
+#define SC_EXPIMP_TEMPLATE extern
+#endif
+#else
+#define SC_LITE_EXTERN
+#define SC_EXPIMP_TEMPLATE
+#endif
+
 namespace SL {
 namespace Screen_Capture {
     struct Point {
@@ -179,11 +192,11 @@ namespace Screen_Capture {
         }
     };
     // will return all attached monitors
-    std::vector<Monitor> GetMonitors();
+    std::vector<Monitor> SC_LITE_EXTERN GetMonitors();
     // will return all windows
-    std::vector<Window> GetWindows();
+    std::vector<Window> SC_LITE_EXTERN GetWindows();
 
-    bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
+    bool SC_LITE_EXTERN isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
 
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Monitor &monitor)> ScreenCaptureCallback;
@@ -194,7 +207,7 @@ namespace Screen_Capture {
     typedef std::function<std::vector<Window>()> WindowCallback;
 
     class ScreenCaptureManagerImpl;
-    class ScreenCaptureManager {
+    class SC_LITE_EXTERN ScreenCaptureManager {
         std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
 
       public:
@@ -238,9 +251,10 @@ namespace Screen_Capture {
 
     // the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want
     // to be captured
-    std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
+    std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> SC_LITE_EXTERN CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
     // the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to
     // be captured
-    std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback &windowstocapture);
+    std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> SC_LITE_EXTERN CreateCaptureConfiguration(const WindowCallback &windowstocapture);
 } // namespace Screen_Capture
 } // namespace SL
+SC_EXPIMP_TEMPLATE template class SC_LITE_EXTERN std::shared_ptr<SL::Screen_Capture::ScreenCaptureManagerImpl>;

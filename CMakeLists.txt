@@ -4,7 +4,7 @@ project(screen_capture_lite)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
+option(BUILD_SHARED_LIBS "Build the shared library" OFF)
 option(BUILD_EXAMPLE "Build example" ON)
 
 if(MSVC)
@@ -71,6 +71,34 @@ add_library(${PROJECT_NAME}
 	src/ThreadManager.cpp
 	${SCREEN_CAPTURE_PLATFORM_SRC}
  )
+ if(BUILD_SHARED_LIBS)	
+	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
+	 if(WIN32) 
+		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES}  Dwmapi)
+	elseif(APPLE)
+		find_package(Threads REQUIRED)
+		find_library(corefoundation_lib CoreFoundation)
+		find_library(cocoa_lib Cocoa)
+		target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${corefoundation_lib} ${cocoa_lib})
+	else()
+		find_package(X11 REQUIRED)
+		if(!X11_XTest_FOUND)
+ 			message(FATAL_ERROR "X11 extensions are required, but not found!")
+		endif()
+		if(!X11_Xfixes_LIB)
+ 			message(FATAL_ERROR "X11 fixes extension is required, but not found!")
+		endif()
+		find_package(Threads REQUIRED)
+		set(${PROJECT_NAME}_PLATFORM_LIBS
+			${X11_LIBRARIES}
+			${X11_Xfixes_LIB}
+			${X11_XTest_LIB}
+			${X11_Xinerama_LIB}
+			${CMAKE_THREAD_LIBS_INIT}
+		)	
+		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} dl)
+	endif()
+endif()
 
 install (TARGETS ${PROJECT_NAME}  
 	ARCHIVE DESTINATION lib

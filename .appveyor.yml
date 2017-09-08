@@ -17,4 +17,5 @@ install:
   - cmake -G "Visual Studio 15 2017" ..
 
 build_script:
-  - cmake --build .
+  - cmake -DBUILD_SHARED_LIBS=ON --build  .
+  - cmake -DBUILD_SHARED_LIBS=OFF --build  .

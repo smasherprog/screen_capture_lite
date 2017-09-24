@@ -71,7 +71,7 @@ add_library(${PROJECT_NAME}
 	src/ThreadManager.cpp
 	${SCREEN_CAPTURE_PLATFORM_SRC}
  )
- if(BUILD_SHARED_LIBS)	
+ if(${BUILD_SHARED_LIBS})	
 	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
 	 if(WIN32) 
 		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES}  Dwmapi)
@@ -101,6 +101,7 @@ add_library(${PROJECT_NAME}
 endif()
 
 install (TARGETS ${PROJECT_NAME}  
+	RUNTIME DESTINATION bin
 	ARCHIVE DESTINATION lib
 	LIBRARY DESTINATION lib
 )

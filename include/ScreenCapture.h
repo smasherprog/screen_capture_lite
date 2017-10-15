@@ -34,6 +34,7 @@ namespace Screen_Capture {
         int OffsetX = 0;
         int OffsetY = 0;
         char Name[128] = {0};
+        float Scaling = 1.0f;
     };
 
     struct Window {

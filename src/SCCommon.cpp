@@ -8,9 +8,9 @@
 namespace SL {
 namespace Screen_Capture {
 
-    void SanitizeRects(std::vector<ImageRect>& rects, const Image& img)
+    void SanitizeRects(std::vector<ImageRect> &rects, const Image &img)
     {
-        for (auto& r : rects) {
+        for (auto &r : rects) {
             if (r.right > Width(img)) {
                 r.right = Width(img);
             }
@@ -21,7 +21,7 @@ namespace Screen_Capture {
     }
 #define maxdist 256
 
-    std::vector<ImageRect> GetDifs(const Image& oldimg, const Image& newimg)
+    std::vector<ImageRect> GetDifs(const Image &oldimg, const Image &newimg)
     {
         std::vector<ImageRect> rects;
         if (Width(oldimg) != Width(newimg) || Height(oldimg) != Height(newimg)) {
@@ -30,8 +30,8 @@ namespace Screen_Capture {
         }
         rects.reserve((Height(newimg) / maxdist) + 1 * (Width(newimg) / maxdist) + 1);
 
-        auto oldimg_ptr = (const int*)StartSrc(oldimg);
-        auto newimg_ptr = (const int*)StartSrc(newimg);
+        auto oldimg_ptr = (const int *)StartSrc(oldimg);
+        auto newimg_ptr = (const int *)StartSrc(newimg);
 
         auto imgwidth = Width(oldimg);
         auto imgheight = Height(oldimg);
@@ -74,7 +74,8 @@ namespace Screen_Capture {
             if (outrects.back().right == rects[i].left && outrects.back().bottom == rects[i].bottom) {
                 outrects.back().right = rects[i].right;
                 expandcount++;
-            } else {
+            }
+            else {
                 outrects.push_back(rects[i]);
                 containedcount++;
             }
@@ -93,15 +94,16 @@ namespace Screen_Capture {
         }
         rects.resize(0);
         // vertical scan
-        for (auto& otrect : outrects) {
+        for (auto &otrect : outrects) {
 
-            auto found = std::find_if(rects.rbegin(), rects.rend(), [=](const ImageRect& rec) {
+            auto found = std::find_if(rects.rbegin(), rects.rend(), [=](const ImageRect &rec) {
                 return rec.bottom == otrect.top && rec.left == otrect.left && rec.right == otrect.right;
             });
             if (found == rects.rend()) {
                 rects.push_back(otrect);
                 containedcount++;
-            } else {
+            }
+            else {
                 found->bottom = otrect.bottom;
                 expandcount++;
             }
@@ -121,8 +123,7 @@ namespace Screen_Capture {
         return rects;
     }
 
-    Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy,
-        const std::string& n)
+    Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string &n, float scaling)
     {
         Monitor ret = {};
         ret.Index = index;
@@ -133,11 +134,11 @@ namespace Screen_Capture {
         ret.OffsetX = ox;
         ret.OffsetY = oy;
         ret.Width = w;
+        ret.Scaling = scaling;
         return ret;
     }
 
-    Image Create(const ImageRect& imgrect, int pixelstride, int rowpadding,
-        const unsigned char* data)
+    Image Create(const ImageRect &imgrect, int pixelstride, int rowpadding, const unsigned char *data)
     {
         Image ret;
         ret.Bounds = imgrect;
@@ -146,23 +147,23 @@ namespace Screen_Capture {
         ret.RowPadding = rowpadding;
         return ret;
     }
-    int Index(const Monitor& mointor) { return mointor.Index; }
-    int Id(const Monitor& mointor) { return mointor.Id; }
-    int OffsetX(const Monitor& mointor) { return mointor.OffsetX; }
-    int OffsetY(const Monitor& mointor) { return mointor.OffsetY; }
-    const char* Name(const Monitor& mointor) { return mointor.Name; }
-    int Height(const Monitor& mointor) { return mointor.Height; }
-    int Width(const Monitor& mointor) { return mointor.Width; }
-    int Height(const ImageRect& rect) { return rect.bottom - rect.top; }
-    int Width(const ImageRect& rect) { return rect.right - rect.left; }
-    int Height(const Image& img) { return Height(img.Bounds); }
-    int Width(const Image& img) { return Width(img.Bounds); }
-    const ImageRect& Rect(const Image& img) { return img.Bounds; }
+    int Index(const Monitor &mointor) { return mointor.Index; }
+    int Id(const Monitor &mointor) { return mointor.Id; }
+    int OffsetX(const Monitor &mointor) { return mointor.OffsetX; }
+    int OffsetY(const Monitor &mointor) { return mointor.OffsetY; }
+    const char *Name(const Monitor &mointor) { return mointor.Name; }
+    int Height(const Monitor &mointor) { return mointor.Height; }
+    int Width(const Monitor &mointor) { return mointor.Width; }
+    int Height(const ImageRect &rect) { return rect.bottom - rect.top; }
+    int Width(const ImageRect &rect) { return rect.right - rect.left; }
+    int Height(const Image &img) { return Height(img.Bounds); }
+    int Width(const Image &img) { return Width(img.Bounds); }
+    const ImageRect &Rect(const Image &img) { return img.Bounds; }
 
     // number of bytes per row, NOT including the Rowpadding
-    int RowStride(const Image& img) { return img.Pixelstride * Width(img); }
+    int RowStride(const Image &img) { return img.Pixelstride * Width(img); }
     // number of bytes per row of padding
-    int RowPadding(const Image& img) { return img.RowPadding; }
-    const unsigned char* StartSrc(const Image& img) { return img.Data; }
+    int RowPadding(const Image &img) { return img.RowPadding; }
+    const unsigned char *StartSrc(const Image &img) { return img.Data; }
 } // namespace Screen_Capture
 } // namespace SL

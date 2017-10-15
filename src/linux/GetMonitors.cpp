@@ -20,7 +20,7 @@ namespace Screen_Capture
 
             auto name = std::string("Display ") + std::to_string(i);
             ret.push_back(CreateMonitor(
-                i, screen[i].screen_number, screen[i].height, screen[i].width, screen[i].x_org, screen[i].y_org, name));
+                i, screen[i].screen_number, screen[i].height, screen[i].width, screen[i].x_org, screen[i].y_org, name, 1.0f));
         }
         XFree(screen);
 

@@ -11,14 +11,11 @@
 #if defined(WINDOWS) || defined(WIN32)
 #if defined(SC_LITE_DLL)
 #define SC_LITE_EXTERN __declspec(dllexport)
-#define SC_EXPIMP_TEMPLATE
 #else
 #define SC_LITE_EXTERN
-#define SC_EXPIMP_TEMPLATE extern
 #endif
 #else
 #define SC_LITE_EXTERN
-#define SC_EXPIMP_TEMPLATE
 #endif
 
 namespace SL {
@@ -135,13 +132,9 @@ namespace Screen_Capture {
     typedef std::function<std::vector<Monitor>()> MonitorCallback;
     typedef std::function<std::vector<Window>()> WindowCallback;
 
-    class ScreenCaptureManagerImpl;
-    class SC_LITE_EXTERN ScreenCaptureManager {
-        std::shared_ptr<ScreenCaptureManagerImpl> Impl_;
-
+    class SC_LITE_EXTERN IScreenCaptureManager {
       public:
-        ScreenCaptureManager(const std::shared_ptr<ScreenCaptureManagerImpl> &impl) : Impl_(impl) {}
-        ~ScreenCaptureManager() {}
+        virtual ~IScreenCaptureManager() {}
 
         // Used by the library to determine the callback frequency
         template <class Rep, class Period> void setFrameChangeInterval(const std::chrono::duration<Rep, Period> &rel_time)
@@ -154,15 +147,15 @@ namespace Screen_Capture {
             setMouseChangeInterval(std::make_shared<Timer<Rep, Period>>(rel_time));
         }
 
-        void setFrameChangeInterval(const std::shared_ptr<ITimer> &timer);
-        void setMouseChangeInterval(const std::shared_ptr<ITimer> &timer);
+        virtual void setFrameChangeInterval(const std::shared_ptr<ITimer> &timer) = 0;
+        virtual void setMouseChangeInterval(const std::shared_ptr<ITimer> &timer) = 0;
 
         // Will pause all capturing
-        void pause();
+        virtual void pause() = 0;
         // Will return whether the library is paused
-        bool isPaused() const;
+        virtual bool isPaused() const = 0;
         // Will resume all capturing if paused, otherwise has no effect
-        void resume();
+        virtual void resume() = 0;
     };
 
     template <typename CAPTURECALLBACK> class ICaptureConfiguration {
@@ -175,7 +168,7 @@ namespace Screen_Capture {
         // When a mouse image changes or the mouse changes position, the callback is invoked.
         virtual std::shared_ptr<ICaptureConfiguration<CAPTURECALLBACK>> onMouseChanged(const MouseCallback &cb) = 0;
         // start capturing
-        virtual std::shared_ptr<ScreenCaptureManager> start_capturing() = 0;
+        virtual std::shared_ptr<IScreenCaptureManager> start_capturing() = 0;
     };
 
     // the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want
@@ -186,4 +179,3 @@ namespace Screen_Capture {
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback &windowstocapture);
 } // namespace Screen_Capture
 } // namespace SL
-SC_EXPIMP_TEMPLATE template class SC_LITE_EXTERN std::shared_ptr<SL::Screen_Capture::ScreenCaptureManagerImpl>;

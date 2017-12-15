@@ -68,7 +68,7 @@ namespace Screen_Capture {
         auto imgsrc = StartSrc(img);
         auto imgdist = dst;
         for (auto h = 0; h < Height(img); h++) {
-            for (auto w = 0; w < Width(img); w++)
+            for (auto w = 0; w < Width(img); w++) {
                 unsigned char r = (*(imgsrc + 2)) & 0xF8;
                 unsigned char g = (*(imgsrc + 1)) & 0xFC;
                 unsigned char b = (*imgsrc) & 0xF8;

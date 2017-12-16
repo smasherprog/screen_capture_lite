@@ -1,4 +1,5 @@
 # screen capture lite
+<h3>I will not debug normal programming issues and will close any that are not bugs.</h3>
 <p>Linux/Mac <img src="https://travis-ci.org/smasherprog/screen_capture_lite.svg?branch=master" /></p>
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/6nlqo1csbkgdxorx"/><p>
 <p>Cross-platform screen and window capturing library . . . this is made to be lightweight and fast.

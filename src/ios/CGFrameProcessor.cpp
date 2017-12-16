@@ -23,10 +23,6 @@ namespace SL {
         {
             auto Ret = DUPL_RETURN_SUCCESS;
 
-            if(Height(curentmonitorinfo) != Height(SelectedMonitor) || Width(curentmonitorinfo) != Width(SelectedMonitor)){
-                return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
-            }
-            
             auto imageRef =  CGDisplayCreateImage(Id(SelectedMonitor));
 
             if(!imageRef) return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.

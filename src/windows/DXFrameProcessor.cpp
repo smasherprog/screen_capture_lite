@@ -306,7 +306,7 @@ namespace Screen_Capture {
         AquireFrameRAII frame(OutputDuplication.Get());
 
         // Get new frame
-        auto hr = frame.AcquireNextFrame(0, &FrameInfo, DesktopResource.GetAddressOf());
+        auto hr = frame.AcquireNextFrame(100, &FrameInfo, DesktopResource.GetAddressOf());
         if (hr == DXGI_ERROR_WAIT_TIMEOUT) {
             return DUPL_RETURN_SUCCESS;
         }

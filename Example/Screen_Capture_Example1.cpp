@@ -298,6 +298,7 @@ int main()
         }
     }
 
+
     std::cout << "Changing the cpature rate to 1 second" << std::endl;
     framgrabber->setFrameChangeInterval(std::chrono::seconds(1));
     std::this_thread::sleep_for(std::chrono::seconds(5));

@@ -132,6 +132,8 @@ void createpartialframegrabber()
         auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
 
         auto size = RowStride(img) * Height(img);
+            assert(img.Bounds.top == 512);
+            assert(img.Bounds.left == 512);
         assert(Height(img) == 512);
         assert(Width(img) == 512);
         // auto imgbuffer(std::make_unique<unsigned char[]>(size));

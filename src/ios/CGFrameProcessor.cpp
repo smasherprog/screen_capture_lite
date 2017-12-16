@@ -46,10 +46,11 @@ namespace Screen_Capture {
         auto buf = CFDataGetBytePtr(rawdatas);
 
         ImageRect ret = {0};
-        ret.left = ret.top = 0;
-        ret.bottom = Height(SelectedMonitor);
-        ret.right = Width(SelectedMonitor);
-        auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData);
+        ret.left = OffsetX(SelectedMonitor);
+        ret.top = OffsetY(SelectedMonitor);
+        ret.bottom = ret.top +Height(SelectedMonitor);
+        ret.right = ret.left + Width(SelectedMonitor);
+        auto startsrc =buf;
 
         auto rowstride = PixelStride * Width(SelectedMonitor);
 

@@ -107,7 +107,10 @@ namespace Screen_Capture {
         }
         return true;
     }
+    static bool ScreenCaptureManagerExists = false;
     class ScreenCaptureManager : public IScreenCaptureManager {
+        
+
       public:
         // allreads share the same data!!!
         std::shared_ptr<Thread_Data> Thread_Data_;
@@ -116,6 +119,9 @@ namespace Screen_Capture {
 
         ScreenCaptureManager()
         {
+            //you must ONLY HAVE ONE INSTANCE RUNNING AT A TIME. Destroy the first instance then create one!
+            assert(!ScreenCaptureManagerExists);
+            ScreenCaptureManagerExists = true;
             Thread_Data_ = std::make_shared<Thread_Data>();
             Thread_Data_->CommonData_.Paused = false;
             Thread_Data_->ScreenCaptureData.FrameTimer = std::make_shared<Timer<long long, std::milli>>(100ms);
@@ -133,6 +139,7 @@ namespace Screen_Capture {
             else if (Thread_.joinable()) {
                 Thread_.join();
             }
+            ScreenCaptureManagerExists = false;
         }
         void start()
         {

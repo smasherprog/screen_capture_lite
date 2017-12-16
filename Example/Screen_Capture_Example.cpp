@@ -37,6 +37,7 @@ void createframegrabber()
 {
     realcounter = 0;
     onNewFramecounter = 0;
+    framgrabber = nullptr;
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
         auto mons = SL::Screen_Capture::GetMonitors();
@@ -99,6 +100,7 @@ void createpartialframegrabber()
 {
     realcounter = 0;
     onNewFramecounter = 0;
+    framgrabber = nullptr;
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
         auto mons = SL::Screen_Capture::GetMonitors();
@@ -132,8 +134,8 @@ void createpartialframegrabber()
         auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
 
         auto size = RowStride(img) * Height(img);
-            assert(img.Bounds.top == 512);
-            assert(img.Bounds.left == 512);
+            assert(img.Bounds.top >= 512);
+            assert(img.Bounds.left >= 512);
         assert(Height(img) == 512);
         assert(Width(img) == 512);
         // auto imgbuffer(std::make_unique<unsigned char[]>(size));
@@ -173,6 +175,7 @@ void createwindowgrabber()
 {
     realcounter = 0;
     onNewFramecounter = 0;
+    framgrabber = nullptr;
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
 

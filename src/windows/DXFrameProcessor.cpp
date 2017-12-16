@@ -302,11 +302,11 @@ namespace Screen_Capture {
         auto Ret = DUPL_RETURN_SUCCESS;
 
         Microsoft::WRL::ComPtr<IDXGIResource> DesktopResource;
-        DXGI_OUTDUPL_FRAME_INFO FrameInfo;
+        DXGI_OUTDUPL_FRAME_INFO FrameInfo = {0};
         AquireFrameRAII frame(OutputDuplication.Get());
 
         // Get new frame
-        auto hr = frame.AcquireNextFrame(500, &FrameInfo, DesktopResource.GetAddressOf());
+        auto hr = frame.AcquireNextFrame(0, &FrameInfo, DesktopResource.GetAddressOf());
         if (hr == DXGI_ERROR_WAIT_TIMEOUT) {
             return DUPL_RETURN_SUCCESS;
         }
@@ -320,10 +320,9 @@ namespace Screen_Capture {
             return ProcessFailure(nullptr, L"Failed to QI for ID3D11Texture2D from acquired IDXGIResource in DUPLICATIONMANAGER", L"Error", hr);
         }
 
-        D3D11_TEXTURE2D_DESC ThisDesc;
-        aquireddesktopimage->GetDesc(&ThisDesc);
-
         if (!StagingSurf) {
+            D3D11_TEXTURE2D_DESC ThisDesc = {0};
+            aquireddesktopimage->GetDesc(&ThisDesc);
             D3D11_TEXTURE2D_DESC StagingDesc;
             StagingDesc = ThisDesc;
             StagingDesc.BindFlags = 0;
@@ -353,7 +352,7 @@ namespace Screen_Capture {
             DeviceContext->CopySubresourceRegion(StagingSurf.Get(), 0, 0, 0, 0, aquireddesktopimage.Get(), 0, &sourceRegion);
         }
 
-        D3D11_MAPPED_SUBRESOURCE MappingDesc;
+        D3D11_MAPPED_SUBRESOURCE MappingDesc = {0};
         MAPPED_SUBRESOURCERAII mappedresrouce(DeviceContext.Get());
         hr = mappedresrouce.Map(StagingSurf.Get(), 0, D3D11_MAP_READ, 0, &MappingDesc);
         // Get the data
@@ -363,7 +362,7 @@ namespace Screen_Capture {
                                   hr, SystemTransitionsExpectedErrors);
         }
 
-        ImageRect ret;
+        ImageRect ret = {0};
         ret.left = ret.top = 0;
         ret.bottom = Height(SelectedMonitor);
         ret.right = Width(SelectedMonitor);
@@ -372,7 +371,6 @@ namespace Screen_Capture {
         auto rowstride = PixelStride * Width(SelectedMonitor);
 
         if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
-
             auto wholeimg = Create(ret, PixelStride, static_cast<int>(MappingDesc.RowPitch) - rowstride, startsrc);
             Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
         }

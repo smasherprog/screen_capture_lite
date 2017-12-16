@@ -69,9 +69,12 @@ namespace Screen_Capture {
         auto imgdist = dst;
         for (auto h = 0; h < Height(img); h++) {
             for (auto w = 0; w < Width(img); w++) {
-                int short rgb = (*(imgsrc + 2) << 11) | (*(imgsrc + 1) << 5) | *(imgsrc);
+                unsigned char r = (*(imgsrc + 2)) & 0xF8;
+                unsigned char g = (*(imgsrc + 1)) & 0xFC;
+                unsigned char b = (*imgsrc) & 0xF8;
+                int short rgb = (r << 8) | (g << 3) | (b >> 3);
                 *imgdist++ = static_cast<unsigned char>(rgb);
-                *imgdist++ = static_cast<unsigned char>(rgb << 8);
+                *imgdist++ = static_cast<unsigned char>(rgb >> 8);
                 imgsrc += img.Pixelstride;
             }
             imgsrc += RowPadding(img);

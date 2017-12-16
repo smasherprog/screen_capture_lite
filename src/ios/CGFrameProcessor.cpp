@@ -44,10 +44,10 @@ namespace SL {
             auto buf = CFDataGetBytePtr(rawdatas);
             
             auto datalen = width*height*PixelStride;
-            ImageRect ret;
-            ret.left =  ret.top=0;
-            ret.right =width;
-            ret.bottom = height;
+        ImageRect ret = {0};
+        ret.left = ret.top = 0;
+        ret.bottom = Height(SelectedMonitor);
+        ret.right = Width(SelectedMonitor);
             if(Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
                 
                 auto wholeimg = SL::Screen_Capture::Create(ret, PixelStride, bytesperrow - PixelStride*width, buf);

@@ -4,133 +4,137 @@
 #include <iostream>
 
 namespace SL {
-    namespace Screen_Capture {
-        
-        
-        DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor& monitor) {
-            auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
-            Data = data;
-            SelectedMonitor = monitor;
-            return ret;
+namespace Screen_Capture {
+
+    DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Monitor &monitor)
+    {
+        auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
+        Data = data;
+        SelectedMonitor = monitor;
+        return ret;
+    }
+
+    DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Window &window)
+    {
+        auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
+        Data = data;
+        return ret;
+    }
+    DUPL_RETURN CGFrameProcessor::ProcessFrame(const Monitor &curentmonitorinfo)
+    {
+        auto Ret = DUPL_RETURN_SUCCESS;
+
+        auto imageRef = CGDisplayCreateImage(Id(SelectedMonitor));
+
+        if (!imageRef)
+            return DUPL_RETURN_ERROR_EXPECTED; // this happens when the monitors change.
+
+        auto width = CGImageGetWidth(imageRef);
+        auto height = CGImageGetHeight(imageRef);
+
+        auto prov = CGImageGetDataProvider(imageRef);
+        if (!prov) {
+            CGImageRelease(imageRef);
+            return DUPL_RETURN_ERROR_EXPECTED;
         }
-        
-        DUPL_RETURN CGFrameProcessor::Init(std::shared_ptr<Thread_Data> data, Window& window){
-            auto ret = DUPL_RETURN::DUPL_RETURN_SUCCESS;
-            Data = data;
-            return ret;
-        }
-        DUPL_RETURN CGFrameProcessor::ProcessFrame(const Monitor& curentmonitorinfo)
-        {
-            auto Ret = DUPL_RETURN_SUCCESS;
+        auto bytesperrow = CGImageGetBytesPerRow(imageRef);
+        auto bitsperpixel = CGImageGetBitsPerPixel(imageRef);
+        // right now only support full 32 bit images.. Most desktops should run this as its the most efficent
+        assert(bitsperpixel == PixelStride * 8);
 
-            auto imageRef =  CGDisplayCreateImage(Id(SelectedMonitor));
+        auto rawdatas = CGDataProviderCopyData(prov);
+        auto buf = CFDataGetBytePtr(rawdatas);
 
-            if(!imageRef) return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
-            
-            auto width = CGImageGetWidth(imageRef);
-            auto height = CGImageGetHeight(imageRef);
-
-            auto prov = CGImageGetDataProvider(imageRef);
-            if(!prov){
-                CGImageRelease(imageRef);
-                return DUPL_RETURN_ERROR_EXPECTED;
-            }
-            auto bytesperrow = CGImageGetBytesPerRow(imageRef);
-            auto bitsperpixel = CGImageGetBitsPerPixel(imageRef);
-            // right now only support full 32 bit images.. Most desktops should run this as its the most efficent
-            assert(bitsperpixel == PixelStride*8);
-            
-            auto rawdatas= CGDataProviderCopyData(prov);
-            auto buf = CFDataGetBytePtr(rawdatas);
-            
-            auto datalen = width*height*PixelStride;
         ImageRect ret = {0};
         ret.left = ret.top = 0;
         ret.bottom = Height(SelectedMonitor);
         ret.right = Width(SelectedMonitor);
-            if(Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
-                
-                auto wholeimg = SL::Screen_Capture::Create(ret, PixelStride, bytesperrow - PixelStride*width, buf);
-                Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
-                
-            } else {
-                if(bytesperrow == PixelStride*width){
-                    //most efficent, can be done in a single memcpy
-                    memcpy(NewImageBuffer.get(),buf, datalen);
-                } else {
-                    //for loop needed to copy each row
-                    auto dst =NewImageBuffer.get();
-                    auto src =buf;
-                    for (auto h =0; h<height;h++) {
-                        memcpy(dst,src, PixelStride*width);
-                        dst +=PixelStride*width;
-                        src +=bytesperrow;
-                    }
-                }
-                
-                ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor ,ret);
-            }
-            CFRelease(rawdatas);
-            CGImageRelease(imageRef);
-            return Ret;
+        auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData);
+
+        auto rowstride = PixelStride * Width(SelectedMonitor);
+
+        if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
+            auto wholeimg = Create(ret, PixelStride, static_cast<int>(bytesperrow) - rowstride, startsrc);
+            Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
         }
-        DUPL_RETURN CGFrameProcessor::ProcessFrame(const Window& window){
-            
-            auto Ret = DUPL_RETURN_SUCCESS;
-        
-            auto imageRef = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow ,static_cast<uint32_t>(window.Handle), kCGWindowImageBoundsIgnoreFraming);
-            if(!imageRef) return DUPL_RETURN_ERROR_EXPECTED;//this happens when the monitors change.
-            
-            auto width = CGImageGetWidth(imageRef);
-            auto height = CGImageGetHeight(imageRef);
-            
-            if( width != window.Size.x ||  height != window.Size.y ){
-                 CGImageRelease(imageRef);
-                 return DUPL_RETURN_ERROR_EXPECTED;//this happens when the window sizes change.
+        else {
+            auto startdst = NewImageBuffer.get();
+            if (rowstride == static_cast<int>(bytesperrow)) { // no need for multiple calls, there is no padding here
+                memcpy(startdst, startsrc, rowstride * Height(SelectedMonitor));
             }
-            auto prov = CGImageGetDataProvider(imageRef);
-            if(!prov){
-                CGImageRelease(imageRef);
-                return DUPL_RETURN_ERROR_EXPECTED;
-            }
-            auto bytesperrow = CGImageGetBytesPerRow(imageRef);
-            auto bitsperpixel = CGImageGetBitsPerPixel(imageRef);
-            // right now only support full 32 bit images.. Most desktops should run this as its the most efficent
-            assert(bitsperpixel == PixelStride*8);
-            
-            auto rawdatas= CGDataProviderCopyData(prov);
-            auto buf = CFDataGetBytePtr(rawdatas);
-            
-            auto datalen = width*height*PixelStride;
-            ImageRect ret;
-            ret.left =  ret.top=0;
-            ret.right =width;
-            ret.bottom = height;
-            if(Data->WindowCaptureData.OnNewFrame && !Data->WindowCaptureData.OnFrameChanged) {
-                
-                auto wholeimg = SL::Screen_Capture::Create(ret, PixelStride, bytesperrow - PixelStride*width, buf);
-                Data->WindowCaptureData.OnNewFrame(wholeimg, window);
-                
-            } else {
-                if(bytesperrow == PixelStride*width){
-                    //most efficent, can be done in a single memcpy
-                    memcpy(NewImageBuffer.get(),buf, datalen);
-                } else {
-                    //for loop needed to copy each row
-                    auto dst =NewImageBuffer.get();
-                    auto src =buf;
-                    for (auto h =0; h<height;h++) {
-                        memcpy(dst,src, PixelStride*width);
-                        dst +=PixelStride*width;
-                        src +=bytesperrow;
-                    }
+            else {
+                for (auto i = 0; i < Height(SelectedMonitor); i++) {
+                    memcpy(startdst + (i * rowstride), startsrc + (i * bytesperrow), rowstride);
                 }
-                
-                ProcessCapture(Data->WindowCaptureData, *this, window ,ret);
             }
-            CFRelease(rawdatas);
-            CGImageRelease(imageRef);
-            return Ret;
+            ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);
         }
+
+        CFRelease(rawdatas);
+        CGImageRelease(imageRef);
+        return Ret;
     }
+    DUPL_RETURN CGFrameProcessor::ProcessFrame(const Window &window)
+    {
+
+        auto Ret = DUPL_RETURN_SUCCESS;
+
+        auto imageRef = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, static_cast<uint32_t>(window.Handle),
+                                                kCGWindowImageBoundsIgnoreFraming);
+        if (!imageRef)
+            return DUPL_RETURN_ERROR_EXPECTED; // this happens when the monitors change.
+
+        auto width = CGImageGetWidth(imageRef);
+        auto height = CGImageGetHeight(imageRef);
+
+        if (width != window.Size.x || height != window.Size.y) {
+            CGImageRelease(imageRef);
+            return DUPL_RETURN_ERROR_EXPECTED; // this happens when the window sizes change.
+        }
+        auto prov = CGImageGetDataProvider(imageRef);
+        if (!prov) {
+            CGImageRelease(imageRef);
+            return DUPL_RETURN_ERROR_EXPECTED;
+        }
+        auto bytesperrow = CGImageGetBytesPerRow(imageRef);
+        auto bitsperpixel = CGImageGetBitsPerPixel(imageRef);
+        // right now only support full 32 bit images.. Most desktops should run this as its the most efficent
+        assert(bitsperpixel == PixelStride * 8);
+
+        auto rawdatas = CGDataProviderCopyData(prov);
+        auto buf = CFDataGetBytePtr(rawdatas);
+
+        auto datalen = width * height * PixelStride;
+        ImageRect ret;
+        ret.left = ret.top = 0;
+        ret.right = width;
+        ret.bottom = height;
+        if (Data->WindowCaptureData.OnNewFrame && !Data->WindowCaptureData.OnFrameChanged) {
+
+            auto wholeimg = SL::Screen_Capture::Create(ret, PixelStride, bytesperrow - PixelStride * width, buf);
+            Data->WindowCaptureData.OnNewFrame(wholeimg, window);
+        }
+        else {
+            if (bytesperrow == PixelStride * width) {
+                // most efficent, can be done in a single memcpy
+                memcpy(NewImageBuffer.get(), buf, datalen);
+            }
+            else {
+                // for loop needed to copy each row
+                auto dst = NewImageBuffer.get();
+                auto src = buf;
+                for (auto h = 0; h < height; h++) {
+                    memcpy(dst, src, PixelStride * width);
+                    dst += PixelStride * width;
+                    src += bytesperrow;
+                }
+            }
+
+            ProcessCapture(Data->WindowCaptureData, *this, window, ret);
+        }
+        CFRelease(rawdatas);
+        CGImageRelease(imageRef);
+        return Ret;
+    }
+}
 }

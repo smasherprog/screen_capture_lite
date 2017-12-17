@@ -10,13 +10,29 @@ platform:
 - x64
 
 install:
+  - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects\sc
   - mkdir build
   - cd build
-  - cmake -G "Visual Studio 15 2017" ..
+  - cmake ..
 
 build_script:
-  - cmake -DBUILD_SHARED_LIBS=ON .
-  - cmake --build .
   - cmake -DBUILD_SHARED_LIBS=OFF .
-  - cmake --build .
+  - cmake --build . --config %CONFIGURATION%
+  - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.lib
+  - 7z a -tzip %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\include\ScreenCapture.h
+  - appveyor PushArtifact %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip
+   - cmake -DBUILD_SHARED_LIBS=ON . 
+  - cmake --build . --config %CONFIGURATION%
+  - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MD.zip -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.dll -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.lib
+  - 7z a -tzip %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MD.zip -i!%APPVEYOR_BUILD_FOLDER%\include\ScreenCapture.h
+  - appveyor PushArtifact %CONFIGURATION%_%PLATFORM%_MD.zip
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: WCGi6SXwa6VaPyLH6fZCrmTix+e2FA3zwzhNg8dSf3EdrcecGIR3Z0qG/vssOdfA 
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true 

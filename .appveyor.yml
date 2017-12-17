@@ -18,7 +18,7 @@ install:
 
 build_script:
   - cmake -DBUILD_SHARED_LIBS=OFF .
-  - cmake --build . --target INSTALL --config %configuration% -- /nologo
+  - cmake --build . --target ALL_BUILD --config %configuration%
   - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.lib
   - 7z a -tzip %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\include\ScreenCapture.h
   - appveyor PushArtifact %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip

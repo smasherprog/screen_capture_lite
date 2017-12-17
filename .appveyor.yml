@@ -7,14 +7,6 @@ platform:
 
 environment:
   matrix:
-  - GENERATOR: "Visual Studio 14 2015"
-    CONFIG: Debug
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-
-  - GENERATOR: "Visual Studio 14 2015"
-    CONFIG: Release
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-
   - GENERATOR: "Visual Studio 15 2017"
     CONFIG: Debug
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
@@ -31,12 +23,12 @@ install:
 
 build_script:
   - cmd: cmake .. -G"%GENERATOR%" -DBUILD_SHARED_LIBS=OFF 
-  - cmd: cmake --build .  --config %CONFIG%
+  - cmd: cmake --build . --config %CONFIG%
   - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.lib
   - 7z a -tzip %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\include\ScreenCapture.h
   - appveyor PushArtifact %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip
-   - cmake -DBUILD_SHARED_LIBS=ON . 
-  - cmake --build .
+  - cmd: cmake .. -G"%GENERATOR%" -DBUILD_SHARED_LIBS=ON . 
+  - cmd: cmake --build . --config %CONFIG%
   - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MD.zip -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.dll -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.lib
   - 7z a -tzip %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MD.zip -i!%APPVEYOR_BUILD_FOLDER%\include\ScreenCapture.h
   - appveyor PushArtifact %CONFIGURATION%_%PLATFORM%_MD.zip

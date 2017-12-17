@@ -25,7 +25,7 @@ install:
 build_script: 
   - if %platform%==x86 set generator=Visual Studio 15 2017
   - if %platform%==x64 set generator=Visual Studio 15 2017 Win64
-  - echo %generator% %SHARED% %configuration%
+  - cmd: echo %generator% %SHARED% %configuration%
   - cmd: cmake .. -G"%generator%" -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
   - cmd: cmake --build . --target INSTALL --config %configuration%
   - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%configuration%_%PLATFORM%_%POSTFIXNAME%.zip 

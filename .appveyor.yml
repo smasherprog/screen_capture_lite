@@ -15,7 +15,7 @@ environment:
   - SHARED: ON
     POSTFIXNAME: MD
     
- matrix:
+matrix:
   fast_finish: true
   
 install:

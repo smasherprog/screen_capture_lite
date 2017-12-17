@@ -9,16 +9,33 @@ platform:
 - x86
 - x64
 
+environment:
+  matrix:
+  - GENERATOR: "Visual Studio 14 2015"
+    CONFIG: Debug
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+
+  - GENERATOR: "Visual Studio 14 2015"
+    CONFIG: Release
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+
+  - GENERATOR: "Visual Studio 15 2017"
+    CONFIG: Debug
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+  - GENERATOR: "Visual Studio 15 2017"
+    CONFIG: Release
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    
 install:
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects\sc
   - mkdir build
   - cd build
-  - cmake ..
 
 build_script:
-  - cmake -DBUILD_SHARED_LIBS=OFF .
-  - cmake --build . --target ALL_BUILD --config %configuration%
+  - cmd: cmake .. -G"%GENERATOR%" -DBUILD_SHARED_LIBS=OFF 
+  - cmd: cmake --build .  --config %CONFIG%
   - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.lib
   - 7z a -tzip %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\include\ScreenCapture.h
   - appveyor PushArtifact %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip

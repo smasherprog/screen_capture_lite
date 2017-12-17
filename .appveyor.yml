@@ -14,7 +14,16 @@ environment:
   - GENERATOR: "Visual Studio 15 2017"
     CONFIG: Release
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  
+  matrix:
+  - SHARED: OFF
+    POSTFIXNAME: MT
+  - SHARED: ON
+    POSTFIXNAME: MD
     
+ matrix:
+  fast_finish: true
+  
 install:
   - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
   - cd c:\projects\sc
@@ -22,16 +31,9 @@ install:
   - cd build
 
 build_script:
-  - cmd: cmake .. -G"%GENERATOR%" -DBUILD_SHARED_LIBS=OFF 
-  - cmd: cmake --build . --config %CONFIG%
-  - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.lib
-  - 7z a -tzip %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip -i!%APPVEYOR_BUILD_FOLDER%\include\ScreenCapture.h
-  - appveyor PushArtifact %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MT.zip
-  - cmd: cmake .. -G"%GENERATOR%" -DBUILD_SHARED_LIBS=ON . 
-  - cmd: cmake --build . --config %CONFIG%
-  - 7z a %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MD.zip -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.dll -i!%APPVEYOR_BUILD_FOLDER%\build\%CONFIGURATION%\*.lib
-  - 7z a -tzip %APPVEYOR_REPO_TAG_NAME%_vc140_%CONFIGURATION%_%PLATFORM%_MD.zip -i!%APPVEYOR_BUILD_FOLDER%\include\ScreenCapture.h
-  - appveyor PushArtifact %CONFIGURATION%_%PLATFORM%_MD.zip
+  - cmd: cmake .. -G"%GENERATOR%" -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
+  - cmd: cmake --build . --target INSTALL --config %CONFIG%
+  
 
 deploy:
   provider: GitHub

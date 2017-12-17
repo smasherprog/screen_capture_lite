@@ -1,20 +1,14 @@
-
-clone_folder: c:\projects\sc
+image: Visual Studio 2017
 
 platform:
-- x86
-- x64
+- Visual Studio 15 2017
+- Visual Studio 15 2017 Win64
 
-environment:
-  matrix:
-  - GENERATOR: "Visual Studio 15 2017"
-    CONFIG: Debug
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
-  - GENERATOR: "Visual Studio 15 2017"
-    CONFIG: Release
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+configuration:
+  - Debug
+  - Release
   
+environment:
   matrix:
   - SHARED: OFF
     POSTFIXNAME: MT
@@ -25,13 +19,11 @@ environment:
   fast_finish: true
   
 install:
-  - ps: If ($env:Platform -Match "x86"){ $env:CMAKE_ARCH="" } Else { $env:CMAKE_ARCH=" Win64"}
-  - cd c:\projects\sc
   - mkdir build
   - cd build
 
-build_script:
-  - cmd: cmake .. -G"%GENERATOR%" -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
+build_script: 
+  - cmd: cmake .. -G"%platform%" -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
   - cmd: cmake --build . --target INSTALL --config %CONFIG%
   
 

@@ -51,9 +51,9 @@ namespace Screen_Capture {
         ret.bottom = Height(SelectedMonitor);
         ret.right = Width(SelectedMonitor);
         auto rowstride = PixelStride * Width(SelectedMonitor);
+        auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
         
         if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
-            auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
             auto wholeimg = Create(ret, PixelStride, static_cast<int>(bytesperrow) - rowstride, startbuf);
             Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
         }
@@ -63,7 +63,6 @@ namespace Screen_Capture {
                 memcpy(startdst, buf, rowstride * Height(SelectedMonitor));
             }
             else {
-                auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
                 for (auto i = 0; i < Height(SelectedMonitor); i++) {
                     memcpy(startdst + (i * rowstride), (startbuf + (i * bytesperrow)) , rowstride);
                 }

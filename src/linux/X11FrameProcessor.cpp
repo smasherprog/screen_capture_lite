@@ -89,7 +89,7 @@ namespace Screen_Capture
         return ret;
     }
  
-    DUPL_RETURN X11FrameProcessor::ProcessFrame(const Monitor& currentmonitorinfo)
+    DUPL_RETURN X11FrameProcessor::ProcessFrame(const Monitor& curentmonitorinfo)
     {
         auto Ret = DUPL_RETURN_SUCCESS;
         
@@ -110,9 +110,9 @@ namespace Screen_Capture
         auto rowstride = PixelStride * Width(SelectedMonitor);
         auto buf = reinterpret_cast<unsigned char*>(Image->data);
         auto bytesperrow = PixelStride * ret.right * ret.bottom;
-
+        auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
         if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
-            auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
+            
             auto wholeimg = Create(ret, PixelStride, static_cast<int>(bytesperrow) - rowstride, startbuf);
             Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
         }
@@ -121,8 +121,7 @@ namespace Screen_Capture
             if (rowstride == static_cast<int>(bytesperrow)) { // no need for multiple calls, there is no padding here
                 memcpy(startdst, buf, rowstride * Height(SelectedMonitor));
             }
-            else {
-                auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
+            else { 
                 for (auto i = 0; i < Height(SelectedMonitor); i++) {
                     memcpy(startdst + (i * rowstride), (startbuf + (i * bytesperrow)) , rowstride);
                 }

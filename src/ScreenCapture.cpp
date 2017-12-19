@@ -177,7 +177,7 @@ namespace Screen_Capture {
             std::atomic_store(&Thread_Data_->WindowCaptureData.MouseTimer, timer);
         }
         virtual void pause() override { Thread_Data_->CommonData_.Paused = true; }
-        virtual bool isPaused() override const { return Thread_Data_->CommonData_.Paused; }
+        virtual bool isPaused() const override { return Thread_Data_->CommonData_.Paused; }
         virtual void resume() override { Thread_Data_->CommonData_.Paused = false; }
     };
 

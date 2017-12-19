@@ -363,10 +363,10 @@ namespace Screen_Capture {
         }
 
         ImageRect ret = {0};
-        ret.left = OffsetX(SelectedMonitor) - OutputDesc.DesktopCoordinates.left;
-        ret.top = OffsetY(SelectedMonitor);
-        ret.bottom = ret.top + Height(SelectedMonitor);
-        ret.right = ret.left + Width(SelectedMonitor);
+        ret.left = 0;
+        ret.top = 0;
+        ret.bottom = Height(SelectedMonitor);
+        ret.right = Width(SelectedMonitor);
         auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData);
 
         auto rowstride = PixelStride * Width(SelectedMonitor);
@@ -387,10 +387,8 @@ namespace Screen_Capture {
             }
             ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);
         }
-
         return Ret;
     }
-
 } // namespace Screen_Capture
 } // namespace SL
 

@@ -46,26 +46,26 @@ namespace Screen_Capture {
         auto buf = CFDataGetBytePtr(rawdatas);
 
         ImageRect ret = {0};
-        ret.left = OffsetX(SelectedMonitor);
-        ret.top = OffsetY(SelectedMonitor);
-        ret.bottom = ret.top +Height(SelectedMonitor);
-        ret.right = ret.left + Width(SelectedMonitor);
-        auto startsrc =buf;
-
+        ret.left = 0;
+        ret.top = 0;
+        ret.bottom = Height(SelectedMonitor);
+        ret.right = Width(SelectedMonitor);
         auto rowstride = PixelStride * Width(SelectedMonitor);
-
+        
         if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
-            auto wholeimg = Create(ret, PixelStride, static_cast<int>(bytesperrow) - rowstride, startsrc);
+            auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
+            auto wholeimg = Create(ret, PixelStride, static_cast<int>(bytesperrow) - rowstride, startbuf);
             Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
         }
         else {
             auto startdst = NewImageBuffer.get();
             if (rowstride == static_cast<int>(bytesperrow)) { // no need for multiple calls, there is no padding here
-                memcpy(startdst, startsrc, rowstride * Height(SelectedMonitor));
+                memcpy(startdst, buf, rowstride * Height(SelectedMonitor));
             }
             else {
+                auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
                 for (auto i = 0; i < Height(SelectedMonitor); i++) {
-                    memcpy(startdst + (i * rowstride), startsrc + (i * bytesperrow), rowstride);
+                    memcpy(startdst + (i * rowstride), (startbuf + (i * bytesperrow)) , rowstride);
                 }
             }
             ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);

@@ -90,9 +90,12 @@ namespace Screen_Capture
     }
  
     DUPL_RETURN X11FrameProcessor::ProcessFrame(const Monitor& curentmonitorinfo)
-    {
+    {        
         auto Ret = DUPL_RETURN_SUCCESS;
-        
+        ImageRect ret;
+        ret.left = ret.top = 0;
+        ret.right = Width(SelectedMonitor);
+        ret.bottom = Height(SelectedMonitor);
         if(!XShmGetImage(SelectedDisplay,
                          RootWindow(SelectedDisplay, DefaultScreen(SelectedDisplay)),
                          Image,
@@ -102,30 +105,12 @@ namespace Screen_Capture
             return DUPL_RETURN_ERROR_EXPECTED;
         }
 
-        ImageRect ret = {0};
-        ret.left = 0;
-        ret.top = 0;
-        ret.bottom = Height(SelectedMonitor);
-        ret.right = Width(SelectedMonitor);
-        auto rowstride = PixelStride * Width(SelectedMonitor);
-        auto buf = reinterpret_cast<unsigned char*>(Image->data);
-        auto bytesperrow = PixelStride * ret.right * ret.bottom;
-        auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
-        if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
-            
-            auto wholeimg = Create(ret, PixelStride, static_cast<int>(bytesperrow) - rowstride, startbuf);
+        if(Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
+
+            auto wholeimg = Create(ret, PixelStride, 0, reinterpret_cast<unsigned char*>(Image->data));
             Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
-        }
-        else {
-            auto startdst = NewImageBuffer.get();
-            if (rowstride == static_cast<int>(bytesperrow)) { // no need for multiple calls, there is no padding here
-                memcpy(startdst, buf, rowstride * Height(SelectedMonitor));
-            }
-            else { 
-                for (auto i = 0; i < Height(SelectedMonitor); i++) {
-                    memcpy(startdst + (i * rowstride), (startbuf + (i * bytesperrow)) , rowstride);
-                }
-            }
+        } else {
+            memcpy(NewImageBuffer.get(), Image->data, PixelStride * ret.right * ret.bottom);
             ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);
         }
         return Ret;

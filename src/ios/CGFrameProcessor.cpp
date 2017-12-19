@@ -52,7 +52,7 @@ namespace Screen_Capture {
         ret.right = Width(SelectedMonitor);
         auto rowstride = PixelStride * Width(SelectedMonitor);
         auto startbuf = buf + ((OffsetX(SelectedMonitor) - OffsetX(curentmonitorinfo) )*PixelStride);//advance to the start of this image
-        startbuf += (OffsetY(curentmonitorinfo) *  bytesperrow);
+        startbuf += (OffsetY(SelectedMonitor) *  bytesperrow);
 
         if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
             auto wholeimg = Create(ret, PixelStride, static_cast<int>(bytesperrow) - rowstride, startbuf);

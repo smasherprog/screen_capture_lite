@@ -1,22 +1,41 @@
 image: Visual Studio 2017
 
-configuration: 
-  - Relase 
-  
-clone_folder: c:\projects\sc
-
 platform:
 - x86
 - x64
 
+configuration:
+  - Debug
+  - Release
+  
+environment:
+  matrix:
+  - SHARED: OFF
+    POSTFIXNAME: MT
+  - SHARED: ON
+    POSTFIXNAME: MD
+    
+matrix:
+  fast_finish: true
+  
 install:
-  - cd c:\projects\sc
   - mkdir build
   - cd build
-  - cmake -G "Visual Studio 15 2017" ..
 
-build_script:
-  - cmake -DBUILD_SHARED_LIBS=ON .
-  - cmake --build .
-  - cmake -DBUILD_SHARED_LIBS=OFF .
-  - cmake --build .
+build_script: 
+  - if %platform%==x86 set generator=Visual Studio 15 2017
+  - if %platform%==x64 set generator=Visual Studio 15 2017 Win64
+  - cmd: echo %generator% %SHARED% %configuration%
+  - cmd: cmake .. -G"%generator%" -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
+  - cmd: cmake --build . --target INSTALL --config %configuration%
+  - 7z a vc140_%configuration%_%PLATFORM%_%POSTFIXNAME%.zip  -i!%APPVEYOR_BUILD_FOLDER%\build\output\*
+  - appveyor PushArtifact vc140_%configuration%_%PLATFORM%_%POSTFIXNAME%.zip
+  
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: WCGi6SXwa6VaPyLH6fZCrmTix+e2FA3zwzhNg8dSf3EdrcecGIR3Z0qG/vssOdfA 
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true 

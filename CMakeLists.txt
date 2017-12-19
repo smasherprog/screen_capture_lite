@@ -78,6 +78,7 @@ add_library(${PROJECT_NAME}
 	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
 	 if(WIN32) 
 		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES}  Dwmapi)
+		install (FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
 	elseif(APPLE)
 		find_package(Threads REQUIRED)
 		find_library(corefoundation_lib CoreFoundation)

@@ -15,6 +15,7 @@ see the Exmaple folder for a demo</p>
 
 <h2>USAGE</h2>
 <p>The image format is raw BGRA 32 bits per pixel. Alpha is unused! <p>
+<p>The data exists like this if you were to march through with a for loop [A,R,G,B], [A,R,G,B], [A,R,G,B]. For a read on why this is check out the post here <a href="https://stackoverflow.com/questions/8104461/pixelformat-format32bppargb-seems-to-have-wrong-byte-order">post here</a><p>
 https://github.com/smasherprog/screen_capture_lite/blob/master/Example/Screen_Capture_Example.cpp
 
 

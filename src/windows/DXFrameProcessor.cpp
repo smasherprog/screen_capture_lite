@@ -363,7 +363,8 @@ namespace Screen_Capture {
         }
 
         ImageRect ret = {0};
-        ret.left = ret.top = 0;
+        ret.left = 0;
+        ret.top = 0;
         ret.bottom = Height(SelectedMonitor);
         ret.right = Width(SelectedMonitor);
         auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData);
@@ -386,10 +387,8 @@ namespace Screen_Capture {
             }
             ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);
         }
-
         return Ret;
     }
-
 } // namespace Screen_Capture
 } // namespace SL
 

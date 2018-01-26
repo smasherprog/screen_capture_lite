@@ -3,7 +3,7 @@ language : cpp
 matrix:
   include:
     - os: osx
-      osx_image: xcode8
+      osx_image: xcode9.2
       compiler: clang
     - os: linux
       env: CLANG_VERSION=5.0 BUILD_TYPE=Release

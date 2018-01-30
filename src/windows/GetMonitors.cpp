@@ -42,7 +42,7 @@ namespace Screen_Capture {
                     break;
                 }
                 ret.push_back(
-                    CreateMonitor(i, i, devMode.dmPelsHeight, devMode.dmPelsWidth, devMode.dmPosition.x, devMode.dmPosition.y, name, scale));
+                    CreateMonitor(static_cast<int>(ret.size()), i, devMode.dmPelsHeight, devMode.dmPelsWidth, devMode.dmPosition.x, devMode.dmPosition.y, name, scale));
             }
         }
         return ret;

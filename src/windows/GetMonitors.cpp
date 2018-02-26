@@ -16,8 +16,8 @@ namespace Screen_Capture {
         for (auto i = 0; EnumDisplayDevicesA(NULL, i, &dd, 0); i++) {
             // monitor must be attached to desktop and not a mirroring device
 
-            if ((dd.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 ||
-                (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0 && (dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER) == 0) {
+            if (((dd.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 || (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0) &&
+                (dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER) == 0) {
                 DEVMODEA devMode;
                 devMode.dmSize = sizeof(devMode);
                 EnumDisplaySettingsA(dd.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);
@@ -43,8 +43,8 @@ namespace Screen_Capture {
                     scale = 1.0f;
                     break;
                 }
-                ret.push_back(
-                    CreateMonitor(static_cast<int>(ret.size()), i, devMode.dmPelsHeight, devMode.dmPelsWidth, devMode.dmPosition.x, devMode.dmPosition.y, name, scale));
+                ret.push_back(CreateMonitor(static_cast<int>(ret.size()), i, devMode.dmPelsHeight, devMode.dmPelsWidth, devMode.dmPosition.x,
+                                            devMode.dmPosition.y, name, scale));
             }
         }
         return ret;

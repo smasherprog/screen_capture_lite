@@ -15,7 +15,9 @@ namespace Screen_Capture {
         dd.cb = sizeof(dd);
         for (auto i = 0; EnumDisplayDevicesA(NULL, i, &dd, 0); i++) {
             // monitor must be attached to desktop and not a mirroring device
-            if ((dd.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) & !(dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER)) {
+
+            if ((dd.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 ||
+                (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0 && (dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER) == 0) {
                 DEVMODEA devMode;
                 devMode.dmSize = sizeof(devMode);
                 EnumDisplaySettingsA(dd.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);

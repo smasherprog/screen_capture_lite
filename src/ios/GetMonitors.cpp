@@ -27,7 +27,7 @@ namespace SL{
                     auto r = CGDisplayBounds(displays[i]);
                     auto scale = static_cast<float>(width)/static_cast<float>(r.size.width);
                     auto name = std::string("Monitor ") + std::to_string(displays[i]);
-                    ret.push_back(CreateMonitor(i, displays[i],height,width, int(r.origin.x), int(r.origin.y), name, scale));
+                    ret.push_back(CreateMonitor(static_cast<int>(ret.size()), displays[i],height,width, int(r.origin.x), int(r.origin.y), name, scale));
                 }
             }
             return ret;

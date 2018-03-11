@@ -27,6 +27,7 @@ namespace Screen_Capture {
     struct Monitor {
         int Id = INT32_MAX;
         int Index = INT32_MAX;
+        int Adapter = -1;
         int Height = 0;
         int Width = 0;
         // Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their
@@ -68,6 +69,7 @@ namespace Screen_Capture {
     SC_LITE_EXTERN int Index(const Monitor &mointor);
     // unique identifier
     SC_LITE_EXTERN int Id(const Monitor &mointor);
+    SC_LITE_EXTERN int Adapter(const Monitor &mointor);
     SC_LITE_EXTERN int OffsetX(const Monitor &mointor);
     SC_LITE_EXTERN int OffsetY(const Monitor &mointor);
     SC_LITE_EXTERN const char *Name(const Monitor &mointor);

@@ -138,6 +138,13 @@ namespace Screen_Capture {
         return ret;
     }
 
+    Monitor CreateMonitor(int index, int id, int adapter, int h, int w, int ox, int oy, const std::string &n, float scaling)
+    {
+        Monitor ret = CreateMonitor(index, id, h, w, ox, oy, n, scaling);
+        ret.Adapter = adapter;
+        return ret;
+    }
+
     Image Create(const ImageRect &imgrect, int pixelstride, int rowpadding, const unsigned char *data)
     {
         Image ret;
@@ -149,6 +156,7 @@ namespace Screen_Capture {
     }
     int Index(const Monitor &mointor) { return mointor.Index; }
     int Id(const Monitor &mointor) { return mointor.Id; }
+    int Adapter(const Monitor &mointor) { return mointor.Adapter; }
     int OffsetX(const Monitor &mointor) { return mointor.OffsetX; }
     int OffsetY(const Monitor &mointor) { return mointor.OffsetY; }
     const char *Name(const Monitor &mointor) { return mointor.Name; }

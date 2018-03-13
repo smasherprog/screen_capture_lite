@@ -1,17 +1,6 @@
 #include "SCCommon.h"
 #include "ScreenCapture.h"
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
-#include <Windows.h>
-#include <d3d11.h>
-#include <dxgi1_2.h>
-#include <wrl.h>
-
-#include <codecvt>
-#include <locale>
-
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3d11.lib")
+#include <DXGI.h>
 
 namespace SL {
 namespace Screen_Capture {

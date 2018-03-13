@@ -2,7 +2,6 @@
 #include <atomic>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <string>
 
 #if (_MSC_VER >= 1700) && defined(_USING_V110_SDK71_)
@@ -140,6 +139,7 @@ namespace Screen_Capture {
     DUPL_RETURN Initialize(DUPLE_RESOURCES &r, ID3D11Device *device, const UINT adapter, const UINT output)
     {
         Microsoft::WRL::ComPtr<IDXGIFactory> pFactory;
+
         // Create a DXGIFactory object.
         HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void **)pFactory.GetAddressOf());
         if (FAILED(hr)) {

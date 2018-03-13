@@ -7,11 +7,11 @@
 #include <dxgi1_2.h>
 #include <wrl.h>
 
-#include <locale>
 #include <codecvt>
+#include <locale>
 
-#pragma comment(lib,"dxgi.lib")
-#pragma comment(lib,"d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3d11.lib")
 
 namespace SL {
 namespace Screen_Capture {
@@ -40,71 +40,37 @@ namespace Screen_Capture {
     {
         std::vector<Monitor> ret;
 
-        IDXGIAdapter * pAdapter;
-        std::vector <IDXGIAdapter*> vAdapters;
-        IDXGIFactory* pFactory = NULL;
+        IDXGIAdapter *pAdapter = nullptr;
+        IDXGIFactory *pFactory = nullptr;
 
         // Create a DXGIFactory object.
-        if (FAILED(CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory)))
-        {
-            //Couldn't enumerate displays with DXGI, fall back to EnumDisplayDevices
-            DISPLAY_DEVICEA dd;
-            ZeroMemory(&dd, sizeof(dd));
-            dd.cb = sizeof(dd);
-            for (auto i = 0; EnumDisplayDevicesA(NULL, i, &dd, 0); i++) {
-                // monitor must be attached to desktop and not a mirroring device
+        if (SUCCEEDED(CreateDXGIFactory(__uuidof(IDXGIFactory), (void **)&pFactory))) {
+            for (UINT i = 0; pFactory->EnumAdapters(i, &pAdapter) != DXGI_ERROR_NOT_FOUND; ++i) {
+                IDXGIOutput *pOutput;
 
-                if (((dd.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0 || (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0) &&
-                    (dd.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER) == 0) {
-                    DEVMODEA devMode;
-                    devMode.dmSize = sizeof(devMode);
-                    EnumDisplaySettingsA(dd.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);
-                    std::string name = dd.DeviceName;
-                    auto mon = CreateDCA(dd.DeviceName, NULL, NULL, NULL);
+                for (UINT j = 0; pAdapter->EnumOutputs(j, &pOutput) != DXGI_ERROR_NOT_FOUND; ++j) {
+                    DXGI_OUTPUT_DESC desc;
+                    pOutput->GetDesc(&desc);
+                    pOutput->Release();
+                    std::wstring wname = desc.DeviceName;
+                    std::string name(wname.begin(), wname.end());
+                    DEVMODEW devMode;
+                    EnumDisplaySettingsW(desc.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);
+
+                    auto mon = CreateDCW(desc.DeviceName, NULL, NULL, NULL);
                     auto xdpi = GetDeviceCaps(mon, LOGPIXELSX);
                     DeleteDC(mon);
                     auto scale = scaleFromDpi(xdpi);
-                    
-                    ret.push_back(CreateMonitor(static_cast<int>(ret.size()), i, devMode.dmPelsHeight, devMode.dmPelsWidth, devMode.dmPosition.x,
-                        devMode.dmPosition.y, name, scale));
+
+                    bool flipSides = desc.Rotation == DXGI_MODE_ROTATION_ROTATE90 || desc.Rotation == DXGI_MODE_ROTATION_ROTATE270;
+                    ret.push_back(CreateMonitor(static_cast<int>(ret.size()), j, i, flipSides ? devMode.dmPelsWidth : devMode.dmPelsHeight,
+                                                flipSides ? devMode.dmPelsHeight : devMode.dmPelsWidth, devMode.dmPosition.x, devMode.dmPosition.y,
+                                                name, scale));
                 }
+                pAdapter->Release();
             }
-            return ret;
+            pFactory->Release();
         }
-
-        for (UINT i = 0;
-            pFactory->EnumAdapters(i, &pAdapter) != DXGI_ERROR_NOT_FOUND;
-            ++i)
-        {
-            IDXGIOutput * pOutput;
-
-            for (UINT j = 0;
-                pAdapter->EnumOutputs(j, &pOutput) != DXGI_ERROR_NOT_FOUND;
-                ++j)
-            {
-                DXGI_OUTPUT_DESC desc;
-                pOutput->GetDesc(&desc);
-
-                std::wstring wname = desc.DeviceName;
-
-                int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wname[0], (int)wname.size(), NULL, 0, NULL, NULL);
-                std::string name(size_needed, 0);
-                WideCharToMultiByte(CP_UTF8, 0, &wname[0], (int)wname.size(), &name[0], size_needed, NULL, NULL);
-
-                DEVMODEW devMode;
-                EnumDisplaySettingsW(desc.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);
-
-                auto mon = CreateDCW(desc.DeviceName, NULL, NULL, NULL);
-                auto xdpi = GetDeviceCaps(mon, LOGPIXELSX);
-                DeleteDC(mon);
-                auto scale = scaleFromDpi(xdpi);
-
-                bool flipSides = desc.Rotation == DXGI_MODE_ROTATION_ROTATE90 || desc.Rotation == DXGI_MODE_ROTATION_ROTATE270;
-                ret.push_back(CreateMonitor(static_cast<int>(ret.size()), j, i, flipSides ? devMode.dmPelsWidth : devMode.dmPelsHeight, flipSides ? devMode.dmPelsHeight : devMode.dmPelsWidth,
-                    devMode.dmPosition.x, devMode.dmPosition.y, name, scale));
-            }
-        }
-
         return ret;
     }
 } // namespace Screen_Capture

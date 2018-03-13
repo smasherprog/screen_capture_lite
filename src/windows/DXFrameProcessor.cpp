@@ -2,7 +2,6 @@
 #include <atomic>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <string>
 
 #if (_MSC_VER >= 1700) && defined(_USING_V110_SDK71_)
@@ -137,21 +136,21 @@ namespace Screen_Capture {
         return DUPL_RETURN_SUCCESS;
     }
 
-    DUPL_RETURN Initialize(DUPLE_RESOURCES &r, ID3D11Device *device, const UINT output)
+    DUPL_RETURN Initialize(DUPLE_RESOURCES &r, ID3D11Device *device, const UINT adapter, const UINT output)
     {
+        Microsoft::WRL::ComPtr<IDXGIFactory> pFactory;
 
-        // Get DXGI device
-        Microsoft::WRL::ComPtr<IDXGIDevice> DxgiDevice;
-        HRESULT hr = device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void **>(DxgiDevice.GetAddressOf()));
+        // Create a DXGIFactory object.
+        HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void **)pFactory.GetAddressOf());
         if (FAILED(hr)) {
-            return ProcessFailure(nullptr, L"Failed to QI for DXGI Device", L"Error", hr);
+            return ProcessFailure(nullptr, L"Failed to construct DXGIFactory", L"Error", hr);
         }
 
-        // Get DXGI adapter
         Microsoft::WRL::ComPtr<IDXGIAdapter> DxgiAdapter;
-        hr = DxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void **>(DxgiAdapter.GetAddressOf()));
+        hr = pFactory->EnumAdapters(adapter, DxgiAdapter.GetAddressOf());
+
         if (FAILED(hr)) {
-            return ProcessFailure(device, L"Failed to get parent DXGI Adapter", L"Error", hr, SystemTransitionsExpectedErrors);
+            return ProcessFailure(device, L"Failed to get DXGI Adapter", L"Error", hr, SystemTransitionsExpectedErrors);
         }
 
         // Get output
@@ -179,6 +178,7 @@ namespace Screen_Capture {
         r.Output = output;
         return DUPL_RETURN_SUCCESS;
     }
+
     RECT ConvertRect(RECT Dirty, const DXGI_OUTPUT_DESC &DeskDesc)
     {
         RECT DestDirty = Dirty;
@@ -278,7 +278,7 @@ namespace Screen_Capture {
             return ret;
         }
         DUPLE_RESOURCES dupl;
-        ret = Initialize(dupl, res.Device.Get(), Id(SelectedMonitor));
+        ret = Initialize(dupl, res.Device.Get(), Adapter(SelectedMonitor), Id(SelectedMonitor));
         if (ret != DUPL_RETURN_SUCCESS) {
             return ret;
         }

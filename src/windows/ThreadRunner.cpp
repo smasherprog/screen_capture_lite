@@ -67,11 +67,13 @@ namespace SL {
             std::cout << "Starting to Capture on Monitor " << Name(monitor) << std::endl;
             std::cout << "Trying DirectX Desktop Duplication " << std::endl;
 #endif
-            if (!TryCaptureMonitor<DXFrameProcessor>(data, monitor)) {//if DX is not supported, fallback to GDI capture
-#if defined _DEBUG || !defined NDEBUG
-                std::cout << "DirectX Desktop Duplication not supprted, falling back to GDI Capturing . . ." << std::endl;
-#endif
+            if (monitor.Adapter == -1)
+            {
                 TryCaptureMonitor<GDIFrameProcessor>(data, monitor);
+            }
+            else
+            {
+                TryCaptureMonitor<DXFrameProcessor>(data, monitor);
             }
         }
 

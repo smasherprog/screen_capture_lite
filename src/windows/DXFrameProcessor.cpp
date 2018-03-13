@@ -139,11 +139,9 @@ namespace Screen_Capture {
 
     DUPL_RETURN Initialize(DUPLE_RESOURCES &r, ID3D11Device *device, const UINT adapter, const UINT output)
     {
-        IDXGIAdapter * pAdapter;
-        IDXGIFactory* pFactory = NULL;
-
+        Microsoft::WRL::ComPtr<IDXGIFactory> pFactory;
         // Create a DXGIFactory object.
-        HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
+        HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void **)pFactory.GetAddressOf());
         if (FAILED(hr)) {
             return ProcessFailure(nullptr, L"Failed to construct DXGIFactory", L"Error", hr);
         }

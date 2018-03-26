@@ -1,8 +1,92 @@
 #include "ScreenCapture.h"
 #include "SCCommon.h"
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <algorithm>
 #include <string>
+#include <vector>
+#include <iostream>
+
+
+namespace {
+    class UniqueTextProperty {
+    public:
+        UniqueTextProperty()
+        {
+            p.value = nullptr;
+        }
+
+        UniqueTextProperty(const UniqueTextProperty&) = delete;
+        UniqueTextProperty& operator=(const UniqueTextProperty&) = delete;
+
+        UniqueTextProperty(UniqueTextProperty&& other):
+            p{other.p}
+        {
+            other.p = XTextProperty{};
+        }
+
+        UniqueTextProperty& operator=(UniqueTextProperty&& other)
+        {
+            swap(*this, other);
+            return *this;
+        }
+
+        friend void swap(UniqueTextProperty& lhs, UniqueTextProperty& rhs) {
+            using std::swap;
+            swap(lhs.p, rhs.p);
+        }
+
+        ~UniqueTextProperty()
+        {
+            if (p.value) {
+                XFree(p.value);
+            }
+        }
+
+        auto& get() {
+            return p;
+        }
+
+    private:
+        XTextProperty p;
+    };
+
+    auto GetWMName(Display* display, Window window)
+    {
+        auto x = UniqueTextProperty{};
+        XGetWMName(display, window, &x.get());
+        return x;
+    }
+
+    auto TextPropertyToStrings(
+        Display* dpy,
+        const XTextProperty& prop
+    )
+    {
+        char **list;
+        auto n_strings = 0;
+        auto result = std::vector<std::string>{};
+
+        auto status = XmbTextPropertyToTextList(
+            dpy,
+            &prop,
+            &list,
+            &n_strings
+        );
+
+        if (status < Success or not n_strings or not *list) {
+            return result;
+        }
+
+        for (auto i = 0; i < n_strings; ++i) {
+            result.emplace_back(list[i]);
+        }
+
+        XFreeStringList(list);
+
+        return result;
+    }
+}
 
 namespace SL
 {
@@ -11,20 +95,24 @@ namespace Screen_Capture
 
     void AddWindow(Display* display, XID& window, std::vector<Window>& wnd)
     {
-        std::string name;
-        char* n = NULL;
-        if(XFetchName(display, window, &n) > 0) {
-            name = n;
-            XFree(n);
-        } 
-        Window w;
+        using namespace std::string_literals;
+
+        auto wm_name = GetWMName(display, window);
+        auto candidates = TextPropertyToStrings(display, wm_name.get());
+
+        auto name = candidates.empty() ? ""s : std::move(candidates.front());
+
+        auto w = Window{};
+
         w.Handle = reinterpret_cast<size_t>(window);
+
         XWindowAttributes wndattr;
         XGetWindowAttributes(display, window, &wndattr);
+
         w.Position = Point{ wndattr.x, wndattr.y };
         w.Size = Point{ wndattr.width, wndattr.height };
 
-        memcpy(w.Name, name.c_str(), name.size() + 1);
+        strncpy(w.Name, name.c_str(), sizeof(w.Name) - 1);
         wnd.push_back(w);
     }
 

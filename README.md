@@ -4,7 +4,8 @@
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/6nlqo1csbkgdxorx"/><p>
 <p>Cross-platform screen and window capturing library . . . this is made to be lightweight and fast.
 see the Exmaple folder for a demo</p>
-<h2>No External Dependencies except on linux: sudo apt-get install libxtst-dev libxinerama-dev libx11-dev libxfixes-dev</h2>
+<h2>No External Dependencies except:</h2>
+<p>linux: sudo apt-get install libxtst-dev libxinerama-dev libx11-dev libxfixes-dev</p>
 <h4>Platforms supported:</h4>
 
 <ul>

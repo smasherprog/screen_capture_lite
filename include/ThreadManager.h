@@ -42,7 +42,7 @@ namespace Screen_Capture {
 
             std::shared_ptr<ITimer> timer;
             // i want to use if const expr here but apple is slow to update their compiler so I have to use this
-            if constexpr (sizeof...(args) == 1) {
+            if (sizeof...(args) == 1) {
                 timer = std::atomic_load(&data->WindowCaptureData.MouseTimer);
             }
             else {

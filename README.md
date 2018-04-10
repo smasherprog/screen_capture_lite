@@ -9,7 +9,7 @@ see the Exmaple folder for a demo</p>
 <h4>Platforms supported:</h4>
 
 <ul>
-<li>Windows 7 and Up</li>
+<li>Windows 8 and Up</li>
 <li>MacOS</li>
 <li>Linux</li>
 </ul>

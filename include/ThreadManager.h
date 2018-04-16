@@ -28,21 +28,17 @@ namespace Screen_Capture {
     template <class T, class F, class... E> bool TryCaptureMouse(const F &data, E... args)
     {
         T frameprocessor;
+        frameprocessor.ImageBufferSize = frameprocessor.MaxCursurorSize * frameprocessor.MaxCursurorSize * PixelStride;
+        frameprocessor.ImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
         auto ret = frameprocessor.Init(data);
         if (ret != DUPL_RETURN_SUCCESS) {
             return false;
-        }
-        frameprocessor.ImageBufferSize = frameprocessor.MaxCursurorSize * frameprocessor.MaxCursurorSize * PixelStride;
-
-        frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
-        frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
-
+        } 
         while (!data->CommonData_.TerminateThreadsEvent) {
             // get a copy of the shared_ptr in a safe way
 
-            std::shared_ptr<ITimer> timer;
-            // i want to use if const expr here but apple is slow to update their compiler so I have to use this
-            if (sizeof...(args) == 1) {
+            std::shared_ptr<ITimer> timer; 
+            if constexpr(sizeof...(args) == 1) {
                 timer = std::atomic_load(&data->WindowCaptureData.MouseTimer);
             }
             else {
@@ -87,21 +83,18 @@ namespace Screen_Capture {
     }
     template <class T, class F> bool TryCaptureMonitor(const F &data, Monitor &monitor)
     {
-        T frameprocessor;
+        T frameprocessor;   
+        frameprocessor.ImageBufferSize = Width(monitor) * Height(monitor) * PixelStride;
+        if (data->ScreenCaptureData.OnFrameChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
+                                                      // image is always new
+            frameprocessor.ImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
+        }
         auto startmonitors = GetMonitors();
         auto ret = frameprocessor.Init(data, monitor);
         if (ret != DUPL_RETURN_SUCCESS) {
             return false;
         }
-        frameprocessor.ImageBufferSize = Width(monitor) * Height(monitor) * PixelStride;
-        if (data->ScreenCaptureData.OnFrameChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
-                                                      // image is always new
-            frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
-            frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
-        }
-        if ((data->ScreenCaptureData.OnNewFrame) && !frameprocessor.NewImageBuffer) {
-            frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
-        }
+    
         while (!data->CommonData_.TerminateThreadsEvent) {
             // get a copy of the shared_ptr in a safe way
             auto timer = std::atomic_load(&data->ScreenCaptureData.FrameTimer);
@@ -139,19 +132,14 @@ namespace Screen_Capture {
     template <class T, class F> bool TryCaptureWindow(const F &data, Window &wnd)
     {
         T frameprocessor;
-        auto ret = frameprocessor.Init(data, wnd);
-        if (ret != DUPL_RETURN_SUCCESS) {
-            return false;
-        }
-
         frameprocessor.ImageBufferSize = wnd.Size.x * wnd.Size.y * PixelStride;
         if (data->WindowCaptureData.OnFrameChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
                                                       // image is always new
-            frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
-            frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
+            frameprocessor.ImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
         }
-        if ((data->WindowCaptureData.OnNewFrame) && !frameprocessor.NewImageBuffer) {
-            frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
+        auto ret = frameprocessor.Init(data, wnd);
+        if (ret != DUPL_RETURN_SUCCESS) {
+            return false;
         }
         while (!data->CommonData_.TerminateThreadsEvent) {
             // get a copy of the shared_ptr in a safe way

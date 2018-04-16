@@ -13,6 +13,7 @@ namespace SL {
             HBITMAPWrapper CaptureBMP;
             Monitor SelectedMonitor;
             HWND SelectedWindow;
+            std::unique_ptr<unsigned char[]> NewImageBuffer;
 
             std::shared_ptr<Thread_Data> Data;
         public:

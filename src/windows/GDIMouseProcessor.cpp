@@ -8,7 +8,7 @@ namespace SL {
             auto Ret = DUPL_RETURN_SUCCESS;
             MonitorDC.DC = GetDC(NULL);
             CaptureDC.DC = CreateCompatibleDC(MonitorDC.DC);
-
+            NewImageBuffer = std::make_unique<unsigned char[]>(ImageBufferSize);
             if (!MonitorDC.DC || !CaptureDC.DC) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
             }
@@ -90,14 +90,14 @@ namespace SL {
 
             if (Data->ScreenCaptureData.OnMouseChanged || Data->WindowCaptureData.OnMouseChanged) {
                 //if the mouse image is different, send the new image and swap the data 
-                if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), bi.biSizeImage) != 0) {
+                if (memcmp(NewImageBuffer.get(), ImageBuffer.get(), bi.biSizeImage) != 0) {
                     if (Data->WindowCaptureData.OnMouseChanged) {
                         Data->WindowCaptureData.OnMouseChanged(&wholeimg, Point{ lastx, lasty });
                     }
                     if (Data->ScreenCaptureData.OnMouseChanged) {
                         Data->ScreenCaptureData.OnMouseChanged(&wholeimg, Point{ lastx, lasty });
                     }
-                    std::swap(NewImageBuffer, OldImageBuffer);
+                    std::swap(NewImageBuffer, ImageBuffer);
                 }
                 else if (Last_x != lastx || Last_y != lasty) {
                     if (Data->WindowCaptureData.OnMouseChanged) {

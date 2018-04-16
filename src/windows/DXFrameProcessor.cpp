@@ -362,31 +362,8 @@ namespace Screen_Capture {
                                   hr, SystemTransitionsExpectedErrors);
         }
 
-        ImageRect ret = {0};
-        ret.left = 0;
-        ret.top = 0;
-        ret.bottom = Height(SelectedMonitor);
-        ret.right = Width(SelectedMonitor);
-        auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData);
-
-        auto rowstride = PixelStride * Width(SelectedMonitor);
-
-        if (Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
-            auto wholeimg = Create(ret, PixelStride, static_cast<int>(MappingDesc.RowPitch) - rowstride, startsrc);
-            Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
-        }
-        else {
-            auto startdst = NewImageBuffer.get();
-            if (rowstride == static_cast<int>(MappingDesc.RowPitch)) { // no need for multiple calls, there is no padding here
-                memcpy(startdst, startsrc, rowstride * Height(SelectedMonitor));
-            }
-            else {
-                for (auto i = 0; i < Height(SelectedMonitor); i++) {
-                    memcpy(startdst + (i * rowstride), startsrc + (i * MappingDesc.RowPitch), rowstride);
-                }
-            }
-            ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);
-        }
+        auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData); 
+        ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, startsrc, MappingDesc.RowPitch);
         return Ret;
     }
 } // namespace Screen_Capture

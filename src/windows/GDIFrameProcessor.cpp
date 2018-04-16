@@ -12,7 +12,7 @@ namespace Screen_Capture {
         MonitorDC.DC = CreateDCA(Name(SelectedMonitor), NULL, NULL, NULL);
         CaptureDC.DC = CreateCompatibleDC(MonitorDC.DC);
         CaptureBMP.Bitmap = CreateCompatibleBitmap(MonitorDC.DC, Width(SelectedMonitor), Height(SelectedMonitor));
-
+        NewImageBuffer = std::make_unique<unsigned char[]>(ImageBufferSize);
         if (!MonitorDC.DC || !CaptureDC.DC || !CaptureBMP.Bitmap) {
             return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
         }
@@ -30,7 +30,7 @@ namespace Screen_Capture {
 
         SelectedWindow = reinterpret_cast<HWND>(selectedwindow.Handle);
         auto Ret = DUPL_RETURN_SUCCESS;
-
+        NewImageBuffer = std::make_unique<unsigned char[]>(ImageBufferSize);
         MonitorDC.DC = GetWindowDC(SelectedWindow);
         CaptureDC.DC = CreateCompatibleDC(MonitorDC.DC);
 
@@ -76,7 +76,7 @@ namespace Screen_Capture {
             bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride * ret.bottom;
             GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
             SelectObject(CaptureDC.DC, originalBmp);
-            ProcessCapture(Data->ScreenCaptureData, *this, currentmonitorinfo, ret);
+            ProcessCapture(Data->ScreenCaptureData, *this, currentmonitorinfo, NewImageBuffer.get(), Width(SelectedMonitor)* PixelStride);
         }
 
         return Ret;
@@ -124,7 +124,7 @@ namespace Screen_Capture {
             bi.biSizeImage = ((Width(ret) * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride * Height(ret);
             GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)Height(ret), NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
             SelectObject(CaptureDC.DC, originalBmp);
-            ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, ret);
+            ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, NewImageBuffer.get(), Width(SelectedMonitor)* PixelStride);
         }
 
         return Ret;

@@ -72,9 +72,14 @@ namespace Screen_Capture {
     SC_LITE_EXTERN int Adapter(const Monitor &mointor);
     SC_LITE_EXTERN int OffsetX(const Monitor &mointor);
     SC_LITE_EXTERN int OffsetY(const Monitor &mointor);
+    SC_LITE_EXTERN int OffsetX(const Window &mointor);
+    SC_LITE_EXTERN int OffsetY(const Window &mointor);
     SC_LITE_EXTERN const char *Name(const Monitor &mointor);
+    SC_LITE_EXTERN const char *Name(const Window &mointor);
     SC_LITE_EXTERN int Height(const Monitor &mointor);
     SC_LITE_EXTERN int Width(const Monitor &mointor);
+    SC_LITE_EXTERN int Height(const Window &mointor);
+    SC_LITE_EXTERN int Width(const Window &mointor);
 
     SC_LITE_EXTERN int Height(const ImageRect &rect);
     SC_LITE_EXTERN int Width(const ImageRect &rect);

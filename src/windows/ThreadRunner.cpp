@@ -1,7 +1,6 @@
 #include "DXFrameProcessor.h"
 #include "GDIFrameProcessor.h"
 #include "GDIMouseProcessor.h"
-#include "GDIWindowProcessor.h"
 #include "ScreenCapture.h"
 #include "ThreadManager.h"
 

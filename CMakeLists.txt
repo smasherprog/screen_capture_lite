@@ -18,9 +18,13 @@ if(WIN32)
 		src/windows/GetWindows.cpp
 		src/windows/GetMonitors.cpp 
 		src/windows/DXFrameProcessor.cpp 
+		include/windows/DXFrameProcessor.h
 		src/windows/GDIFrameProcessor.cpp 
+		include/windows/GDIFrameProcessor.h
 		src/windows/GDIMouseProcessor.cpp
+		include/windows/GDIMouseProcessor.h
 		src/windows/ThreadRunner.cpp
+		include/windows/GDIHelpers.h
     )
     set(SCREEN_CAPTURE_PLATFORM_INC     
        include/windows 

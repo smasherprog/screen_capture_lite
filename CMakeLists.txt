@@ -30,9 +30,16 @@ elseif(APPLE)
 	find_library(cocoa_lib Cocoa)
     set(SCREEN_CAPTURE_PLATFORM_SRC
         src/ios/GetWindows.cpp 
-        src/ios/NSMouseCapture.m 
-        src/ios/NSMouseProcessor.cpp 
+        src/ios/NSMouseCapture.m
+        include/ios/NSMouseCapture.h 
+        src/ios/NSFrameProcessor.cpp
+        src/ios/NSFrameProcessor.mm
+        include/ios/NSFrameProcessorm.h
+        include/ios/NSFrameProcessor.h
+        src/ios/NSMouseProcessor.cpp
+        include/ios/NSMouseProcessor.h
         src/ios/CGFrameProcessor.cpp
+        include/ios/CGFrameProcessor.h
         src/ios/GetMonitors.cpp
         src/ios/ThreadRunner.cpp
     )

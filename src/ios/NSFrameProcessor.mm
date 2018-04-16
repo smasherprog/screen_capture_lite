@@ -1,0 +1,110 @@
+#include "NSFrameProcessorm.h"
+
+
+@implementation FrameProcessor
+
+-(SL::Screen_Capture::DUPL_RETURN) Init:(SL::Screen_Capture::NSFrameProcessor*) parent
+{
+    self = [super init];
+    if (self) {
+        self.nsframeprocessor = parent;
+        self.avcapturesession = [[AVCaptureSession alloc] init];
+        
+        auto input = [[[AVCaptureScreenInput alloc] initWithDisplayID:SL::Screen_Capture::Id(parent->SelectedMonitor)] autorelease];
+        [self.avcapturesession addInput:input];
+        
+        auto output = [[[AVCaptureVideoDataOutput alloc] init] autorelease];
+        NSDictionary* videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey, nil];
+        
+        [output setVideoSettings:videoSettings];
+        [output setAlwaysDiscardsLateVideoFrames:true];
+        [input setMinFrameDuration:CMTimeMake(1, 30)]; 
+        input.capturesCursor = false;
+        input.capturesMouseClicks = false;
+        
+        [self.avcapturesession addOutput:output];
+        [output setSampleBufferDelegate:self queue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0)];
+        [self.avcapturesession startRunning];
+           return SL::Screen_Capture::DUPL_RETURN::DUPL_RETURN_SUCCESS;
+    }
+    return SL::Screen_Capture::DUPL_RETURN::DUPL_RETURN_ERROR_UNEXPECTED;
+}
+
+- (void)dealloc
+{
+    [self.avcapturesession stopRunning];
+    [self.avcapturesession release];
+    [super dealloc];
+}
+
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+    auto& selectedmonitor =self.nsframeprocessor->SelectedMonitor;
+    auto& data  =self.nsframeprocessor->Data->ScreenCaptureData;
+    SL::Screen_Capture::ImageRect ret = {0};
+    ret.left = 0;
+    ret.top = 0;
+    ret.bottom = Height(selectedmonitor);
+    ret.right = Width(selectedmonitor);
+    
+    auto imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    CVPixelBufferLockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
+    auto bytesperrow = CVPixelBufferGetBytesPerRow(imageBuffer);
+    
+    auto buf = static_cast<unsigned char*>(CVPixelBufferGetBaseAddress(imageBuffer));
+    
+    auto rowstride = SL::Screen_Capture::PixelStride * SL::Screen_Capture::Width(selectedmonitor);
+    auto startbuf = buf + ((SL::Screen_Capture::OffsetX(selectedmonitor) - SL::Screen_Capture::OffsetX(selectedmonitor) )*SL::Screen_Capture::PixelStride);//advance to the start of this image
+    startbuf += (SL::Screen_Capture::OffsetY(selectedmonitor) *  bytesperrow);
+    
+    if (data.OnNewFrame && !data.OnFrameChanged) {
+        auto wholeimg = SL::Screen_Capture::Create(ret, SL::Screen_Capture::PixelStride, static_cast<int>(bytesperrow) - rowstride, startbuf);
+        data.OnNewFrame(wholeimg, selectedmonitor);
+    }
+    else {
+        unsigned char* startdst = self.nsframeprocessor->NewImageBuffer.get();
+        if (rowstride == static_cast<int>(bytesperrow)) { // no need for multiple calls, there is no padding here
+            memcpy(startdst, buf, rowstride * SL::Screen_Capture::Height(selectedmonitor));
+        }
+        else {
+            for (auto i = 0; i < SL::Screen_Capture::Height(selectedmonitor); i++) {
+                memcpy(startdst + (i * rowstride), (startbuf + (i * bytesperrow)) , rowstride);
+            }
+        }
+        SL::Screen_Capture::ProcessCapture(data, *(self.nsframeprocessor), selectedmonitor, ret);
+    }
+    CVPixelBufferUnlockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
+}
+@end
+
+namespace SL{
+    namespace Screen_Capture{
+        struct NSFrameProcessorImpl{
+            FrameProcessor* ptr=nullptr;
+            NSFrameProcessorImpl(){
+                ptr = [[FrameProcessor alloc] init];
+            }
+            ~NSFrameProcessorImpl(){
+                if(ptr) {
+                    [ptr release];
+                }
+            }
+            DUPL_RETURN Init(NSFrameProcessor* parent){
+                return [ptr Init:parent];
+            }
+        };
+        NSFrameProcessorImpl* CreateNSFrameProcessorImpl(){
+            return new NSFrameProcessorImpl();
+        }
+        void DestroyNSFrameProcessorImpl(NSFrameProcessorImpl* p){
+            if(p){
+                delete p;
+            }
+        }
+        DUPL_RETURN Init(NSFrameProcessorImpl* createdimpl, NSFrameProcessor* parent){
+            if(createdimpl){
+                return createdimpl->Init(parent);
+            }
+            return DUPL_RETURN::DUPL_RETURN_ERROR_UNEXPECTED;
+        }
+    }
+}

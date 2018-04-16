@@ -88,20 +88,21 @@ namespace Screen_Capture {
     template <class T, class F> bool TryCaptureMonitor(const F &data, Monitor &monitor)
     {
         T frameprocessor;
-        auto startmonitors = GetMonitors();
-        auto ret = frameprocessor.Init(data, monitor);
-        if (ret != DUPL_RETURN_SUCCESS) {
-            return false;
-        }
         frameprocessor.ImageBufferSize = Width(monitor) * Height(monitor) * PixelStride;
         if (data->ScreenCaptureData.OnFrameChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
-                                                      // image is always new
+            // image is always new
             frameprocessor.OldImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
             frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
         }
         if ((data->ScreenCaptureData.OnNewFrame) && !frameprocessor.NewImageBuffer) {
             frameprocessor.NewImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
         }
+        auto startmonitors = GetMonitors();
+        auto ret = frameprocessor.Init(data, monitor);
+        if (ret != DUPL_RETURN_SUCCESS) {
+            return false;
+        }
+    
         while (!data->CommonData_.TerminateThreadsEvent) {
             // get a copy of the shared_ptr in a safe way
             auto timer = std::atomic_load(&data->ScreenCaptureData.FrameTimer);

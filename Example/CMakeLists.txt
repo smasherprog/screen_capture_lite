@@ -5,7 +5,18 @@ if(WIN32)
 elseif(APPLE)
 	find_library(corefoundation_lib CoreFoundation)
 	find_library(cocoa_lib Cocoa)
-	set(${PROJECT_NAME}_PLATFORM_LIBS ${corefoundation_lib} ${cocoa_lib})
+    find_library(coremedia_lib CoreMedia)
+    find_library(avfoundation_lib AVFoundation)
+    find_library(coregraphics_lib CoreGraphics) 
+
+	set(${PROJECT_NAME}_PLATFORM_LIBS
+        ${corefoundation_lib}
+        ${cocoa_lib}
+        ${coremedia_lib}
+        ${corevideo_lib} 
+        ${avfoundation_lib}
+    )
+
 else()
 	find_package(X11 REQUIRED)
 	if(!X11_XTest_FOUND)

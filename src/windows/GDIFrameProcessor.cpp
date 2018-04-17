@@ -124,7 +124,7 @@ namespace Screen_Capture {
             bi.biSizeImage = ((Width(ret) * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride * Height(ret);
             GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)Height(ret), NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
             SelectObject(CaptureDC.DC, originalBmp);
-            ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, NewImageBuffer.get(), Width(SelectedMonitor)* PixelStride);
+            ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, NewImageBuffer.get(), Width(selectedwindow)* PixelStride);
         }
 
         return Ret;

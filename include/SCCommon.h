@@ -83,7 +83,7 @@ namespace SL {
                         auto rightpadding = (RowStride(newimg) + RowPadding(newimg)) - (r.right * PixelStride);
                         auto padding = leftoffset + rightpadding;
                         auto thisstartsrc = startsrc;
-                        thisstartsrc += leftoffset + (r.top * PixelStride * srcrowstride);
+                        thisstartsrc += leftoffset + (r.top * srcrowstride);
 
                         auto difimg = Create(r, PixelStride, padding, thisstartsrc);
                         data.OnFrameChanged(difimg, mointor);

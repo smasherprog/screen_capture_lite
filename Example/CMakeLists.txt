@@ -8,13 +8,15 @@ elseif(APPLE)
     find_library(coremedia_lib CoreMedia)
     find_library(avfoundation_lib AVFoundation)
     find_library(coregraphics_lib CoreGraphics) 
-
+   find_library(corevideo_lib CoreVideo)
+   
 	set(${PROJECT_NAME}_PLATFORM_LIBS
         ${corefoundation_lib}
         ${cocoa_lib}
         ${coremedia_lib}
         ${avfoundation_lib}
-        ${coregraphics_lib} 
+        ${coregraphics_lib}  
+		${corevideo_lib}
     )
 
 else()

@@ -44,33 +44,8 @@ namespace Screen_Capture {
         auto buf = CFDataGetBytePtr(rawdatas);
 
         auto datalen = width * height * PixelStride;
-        ImageRect ret;
-        ret.left = ret.top = 0;
-        ret.right = width;
-        ret.bottom = height;
-        if (Data->WindowCaptureData.OnNewFrame && !Data->WindowCaptureData.OnFrameChanged) {
-
-            auto wholeimg = SL::Screen_Capture::Create(ret, PixelStride, bytesperrow - PixelStride * width, buf);
-            Data->WindowCaptureData.OnNewFrame(wholeimg, window);
-        }
-        else {
-            if (bytesperrow == PixelStride * width) {
-                // most efficent, can be done in a single memcpy
-                memcpy(NewImageBuffer.get(), buf, datalen);
-            }
-            else {
-                // for loop needed to copy each row
-                auto dst = NewImageBuffer.get();
-                auto src = buf;
-                for (auto h = 0; h < height; h++) {
-                    memcpy(dst, src, PixelStride * width);
-                    dst += PixelStride * width;
-                    src += bytesperrow;
-                }
-            }
-
-            ProcessCapture(Data->WindowCaptureData, *this, window, ret);
-        }
+		ProcessCapture(Data->WindowCaptureData, *this, window, buf, bytesperrow);
+	  
         CFRelease(rawdatas);
         CGImageRelease(imageRef);
         return Ret;

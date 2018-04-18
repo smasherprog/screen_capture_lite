@@ -9,6 +9,7 @@ namespace SL {
         
         class X11MouseProcessor: public BaseFrameProcessor {
             Display* SelectedDisplay=nullptr;
+            std::unique_ptr<unsigned char[]> OldImageBuffer;
             XID RootWindow;
             int Last_x = 0;
             int Last_y =0;

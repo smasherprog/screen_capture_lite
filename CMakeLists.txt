@@ -52,7 +52,9 @@ elseif(APPLE)
     )
 else()
   set(SCREEN_CAPTURE_PLATFORM_SRC 
+       include/linux/X11MouseProcessor.h 
        src/linux/X11MouseProcessor.cpp 
+       include/linux/X11FrameProcessor.h 
        src/linux/X11FrameProcessor.cpp
        src/linux/GetMonitors.cpp
        src/linux/GetWindows.cpp

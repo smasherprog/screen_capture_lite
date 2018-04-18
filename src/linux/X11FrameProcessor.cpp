@@ -20,8 +20,8 @@ namespace Screen_Capture
             shmctl(ShmInfo->shmid, IPC_RMID, 0);
             XShmDetach(SelectedDisplay, ShmInfo.get());
         }
-        if(Image) {
-            XDestroyImage(Image);
+        if(XImage_) {
+            XDestroyImage(XImage_);
         }
         if(SelectedDisplay) {
             XCloseDisplay(SelectedDisplay);
@@ -41,7 +41,7 @@ namespace Screen_Capture
 
         ShmInfo = std::make_unique<XShmSegmentInfo>();
 
-        Image = XShmCreateImage(SelectedDisplay,
+        XImage_ = XShmCreateImage(SelectedDisplay,
                                 DefaultVisual(SelectedDisplay, scr),
                                 DefaultDepth(SelectedDisplay, scr),
                                 ZPixmap,
@@ -49,10 +49,10 @@ namespace Screen_Capture
                                 ShmInfo.get(),
                                 selectedwindow.Size.x,
                                 selectedwindow.Size.y);
-        ShmInfo->shmid = shmget(IPC_PRIVATE, Image->bytes_per_line * Image->height, IPC_CREAT | 0777);
+        ShmInfo->shmid = shmget(IPC_PRIVATE, XImage_->bytes_per_line * XImage_->height, IPC_CREAT | 0777);
 
         ShmInfo->readOnly = False;
-        ShmInfo->shmaddr = Image->data = (char*)shmat(ShmInfo->shmid, 0, 0);
+        ShmInfo->shmaddr = XImage_->data = (char*)shmat(ShmInfo->shmid, 0, 0);
 
         XShmAttach(SelectedDisplay, ShmInfo.get());
 
@@ -71,7 +71,7 @@ namespace Screen_Capture
 
         ShmInfo = std::make_unique<XShmSegmentInfo>();
 
-        Image = XShmCreateImage(SelectedDisplay,
+        XImage_ = XShmCreateImage(SelectedDisplay,
                                 DefaultVisual(SelectedDisplay, scr),
                                 DefaultDepth(SelectedDisplay, scr),
                                 ZPixmap,
@@ -79,10 +79,10 @@ namespace Screen_Capture
                                 ShmInfo.get(),
                                 Width(SelectedMonitor),
                                 Height(SelectedMonitor));
-        ShmInfo->shmid = shmget(IPC_PRIVATE, Image->bytes_per_line * Image->height, IPC_CREAT | 0777);
+        ShmInfo->shmid = shmget(IPC_PRIVATE, XImage_->bytes_per_line * XImage_->height, IPC_CREAT | 0777);
 
         ShmInfo->readOnly = False;
-        ShmInfo->shmaddr = Image->data = (char*)shmat(ShmInfo->shmid, 0, 0);
+        ShmInfo->shmaddr = XImage_->data = (char*)shmat(ShmInfo->shmid, 0, 0);
 
         XShmAttach(SelectedDisplay, ShmInfo.get());
 
@@ -93,26 +93,19 @@ namespace Screen_Capture
     {        
         auto Ret = DUPL_RETURN_SUCCESS;
         ImageRect ret;
-        ret.left = ret.top = 0;
-        ret.right = Width(SelectedMonitor);
-        ret.bottom = Height(SelectedMonitor);
+        ret.left = OffsetX(SelectedMonitor);
+        ret.top = OffsetY(SelectedMonitor);
+        ret.right = ret.left + Width(SelectedMonitor);
+        ret.bottom = ret.top + Height(SelectedMonitor);
         if(!XShmGetImage(SelectedDisplay,
                          RootWindow(SelectedDisplay, DefaultScreen(SelectedDisplay)),
-                         Image,
+                         XImage_,
                          OffsetX(SelectedMonitor),
                          OffsetY(SelectedMonitor),
                          AllPlanes)) {
             return DUPL_RETURN_ERROR_EXPECTED;
         }
-
-        if(Data->ScreenCaptureData.OnNewFrame && !Data->ScreenCaptureData.OnFrameChanged) {
-
-            auto wholeimg = Create(ret, PixelStride, 0, reinterpret_cast<unsigned char*>(Image->data));
-            Data->ScreenCaptureData.OnNewFrame(wholeimg, SelectedMonitor);
-        } else {
-            memcpy(NewImageBuffer.get(), Image->data, PixelStride * ret.right * ret.bottom);
-            ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, ret);
-        }
+        ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, (unsigned char*)XImage_->data, XImage_->bytes_per_line, ret);
         return Ret;
     }
     DUPL_RETURN X11FrameProcessor::ProcessFrame(Window& selectedwindow){
@@ -131,21 +124,13 @@ namespace Screen_Capture
         }
         if(!XShmGetImage(SelectedDisplay,
                          selectedwindow.Handle,
-                         Image,
+                         XImage_,
                          0,
                          0,
                          AllPlanes)) {
             return DUPL_RETURN_ERROR_EXPECTED;
         }
-
-        if(Data->WindowCaptureData.OnNewFrame && !Data->WindowCaptureData.OnFrameChanged) {
-
-            auto wholeimg = Create(ret, PixelStride, 0, reinterpret_cast<unsigned char*>(Image->data));
-            Data->WindowCaptureData.OnNewFrame(wholeimg, selectedwindow);
-        } else {
-            memcpy(NewImageBuffer.get(), Image->data, PixelStride * ret.right * ret.bottom);
-            ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, ret);
-        }
+        ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, (unsigned char*)XImage_->data, XImage_->bytes_per_line, ret);
         return Ret;
     }
 }

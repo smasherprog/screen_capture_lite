@@ -28,7 +28,7 @@ namespace SL {
             RootWindow = DefaultRootWindow(SelectedDisplay);
             if (!RootWindow) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
-            }
+            } 
             return ret;
         }
         //
@@ -51,12 +51,12 @@ namespace SL {
             imgrect.right = img->width;
             imgrect.bottom = img->height;
             auto newsize = PixelStride*imgrect.right*imgrect.bottom;
-            if(newsize>ImageBufferSize){
-                NewImageBuffer = std::make_unique<unsigned char[]>(PixelStride*imgrect.right*imgrect.bottom);
+            if(newsize>ImageBufferSize || !OldImageBuffer){
+                ImageBuffer = std::make_unique<unsigned char[]>(PixelStride*imgrect.right*imgrect.bottom);
                 OldImageBuffer=std::make_unique<unsigned char[]>(PixelStride*imgrect.right*imgrect.bottom);
             }
             
-            memcpy(NewImageBuffer.get(), img->pixels, newsize);
+            memcpy(ImageBuffer.get(), img->pixels, newsize);
 
                 // Get the mouse cursor position
             int x, y, root_x, root_y = 0;
@@ -74,9 +74,9 @@ namespace SL {
                 auto wholeimg = Create(imgrect, PixelStride, 0, OldImageBuffer.get());
                     
                 //if the mouse image is different, send the new image and swap the data 
-                if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), newsize) != 0) {
+                if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), newsize) != 0) {
                     Data->ScreenCaptureData.OnMouseChanged(&wholeimg, Point{x, y});
-                    std::swap(NewImageBuffer, OldImageBuffer);
+                    std::swap(ImageBuffer, OldImageBuffer);
                 }
                 else if(Last_x != x || Last_y != y){
                     Data->ScreenCaptureData.OnMouseChanged(nullptr, Point{x, y});

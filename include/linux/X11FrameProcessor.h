@@ -12,7 +12,7 @@ namespace SL {
             
 			Display* SelectedDisplay=nullptr;
             XID SelectedWindow = 0;
-			XImage* Image=nullptr;
+			XImage* XImage_=nullptr;
 			std::unique_ptr<XShmSegmentInfo> ShmInfo;
             Monitor SelectedMonitor;
             

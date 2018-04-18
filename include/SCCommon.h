@@ -53,13 +53,9 @@ namespace SL {
 
         template <class F, class T, class C> void ProcessCapture(const F &data, T &base, const C &mointor,
             unsigned char * startsrc,
-            int srcrowstride
-        ) {
-            ImageRect imageract = { 0 };
-            imageract.left = 0;
-            imageract.top = 0;
-            imageract.bottom = Height(mointor);
-            imageract.right = Width(mointor);
+            int srcrowstride,
+            ImageRect imageract
+        ) { 
             auto dstrowstride = PixelStride * Width(mointor);
             if (data.OnNewFrame) {//each frame we still let the caller know if asked for
                 auto wholeimg = Create(imageract, PixelStride, srcrowstride - dstrowstride, startsrc);

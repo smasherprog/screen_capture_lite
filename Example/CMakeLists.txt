@@ -13,8 +13,8 @@ elseif(APPLE)
         ${corefoundation_lib}
         ${cocoa_lib}
         ${coremedia_lib}
-        ${corevideo_lib} 
         ${avfoundation_lib}
+        ${coregraphics_lib} 
     )
 
 else()

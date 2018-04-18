@@ -92,11 +92,6 @@ namespace Screen_Capture
     DUPL_RETURN X11FrameProcessor::ProcessFrame(const Monitor& curentmonitorinfo)
     {        
         auto Ret = DUPL_RETURN_SUCCESS;
-        ImageRect ret;
-        ret.left = OffsetX(SelectedMonitor);
-        ret.top = OffsetY(SelectedMonitor);
-        ret.right = ret.left + Width(SelectedMonitor);
-        ret.bottom = ret.top + Height(SelectedMonitor);
         if(!XShmGetImage(SelectedDisplay,
                          RootWindow(SelectedDisplay, DefaultScreen(SelectedDisplay)),
                          XImage_,
@@ -105,21 +100,17 @@ namespace Screen_Capture
                          AllPlanes)) {
             return DUPL_RETURN_ERROR_EXPECTED;
         }
-        ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, (unsigned char*)XImage_->data, XImage_->bytes_per_line, ret);
+        ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, (unsigned char*)XImage_->data, XImage_->bytes_per_line);
         return Ret;
     }
     DUPL_RETURN X11FrameProcessor::ProcessFrame(Window& selectedwindow){
         
-        auto Ret = DUPL_RETURN_SUCCESS;
-        ImageRect ret;
-        ret.left = ret.top = 0;
-        ret.right = selectedwindow.Size.x;
-        ret.bottom = selectedwindow.Size.y;
+        auto Ret = DUPL_RETURN_SUCCESS; 
         XWindowAttributes wndattr;
         if(XGetWindowAttributes(SelectedDisplay, SelectedWindow, &wndattr) ==0){
             return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window might not be valid any more
         }
-        if(wndattr.width != ret.right || wndattr.height != ret.bottom){
+        if(wndattr.width != Width(selectedwindow) || wndattr.height != Height(selectedwindow)){
             return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;//window size changed. This will rebuild everything
         }
         if(!XShmGetImage(SelectedDisplay,
@@ -130,7 +121,7 @@ namespace Screen_Capture
                          AllPlanes)) {
             return DUPL_RETURN_ERROR_EXPECTED;
         }
-        ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, (unsigned char*)XImage_->data, XImage_->bytes_per_line, ret);
+        ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, (unsigned char*)XImage_->data, XImage_->bytes_per_line);
         return Ret;
     }
 }

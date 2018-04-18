@@ -52,7 +52,7 @@ namespace SL {
         std::vector<ImageRect> GetDifs(const Image &oldimg, const Image &newimg);
 
         template <class F, class T, class C> void ProcessCapture(const F &data, T &base, const C &mointor,
-            unsigned char * startsrc,
+            const unsigned char * startsrc,
             int srcrowstride
         ) {
             ImageRect imageract = { 0 };

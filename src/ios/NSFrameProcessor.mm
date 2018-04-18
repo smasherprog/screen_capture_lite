@@ -53,25 +53,10 @@
     auto buf = static_cast<unsigned char*>(CVPixelBufferGetBaseAddress(imageBuffer));
     
     auto rowstride = SL::Screen_Capture::PixelStride * SL::Screen_Capture::Width(selectedmonitor);
-    auto startbuf = buf + ((SL::Screen_Capture::OffsetX(selectedmonitor) - SL::Screen_Capture::OffsetX(selectedmonitor) )*SL::Screen_Capture::PixelStride);//advance to the start of this image
+    auto startbuf = buf + (SL::Screen_Capture::OffsetX(selectedmonitor)*SL::Screen_Capture::PixelStride);//advance to the start of this image
     startbuf += (SL::Screen_Capture::OffsetY(selectedmonitor) *  bytesperrow);
-    
-    if (data.OnNewFrame && !data.OnFrameChanged) {
-        auto wholeimg = SL::Screen_Capture::Create(ret, SL::Screen_Capture::PixelStride, static_cast<int>(bytesperrow) - rowstride, startbuf);
-        data.OnNewFrame(wholeimg, selectedmonitor);
-    }
-    else {
-        unsigned char* startdst = self.nsframeprocessor->NewImageBuffer.get();
-        if (rowstride == static_cast<int>(bytesperrow)) { // no need for multiple calls, there is no padding here
-            memcpy(startdst, buf, rowstride * SL::Screen_Capture::Height(selectedmonitor));
-        }
-        else {
-            for (auto i = 0; i < SL::Screen_Capture::Height(selectedmonitor); i++) {
-                memcpy(startdst + (i * rowstride), (startbuf + (i * bytesperrow)) , rowstride);
-            }
-        }
-        SL::Screen_Capture::ProcessCapture(data, *(self.nsframeprocessor), selectedmonitor, ret);
-    }
+    SL::Screen_Capture::ProcessCapture(data, *(self.nsframeprocessor), selectedmonitor, startbuf, bytesperrow);
+ 
     CVPixelBufferUnlockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
 }
 @end

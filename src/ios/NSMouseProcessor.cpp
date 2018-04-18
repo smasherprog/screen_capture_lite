@@ -35,12 +35,12 @@ namespace SL {
                 auto rawdatas= CGDataProviderCopyData(prov);
                 auto buf = CFDataGetBytePtr(rawdatas);
                 auto datalen = CFDataGetLength(rawdatas);
-                if(datalen > ImageBufferSize){
-                    NewImageBuffer = std::make_unique<unsigned char[]>(datalen);
+                if(datalen > ImageBufferSize || !OldImageBuffer){
+                    ImageBuffer = std::make_unique<unsigned char[]>(datalen);
                     OldImageBuffer= std::make_unique<unsigned char[]>(datalen);
                 }
                 
-                memcpy(NewImageBuffer.get(),buf, datalen);
+                memcpy(ImageBuffer.get(),buf, datalen);
                 CFRelease(rawdatas);
                
                //this is not needed. It is freed when the image is released
@@ -52,21 +52,21 @@ namespace SL {
                 imgrect.left =  imgrect.top=0;
                 imgrect.right =width;
                 imgrect.bottom = height;
-                auto wholeimgfirst = Create(imgrect, PixelStride, 0, NewImageBuffer.get());
+                auto wholeimgfirst = Create(imgrect, PixelStride, 0, ImageBuffer.get());
                 
               
                 auto lastx = static_cast<int>(loc.x);
                 auto lasty = static_cast<int>(loc.y);
                     //if the mouse image is different, send the new image and swap the data
          
-                    if (memcmp(NewImageBuffer.get(), OldImageBuffer.get(), datalen) != 0) {
+                    if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), datalen) != 0) {
                         if(Data->ScreenCaptureData.OnMouseChanged){
                            Data->ScreenCaptureData.OnMouseChanged(&wholeimgfirst, Point{ lastx, lasty });
                         }
                         if(Data->WindowCaptureData.OnMouseChanged){
                             Data->WindowCaptureData.OnMouseChanged(&wholeimgfirst, Point{ lastx, lasty });
                         }
-                        std::swap(NewImageBuffer, OldImageBuffer);
+                        std::swap(ImageBuffer, OldImageBuffer);
                         
                     }
                     else if(Last_x != lastx || Last_y != lasty){

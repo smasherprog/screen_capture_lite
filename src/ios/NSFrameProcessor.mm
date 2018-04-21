@@ -1,11 +1,13 @@
 #include "NSFrameProcessorm.h"
-
+#include <thread>
+#include <chrono>
 
 @implementation FrameProcessor
 
 -(SL::Screen_Capture::DUPL_RETURN) Init:(SL::Screen_Capture::NSFrameProcessor*) parent
 {
     self = [super init];
+    self.Working = false;
     if (self) {
         self.nsframeprocessor = parent;
         self.avcapturesession = [[AVCaptureSession alloc] init];
@@ -33,13 +35,22 @@
 - (void)dealloc
 {
     [self.avcapturesession stopRunning];
+    while(self.avcapturesession.isRunning || self.Working){
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
     [self.avcapturesession release];
     [super dealloc];
 }
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+
+    self.Working = true;
+    auto data=self.nsframeprocessor->Data;
+    if(!self.avcapturesession.isRunning || !self.nsframeprocessor || !data){
+        self.Working = false;
+        return;
+    }
     auto& selectedmonitor =self.nsframeprocessor->SelectedMonitor;
-    auto& data  =self.nsframeprocessor->Data->ScreenCaptureData;
     SL::Screen_Capture::ImageRect ret = {0};
     ret.left = 0;
     ret.top = 0;
@@ -55,9 +66,10 @@
     auto rowstride = SL::Screen_Capture::PixelStride * SL::Screen_Capture::Width(selectedmonitor);
     auto startbuf = buf + (SL::Screen_Capture::OffsetX(selectedmonitor)*SL::Screen_Capture::PixelStride);//advance to the start of this image
     startbuf += (SL::Screen_Capture::OffsetY(selectedmonitor) *  bytesperrow);
-    SL::Screen_Capture::ProcessCapture(data, *(self.nsframeprocessor), selectedmonitor, startbuf, bytesperrow);
+    SL::Screen_Capture::ProcessCapture(data->ScreenCaptureData, *(self.nsframeprocessor), selectedmonitor, startbuf, bytesperrow);
  
     CVPixelBufferUnlockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
+    self.Working = false;
 }
 @end
 

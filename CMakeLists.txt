@@ -30,8 +30,7 @@ if(WIN32)
        include/windows 
     )
 elseif(APPLE)
-	find_library(corefoundation_lib CoreFoundation)
-	find_library(cocoa_lib Cocoa)
+
     set(SCREEN_CAPTURE_PLATFORM_SRC
         src/ios/GetWindows.cpp 
         src/ios/NSMouseCapture.m
@@ -94,9 +93,23 @@ add_library(${PROJECT_NAME}
 		install (FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
 	elseif(APPLE)
 		find_package(Threads REQUIRED)
-		find_library(corefoundation_lib CoreFoundation)
-		find_library(cocoa_lib Cocoa)
-		target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} ${corefoundation_lib} ${cocoa_lib})
+        find_library(corefoundation_lib CoreFoundation REQUIRED)
+        find_library(cocoa_lib Cocoa REQUIRED)
+        find_library(coremedia_lib CoreMedia REQUIRED)
+        find_library(avfoundation_lib AVFoundation REQUIRED)
+        find_library(coregraphics_lib CoreGraphics REQUIRED)
+        find_library(corevideo_lib CoreVideo REQUIRED)
+
+        target_link_libraries(
+            ${PROJECT_NAME}
+            ${CMAKE_THREAD_LIBS_INIT}
+            ${corefoundation_lib}
+            ${cocoa_lib}
+            ${coremedia_lib}
+            ${avfoundation_lib}
+            ${coregraphics_lib}
+            ${corevideo_lib}
+        )
 	else()
 		find_package(X11 REQUIRED)
 		if(!X11_XTest_FOUND)

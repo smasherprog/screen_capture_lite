@@ -1,9 +1,10 @@
 #include "SCCommon.h"
+
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <chrono>
 #include <iostream>
-#include <string.h>
+#include <cstring>
 
 namespace SL {
 namespace Screen_Capture {
@@ -19,108 +20,167 @@ namespace Screen_Capture {
             }
         }
     }
-#define maxdist 256
 
-    std::vector<ImageRect> GetDifs(const Image &oldimg, const Image &newimg)
-    {
-        std::vector<ImageRect> rects;
-        if (Width(oldimg) != Width(newimg) || Height(oldimg) != Height(newimg)) {
-            rects.push_back(Rect(newimg));
-            return rects;
-        }
-        rects.reserve((Height(newimg) / maxdist) + 1 * (Width(newimg) / maxdist) + 1);
+    template <typename Block>
+    class BitMap {
+      static_assert(std::is_unsigned<Block>::value);
+      static const size_t BitsPerBlock = sizeof(Block) * 8;
 
-        auto oldimg_ptr = (const int *)StartSrc(oldimg);
-        auto newimg_ptr = (const int *)StartSrc(newimg);
+    public:
+      BitMap(size_t height, size_t width)
+        : Width(width)
+        , Height(height)
+        , Blocks((width * height) / BitsPerBlock + 1, 0)
+      {}
 
-        auto imgwidth = Width(oldimg);
-        auto imgheight = Height(oldimg);
+      bool get(size_t x, size_t y) const {
+        const size_t index = x * Width + y;
+        const size_t nblock = index / BitsPerBlock;
+        const size_t nbit = index % BitsPerBlock;
 
-        for (decltype(imgheight) row = 0; row < imgheight; row += maxdist) {
-            for (decltype(imgwidth) col = 0; col < imgwidth; col += maxdist) {
+        return Blocks[nblock] & (Block(1) << nbit);
+      }
 
-                for (decltype(row) y = row; y < maxdist + row && y < imgheight; y++) {
-                    for (decltype(col) x = col; x < maxdist + col && x < imgwidth; x++) {
-                        auto old = oldimg_ptr[y * imgwidth + x];
-                        auto ne = newimg_ptr[y * imgwidth + x];
-                        if (ne != old) {
-                            ImageRect re;
+      void set(size_t x, size_t y) {
+        const size_t index = x * Width + y;
+        const size_t nblock = index / BitsPerBlock;
+        const size_t nbit = index % BitsPerBlock;
 
-                            re.left = col;
-                            re.top = row;
-                            re.bottom = row + maxdist;
-                            re.right = col + maxdist;
-                            rects.push_back(re);
-                            y += maxdist;
-                            x += maxdist;
-                        }
-                    }
-                }
-            }
-        }
+        Blocks[nblock] |= (Block(1) << nbit);
+      }
 
+      size_t width() const {
+        return Width;
+      }
+
+      size_t height() const {
+        return Height;
+      }
+
+    private:
+      size_t Width;
+      size_t Height;
+      std::vector<Block> Blocks;
+    };
+
+    static void merge(std::vector<ImageRect>& rects) {
         if (rects.size() <= 2) {
-            SanitizeRects(rects, newimg);
-            return rects; // make sure there is at least 2
+          return; // make sure there is at least 2
         }
 
         std::vector<ImageRect> outrects;
         outrects.reserve(rects.size());
         outrects.push_back(rects[0]);
+
         // horizontal scan
-        int expandcount = 0;
-        int containedcount = 0;
         for (size_t i = 1; i < rects.size(); i++) {
-            if (outrects.back().right == rects[i].left && outrects.back().bottom == rects[i].bottom) {
+            if (outrects.back().right  == rects[i].left &&
+                outrects.back().bottom == rects[i].bottom)
+            {
                 outrects.back().right = rects[i].right;
-                expandcount++;
             }
             else {
                 outrects.push_back(rects[i]);
-                containedcount++;
             }
         }
 
-        if (expandcount != 0 || containedcount != 0) {
-            // std::cout << "On Horizontal Scan expandcount " << expandcount << "
-            // containedcount " << containedcount << std::endl;
-        }
-        expandcount = 0;
-        containedcount = 0;
-
         if (outrects.size() <= 2) {
-            SanitizeRects(outrects, newimg);
-            return outrects; // make sure there is at least 2
+            rects = std::move(outrects);
+            return; // make sure there is at least 2
         }
-        rects.resize(0);
+
+        rects.clear();
         // vertical scan
         for (auto &otrect : outrects) {
-
             auto found = std::find_if(rects.rbegin(), rects.rend(), [=](const ImageRect &rec) {
                 return rec.bottom == otrect.top && rec.left == otrect.left && rec.right == otrect.right;
             });
+
             if (found == rects.rend()) {
                 rects.push_back(otrect);
-                containedcount++;
             }
             else {
                 found->bottom = otrect.bottom;
-                expandcount++;
             }
         }
-        if (expandcount != 0 || containedcount != 0) {
-            // std::cout << "On Horizontal Scan expandcount " << expandcount << "
-            // containedcount " << containedcount << std::endl;
-        }
-        /*	for (auto& r : rects) {
-          std::cout << r << std::endl;
-      }
-      */
-        // std::cout << "Found " << rects.size() << " rects in img dif. It took " <<
-        // elapsed.count() << " milliseconds to compare run GetDifs ";
+    }
 
-        SanitizeRects(rects, newimg);
-        return rects;
+#define maxdist 256
+
+    static std::vector<ImageRect> GetRects(const BitMap<uint64_t>& map) {
+      std::vector<ImageRect> rects;
+      rects.reserve(map.width() * map.height());
+
+      for (int x = 0; x < map.height(); ++x) {
+        for (int y = 0; y < map.width(); ++y) {
+          if (map.get(x, y)) {
+            ImageRect rect;
+
+            rect.top = x * maxdist;
+            rect.bottom = (x + 1) * maxdist;
+
+            rect.left = y * maxdist;
+            rect.right = (y + 1) * maxdist;
+
+            rects.push_back(rect);
+          }
+        }
+      }
+
+      return rects;
+    }
+
+    std::vector<ImageRect> GetDifs(const Image& oldImage, const Image& newImage) {
+      const int* old_ptr = (const int*)StartSrc(oldImage);
+      const int* new_ptr = (const int*)StartSrc(newImage);
+
+      const size_t width = Width(newImage);
+      const size_t height = Height(newImage);
+
+      const int width_chunks = width / maxdist;
+      const int height_chunks = height / maxdist;
+
+      const int line_rem = width % maxdist;
+      const int bottom_rem = height % maxdist;
+
+      BitMap<uint64_t> changes {
+        static_cast<size_t>(height_chunks) + 1,
+        static_cast<size_t>(width_chunks) + 1
+      };
+
+      const auto compare = [&](size_t x, size_t y, size_t npixels) {
+        if (!changes.get(x, y)) {
+            if (memcmp(old_ptr, new_ptr, npixels * sizeof(int))) {
+                changes.set(x, y);
+            }
+        }
+
+        old_ptr += npixels;
+        new_ptr += npixels;
+      };
+
+      for (int x = 0; x < height_chunks; ++x) {
+        for (int i = 0; i < maxdist; ++i) { // for each row in current line of chunks
+          for (int y = 0; y < width_chunks; ++y) {
+            compare(x, y, maxdist);
+          }
+
+          compare(x, width_chunks, line_rem);
+        }
+      }
+
+      for (int i = 0; i < bottom_rem; ++i) {
+        for (int y = 0; y < width_chunks; ++y) {
+          compare(height_chunks, y, maxdist);
+        }
+
+        compare(height_chunks, width_chunks, line_rem);
+      }
+
+      auto rects = GetRects(changes);
+      merge(rects);
+      SanitizeRects(rects, newImage);
+      return rects;
     }
 
     Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string &n, float scaling)

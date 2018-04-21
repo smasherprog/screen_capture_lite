@@ -130,7 +130,7 @@ namespace Screen_Capture {
             Thread_Data_->WindowCaptureData.MouseTimer = std::make_shared<Timer<long long, std::milli>>(50ms);
         }
         virtual ~ScreenCaptureManager()
-        {
+        { 
             Thread_Data_->CommonData_.TerminateThreadsEvent = true; // set the exit flag for the threads
             Thread_Data_->CommonData_.Paused = false;               // unpaused the threads to let everything exit
             if (Thread_.get_id() == std::this_thread::get_id()) {

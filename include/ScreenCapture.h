@@ -107,21 +107,32 @@ namespace Screen_Capture {
         virtual void start() = 0;
         virtual void wait() = 0;
     };
-    template <class Rep, class Period> class Timer : public ITimer {
-        std::chrono::duration<Rep, Period> Rel_Time;
-        std::chrono::time_point<std::chrono::high_resolution_clock> StartTime;
-        std::chrono::time_point<std::chrono::high_resolution_clock> StopTime;
+
+    class Timer : public ITimer {
+        using Clock = std::conditional<
+            std::chrono::high_resolution_clock::is_steady,
+            std::chrono::high_resolution_clock,
+            std::chrono::steady_clock
+        >::type;
+
+        std::chrono::microseconds Duration;
+        Clock::time_point Deadline;
 
       public:
-        Timer(const std::chrono::duration<Rep, Period> &rel_time) : Rel_Time(rel_time){};
-        virtual ~Timer() {}
-        virtual void start() { StartTime = std::chrono::high_resolution_clock::now(); }
-        virtual void wait()
+
+        template <typename Rep, typename Period>
+        Timer(const std::chrono::duration<Rep, Period> &duration)
+            : Duration(std::chrono::duration_cast<std::chrono::microseconds>(duration))
+            , Deadline(Clock::now() + Duration)
+        {};
+
+        virtual ~Timer() override {}
+        virtual void start() override { Deadline = Clock::now() + Duration; }
+        virtual void wait() override
         {
-            auto duration = std::chrono::duration_cast<std::chrono::duration<Rep, Period>>(std::chrono::high_resolution_clock::now() - StartTime);
-            auto timetowait = Rel_Time - duration;
-            if (timetowait.count() > 0) {
-                std::this_thread::sleep_for(timetowait);
+            const auto now = Clock::now();
+            if (now < Deadline) {
+                std::this_thread::sleep_for(Deadline - now);
             }
         }
     };
@@ -147,12 +158,12 @@ namespace Screen_Capture {
         // Used by the library to determine the callback frequency
         template <class Rep, class Period> void setFrameChangeInterval(const std::chrono::duration<Rep, Period> &rel_time)
         {
-            setFrameChangeInterval(std::make_shared<Timer<Rep, Period>>(rel_time));
+            setFrameChangeInterval(std::make_shared<Timer>(rel_time));
         }
         // Used by the library to determine the callback frequency
         template <class Rep, class Period> void setMouseChangeInterval(const std::chrono::duration<Rep, Period> &rel_time)
         {
-            setMouseChangeInterval(std::make_shared<Timer<Rep, Period>>(rel_time));
+            setMouseChangeInterval(std::make_shared<Timer>(rel_time));
         }
 
         virtual void setFrameChangeInterval(const std::shared_ptr<ITimer> &timer) = 0;

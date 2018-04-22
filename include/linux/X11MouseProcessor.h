@@ -1,5 +1,5 @@
 #pragma once
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include <memory>
 #include <X11/X.h>
 #include <X11/extensions/Xfixes.h>

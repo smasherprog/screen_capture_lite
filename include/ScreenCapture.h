@@ -89,7 +89,7 @@ namespace SL {
             Timer(const std::chrono::duration<Rep, Period> &duration)
                 : Duration(std::chrono::duration_cast<std::chrono::microseconds>(duration))
                 , Deadline(Clock::now() + Duration)
-            {};
+            {}
             void start() { Deadline = Clock::now() + Duration; }
             void wait()
             {

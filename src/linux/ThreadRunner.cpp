@@ -1,5 +1,5 @@
 #include "ScreenCapture.h"
-#include "ThreadManager.h"
+#include "internal/ThreadManager.h"
 #include "X11FrameProcessor.h"
 #include "X11MouseProcessor.h"
 

@@ -19,52 +19,15 @@
 #endif
 
 namespace SL {
-namespace Screen_Capture {
-    struct Point {
-        int x;
-        int y;
+namespace Screen_Capture { 
+    struct Point;
+    struct Monitor;
+    struct Window; 
+    struct Image; 
+    struct ImageBGRA {
+        unsigned char B, G, R, A;
     };
-    struct Monitor {
-        int Id = INT32_MAX;
-        int Index = INT32_MAX;
-        int Adapter = INT32_MAX;
-        int Height = 0;
-        int Width = 0;
-        // Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their
-        // monitors around so this affects their offset.
-        int OffsetX = 0;
-        int OffsetY = 0;
-        char Name[128] = {0};
-        float Scaling = 1.0f;
-    };
-
-    struct Window {
-        size_t Handle;
-        Point Position;
-        Point Size;
-        // Name will always be lower case. It is converted to lower case internally by the library for comparisons
-        char Name[128] = {0};
-    };
-    struct ImageRect {
-        int left = 0;
-        int top = 0;
-        int right = 0;
-        int bottom = 0;
-        bool Contains(const ImageRect &a) const { return left <= a.left && right >= a.right && top <= a.top && bottom >= a.bottom; }
-    };
-    struct Image {
-        ImageRect Bounds;
-        int Pixelstride = 4;
-        int RowPadding = 0;
-        // image data is BGRA, for example Data[0] = B, Data[1] =G, Data[2] = R, Data [3]=A
-        // alpha is always unused and might contain garbage
-        const unsigned char *Data = nullptr;
-    };
-
-    inline bool operator==(const ImageRect &a, const ImageRect &b)
-    {
-        return b.left == a.left && b.right == a.right && b.top == a.top && b.bottom == a.bottom;
-    }
+  
     // index to self in the GetMonitors() function
     SC_LITE_EXTERN int Index(const Monitor &mointor);
     // unique identifier
@@ -80,21 +43,15 @@ namespace Screen_Capture {
     SC_LITE_EXTERN int Width(const Monitor &mointor);
     SC_LITE_EXTERN int Height(const Window &mointor);
     SC_LITE_EXTERN int Width(const Window &mointor);
-
-    SC_LITE_EXTERN int Height(const ImageRect &rect);
-    SC_LITE_EXTERN int Width(const ImageRect &rect);
-
     SC_LITE_EXTERN int Height(const Image &img);
     SC_LITE_EXTERN int Width(const Image &img);
-    SC_LITE_EXTERN const ImageRect &Rect(const Image &img);
+    SC_LITE_EXTERN int X(const Point &p);
+    SC_LITE_EXTERN int Y(const Point &p);
 
-    // number of bytes per row, NOT including the Rowpadding
-    SC_LITE_EXTERN int RowStride(const Image &img);
-    // number of bytes per row of padding
-    SC_LITE_EXTERN int RowPadding(const Image &img);
-    // the start of the image data, this is not guarenteed to be contiguos. You must use the Rowstride and rowpadding to
-    // examine the image
-    SC_LITE_EXTERN const unsigned char *StartSrc(const Image &img);
+    // the start of the image data, this is not guarenteed to be contiguos.
+    SC_LITE_EXTERN const ImageBGRA *StartSrc(const Image &img);
+    SC_LITE_EXTERN const ImageBGRA *GotoNextRow(const Image &img, const ImageBGRA* current); 
+    SC_LITE_EXTERN bool isDataContiguous(const Image &img);
     SC_LITE_EXTERN void Extract(const Image &img, unsigned char *dst, size_t dst_size);
     SC_LITE_EXTERN void ExtractAndConvertToRGBA(const Image &img, unsigned char *dst, size_t dst_size);
     SC_LITE_EXTERN void ExtractAndConvertToRGB(const Image &img, unsigned char *dst, size_t dst_size);

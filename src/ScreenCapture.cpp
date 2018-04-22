@@ -1,6 +1,6 @@
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include "ScreenCapture.h"
-#include "ThreadManager.h"
+#include "internal/ThreadManager.h"
 #include <algorithm>
 #include <assert.h>
 #include <atomic>
@@ -14,36 +14,36 @@ namespace Screen_Capture {
 
     void Extract(const Image &img, unsigned char *dst, size_t dst_size)
     {
-        assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
+        assert(dst_size >= static_cast<size_t>(Width(img) * Height(img) * sizeof(ImageBGRA)));
         auto startdst = dst;
         auto startsrc = StartSrc(img);
-        if (RowPadding(img) == 0) { // no padding, the entire copy can be a single memcpy call
-            memcpy(startdst, startsrc, RowStride(img) * Height(img));
+        if (isDataContiguous(img)) { // no padding, the entire copy can be a single memcpy call
+            memcpy(startdst, startsrc, Width(img) * Height(img) * sizeof(ImageBGRA));
         }
         else {
-            for (auto i = 0; i < Height(img); i++) {
-                memcpy(startdst, startsrc, RowStride(img));
-                startdst += RowStride(img);                   // advance to the next row
-                startsrc += RowStride(img) + RowPadding(img); // advance to the next row
+            for (auto i = 0; i < Height(img); i++) { 
+                memcpy(startdst, startsrc, sizeof(ImageBGRA) * Width(img));
+                startdst += sizeof(ImageBGRA) * Width(img);               // advance to the next row
+                startsrc = GotoNextRow(img, startsrc); // advance to the next row
             }
         }
     }
 
     void ExtractAndConvertToRGBA(const Image &img, unsigned char *dst, size_t dst_size)
     {
-
-        assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
+        assert(dst_size >= static_cast<size_t>(Width(img) * Height(img) * sizeof(ImageBGRA)));
         auto imgsrc = StartSrc(img);
         auto imgdist = dst;
         for (auto h = 0; h < Height(img); h++) {
-            for (auto w = 0; w < Width(img); w++) {
-                *imgdist++ = *(imgsrc + 2);
-                *imgdist++ = *(imgsrc + 1);
-                *imgdist++ = *(imgsrc);
+            auto startimgsrc = imgsrc;
+            for (auto w = 0; w < Width(img); w++) { 
+                *imgdist++ = imgsrc->B;
+                *imgdist++ = imgsrc->G;
+                *imgdist++ = imgsrc->R;
                 *imgdist++ = 0; // alpha should be zero
-                imgsrc += img.Pixelstride;
+                imgsrc++;
             }
-            imgsrc += RowPadding(img);
+            imgsrc = GotoNextRow(img, startimgsrc);
         }
     }
     void ExtractAndConvertToRGB(const Image &img, unsigned char *dst, size_t dst_size)
@@ -52,13 +52,14 @@ namespace Screen_Capture {
         auto imgsrc = StartSrc(img);
         auto imgdist = dst;
         for (auto h = 0; h < Height(img); h++) {
+            auto startimgsrc = imgsrc;
             for (auto w = 0; w < Width(img); w++) {
-                *imgdist++ = *(imgsrc + 2);
-                *imgdist++ = *(imgsrc + 1);
-                *imgdist++ = *(imgsrc);
-                imgsrc += img.Pixelstride;
+                *imgdist++ = imgsrc->B;
+                *imgdist++ = imgsrc->G;
+                *imgdist++ = imgsrc->R;
+                imgsrc++;
             }
-            imgsrc += RowPadding(img);
+            imgsrc = GotoNextRow(img, startimgsrc);
         }
     }
 
@@ -67,17 +68,18 @@ namespace Screen_Capture {
         assert(dst_size >= static_cast<size_t>(Width(img) * 2 * Height(img)));
         auto imgsrc = StartSrc(img);
         auto imgdist = dst;
-        for (auto h = 0; h < Height(img); h++) {
+        for (auto h = 0; h < Height(img); h++) { 
+            auto startimgsrc = imgsrc;
             for (auto w = 0; w < Width(img); w++) {
-                unsigned char r = (*(imgsrc + 2)) & 0xF8;
-                unsigned char g = (*(imgsrc + 1)) & 0xFC;
-                unsigned char b = (*imgsrc) & 0xF8;
+                unsigned char r = (imgsrc->B) & 0xF8;
+                unsigned char g = (imgsrc->G) & 0xFC;
+                unsigned char b = (imgsrc->R) & 0xF8;
                 int short rgb = (r << 8) | (g << 3) | (b >> 3);
                 *imgdist++ = static_cast<unsigned char>(rgb);
                 *imgdist++ = static_cast<unsigned char>(rgb >> 8);
-                imgsrc += img.Pixelstride;
+                imgsrc++;
             }
-            imgsrc += RowPadding(img);
+            imgsrc = GotoNextRow(img, startimgsrc);
         }
     }
 

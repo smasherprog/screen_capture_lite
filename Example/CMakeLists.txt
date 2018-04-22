@@ -2,6 +2,7 @@ project(screen_capture_example)
 
 if(WIN32)
 	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)
+	add_definitions(-DNOMINMAX)
 elseif(APPLE)
     find_library(corefoundation_lib CoreFoundation)
     find_library(cocoa_lib Cocoa)
@@ -17,13 +18,7 @@ elseif(APPLE)
         ${avfoundation_lib}
         ${coregraphics_lib}  
         ${corevideo_lib}
-    )
-	message(STATUS ${corefoundation_lib})
-	message(STATUS ${cocoa_lib})
-	message(STATUS ${coremedia_lib})
-	message(STATUS ${avfoundation_lib})
-	message(STATUS ${coregraphics_lib})
-	message(STATUS ${corevideo_lib})
+    ) 
 else()
 	find_package(X11 REQUIRED)
 	if(!X11_XTest_FOUND)

@@ -124,10 +124,10 @@ namespace Screen_Capture {
             ScreenCaptureManagerExists = true;
             Thread_Data_ = std::make_shared<Thread_Data>();
             Thread_Data_->CommonData_.Paused = false;
-            Thread_Data_->ScreenCaptureData.FrameTimer = std::make_shared<Timer<long long, std::milli>>(100ms);
-            Thread_Data_->ScreenCaptureData.MouseTimer = std::make_shared<Timer<long long, std::milli>>(50ms);
-            Thread_Data_->WindowCaptureData.FrameTimer = std::make_shared<Timer<long long, std::milli>>(100ms);
-            Thread_Data_->WindowCaptureData.MouseTimer = std::make_shared<Timer<long long, std::milli>>(50ms);
+            Thread_Data_->ScreenCaptureData.FrameTimer = std::make_shared<Timer>(100ms);
+            Thread_Data_->ScreenCaptureData.MouseTimer = std::make_shared<Timer>(50ms);
+            Thread_Data_->WindowCaptureData.FrameTimer = std::make_shared<Timer>(100ms);
+            Thread_Data_->WindowCaptureData.MouseTimer = std::make_shared<Timer>(50ms);
         }
         virtual ~ScreenCaptureManager()
         { 

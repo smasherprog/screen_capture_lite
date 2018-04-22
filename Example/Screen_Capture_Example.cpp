@@ -72,9 +72,9 @@ void createframegrabber()
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
         auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-        auto imgbuffer(std::make_unique<unsigned char[]>(size));
+  /*      auto imgbuffer(std::make_unique<unsigned char[]>(size));
         ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());*/
 
     })
         ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {

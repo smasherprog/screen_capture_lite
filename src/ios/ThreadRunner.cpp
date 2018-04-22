@@ -1,5 +1,5 @@
 #include "ScreenCapture.h"
-#include "ThreadManager.h"
+#include "internal/ThreadManager.h"
 #include "CGFrameProcessor.h"
 #include "NSMouseProcessor.h"
 #include "NSFrameProcessor.h"

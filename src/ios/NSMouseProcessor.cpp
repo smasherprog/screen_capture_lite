@@ -52,7 +52,7 @@ namespace SL {
                 imgrect.left =  imgrect.top=0;
                 imgrect.right =width;
                 imgrect.bottom = height;
-                auto wholeimgfirst = Create(imgrect, PixelStride, 0, ImageBuffer.get());
+                auto wholeimgfirst = CreateImage(imgrect,0, reinterpret_cast<const ImageBGRA*>(ImageBuffer.get()));
                 
               
                 auto lastx = static_cast<int>(loc.x);

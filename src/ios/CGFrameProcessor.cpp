@@ -38,12 +38,12 @@ namespace Screen_Capture {
         auto bytesperrow = CGImageGetBytesPerRow(imageRef);
         auto bitsperpixel = CGImageGetBitsPerPixel(imageRef);
         // right now only support full 32 bit images.. Most desktops should run this as its the most efficent
-        assert(bitsperpixel == PixelStride * 8);
+        assert(bitsperpixel == sizeof(ImageBGRA) * 8);
 
         auto rawdatas = CGDataProviderCopyData(prov);
         auto buf = CFDataGetBytePtr(rawdatas);
 
-        auto datalen = width * height * PixelStride;
+        auto datalen = width * height * sizeof(ImageBGRA);
 		ProcessCapture(Data->WindowCaptureData, *this, window, buf, bytesperrow);
 	  
         CFRelease(rawdatas);

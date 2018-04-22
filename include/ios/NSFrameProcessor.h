@@ -1,5 +1,5 @@
 #pragma once
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 
 namespace SL {
     namespace Screen_Capture {

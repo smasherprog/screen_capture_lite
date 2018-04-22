@@ -1,5 +1,6 @@
 # screen capture lite
 <p><b>Note:</b> This library is is stable and contains no known bugs. I will continue to fix any bugs and test against the platforms as they are updated. </p>
+<p>Master is where development happens and should NOT be considered stable. Use tags for stable releases.</p>
 <p>Linux/Mac <img src="https://travis-ci.org/smasherprog/screen_capture_lite.svg?branch=master" /></p>
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/6nlqo1csbkgdxorx"/><p>
 <p>Cross-platform screen and window capturing library . . . this is made to be lightweight and fast.

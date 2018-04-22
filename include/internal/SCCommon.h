@@ -128,11 +128,9 @@ namespace SL {
 
                     for (auto &r : imgdifs) {
                         auto leftoffset = r.left * sizeofimgbgra;
-                        auto rightpadding = ( (Width(newimg)* sizeofimgbgra)+ newimg.BytesToNextRow) - (r.right *sizeofimgbgra);
-                        auto padding = leftoffset + rightpadding;
                         auto thisstartsrc = startsrc +  leftoffset + (r.top * srcrowstride);
 
-                        auto difimg = CreateImage(r, padding, reinterpret_cast<const ImageBGRA*>(thisstartsrc));
+                        auto difimg = CreateImage(r, srcrowstride, reinterpret_cast<const ImageBGRA*>(thisstartsrc));
                         data.OnFrameChanged(difimg, mointor);
                     }
                 }

@@ -74,16 +74,7 @@ namespace SL {
             }
         }
 
-
-        class ITimer {
-        public:
-            ITimer() {};
-            virtual ~ITimer() {}
-            virtual void start() = 0;
-            virtual void wait() = 0;
-        };
-
-        class Timer : public ITimer {
+        class Timer {
             using Clock = std::conditional<
                 std::chrono::high_resolution_clock::is_steady,
                 std::chrono::high_resolution_clock,
@@ -93,17 +84,14 @@ namespace SL {
             std::chrono::microseconds Duration;
             Clock::time_point Deadline;
 
-        public:
-
+        public: 
             template <typename Rep, typename Period>
             Timer(const std::chrono::duration<Rep, Period> &duration)
                 : Duration(std::chrono::duration_cast<std::chrono::microseconds>(duration))
                 , Deadline(Clock::now() + Duration)
             {};
-
-            virtual ~Timer() override {}
-            virtual void start() override { Deadline = Clock::now() + Duration; }
-            virtual void wait() override
+            void start() { Deadline = Clock::now() + Duration; }
+            void wait()
             {
                 const auto now = Clock::now();
                 if (now < Deadline) {
@@ -141,8 +129,8 @@ namespace SL {
                 setMouseChangeInterval(std::make_shared<Timer>(rel_time));
             }
 
-            virtual void setFrameChangeInterval(const std::shared_ptr<ITimer> &timer) = 0;
-            virtual void setMouseChangeInterval(const std::shared_ptr<ITimer> &timer) = 0;
+            virtual void setFrameChangeInterval(const std::shared_ptr<Timer> &timer) = 0;
+            virtual void setMouseChangeInterval(const std::shared_ptr<Timer> &timer) = 0;
 
             // Will pause all capturing
             virtual void pause() = 0;

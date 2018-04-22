@@ -56,10 +56,10 @@ namespace SL {
         const ImageRect &Rect(const Image &img);
 
         template <typename F, typename M, typename W> struct CaptureData {
-            std::shared_ptr<ITimer> FrameTimer;
+            std::shared_ptr<Timer> FrameTimer;
             F OnNewFrame;
             F OnFrameChanged;
-            std::shared_ptr<ITimer> MouseTimer;
+            std::shared_ptr<Timer> MouseTimer;
             M OnMouseChanged;
             W getThingsToWatch;
         };

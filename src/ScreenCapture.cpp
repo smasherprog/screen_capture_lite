@@ -98,7 +98,7 @@ namespace Screen_Capture {
                 ThreadMgr.Join();
             });
         }
-        virtual void setFrameChangeInterval(const std::shared_ptr<ITimer> &timer) override
+        virtual void setFrameChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
             
 #ifdef __APPLE__
@@ -108,7 +108,7 @@ namespace Screen_Capture {
             std::atomic_store(&Thread_Data_->WindowCaptureData.FrameTimer, timer);
 #endif
         }
-        virtual void setMouseChangeInterval(const std::shared_ptr<ITimer> &timer) override
+        virtual void setMouseChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
             std::atomic_store(&Thread_Data_->ScreenCaptureData.MouseTimer, timer);
             std::atomic_store(&Thread_Data_->WindowCaptureData.MouseTimer, timer);

@@ -1,5 +1,5 @@
 #pragma once
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include <DXGI.h>
 #include <memory>
 #include <wrl.h>

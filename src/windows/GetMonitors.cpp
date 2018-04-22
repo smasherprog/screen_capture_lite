@@ -1,4 +1,4 @@
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include "ScreenCapture.h"
 #include <DXGI.h>
 

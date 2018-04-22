@@ -1,6 +1,5 @@
 #include "X11FrameProcessor.h"
-#include <X11/Xutil.h>
-#include <X11/extensions/Xinerama.h>
+#include <X11/Xutil.h> 
 #include <assert.h>
 #include <vector>
 

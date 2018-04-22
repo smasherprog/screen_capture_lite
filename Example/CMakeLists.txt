@@ -2,6 +2,7 @@ project(screen_capture_example)
 
 if(WIN32)
 	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)
+	add_definitions(-DNOMINMAX)
 elseif(APPLE)
     find_package(Threads REQUIRED)
     find_library(corefoundation_lib CoreFoundation REQUIRED)
@@ -43,4 +44,4 @@ add_executable(${PROJECT_NAME}
 	Screen_Capture_Example.cpp
 )
 target_link_libraries(${PROJECT_NAME} screen_capture_lite ${${PROJECT_NAME}_PLATFORM_LIBS}) 
-
+add_test (NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})

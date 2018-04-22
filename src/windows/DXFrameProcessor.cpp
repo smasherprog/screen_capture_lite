@@ -55,7 +55,7 @@ namespace Screen_Capture {
     {
         HRESULT TranslatedHr;
 #if defined _DEBUG || !defined NDEBUG
-        std::wcout << Str << "\t" << Title << std::endl;
+        std::wcout << "HRESULT: " << std::hex << hr << "\t" <<Str << "\t" << Title << std::endl;
 #endif
         // On an error check if the DX device is lost
         if (Device) {
@@ -299,9 +299,7 @@ namespace Screen_Capture {
 
     DUPL_RETURN DXFrameProcessor::ProcessFrame(const Monitor &currentmonitorinfo)
     {
-        auto Ret = DUPL_RETURN_SUCCESS;
-
-        Microsoft::WRL::ComPtr<IDXGIResource> DesktopResource;
+         Microsoft::WRL::ComPtr<IDXGIResource> DesktopResource;
         DXGI_OUTDUPL_FRAME_INFO FrameInfo = {0};
         AquireFrameRAII frame(OutputDuplication.Get());
 
@@ -312,6 +310,9 @@ namespace Screen_Capture {
         }
         else if (FAILED(hr)) {
             return ProcessFailure(Device.Get(), L"Failed to acquire next frame in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
+        }
+        if (FrameInfo.AccumulatedFrames == 0) { 
+            return DUPL_RETURN_SUCCESS;
         }
         Microsoft::WRL::ComPtr<ID3D11Texture2D> aquireddesktopimage;
         // QI for IDXGIResource
@@ -363,7 +364,7 @@ namespace Screen_Capture {
         } 
         auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData); 
         ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, startsrc, MappingDesc.RowPitch);
-        return Ret;
+        return DUPL_RETURN_SUCCESS;
     }
 } // namespace Screen_Capture
 } // namespace SL

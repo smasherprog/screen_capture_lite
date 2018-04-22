@@ -29,6 +29,7 @@ if(WIN32)
     set(SCREEN_CAPTURE_PLATFORM_INC     
        include/windows 
     )
+	add_definitions(-DNOMINMAX)
 elseif(APPLE)
 
     set(SCREEN_CAPTURE_PLATFORM_SRC
@@ -79,8 +80,8 @@ include_directories(
 )
 add_library(${PROJECT_NAME} 
 	include/ScreenCapture.h 
-	include/SCCommon.h 
-	include/ThreadManager.h 
+	include/internal/SCCommon.h 
+	include/internal/ThreadManager.h 
 	src/ScreenCapture.cpp 
 	src/SCCommon.cpp 
 	src/ThreadManager.cpp
@@ -140,7 +141,5 @@ install (FILES
 	include/ScreenCapture.h 
 	DESTINATION include
 )
-
-if(BUILD_EXAMPLE)
-  add_subdirectory(Example)
-endif()
+enable_testing() 
+add_subdirectory(Example) 

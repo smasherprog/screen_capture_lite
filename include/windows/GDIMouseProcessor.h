@@ -1,6 +1,6 @@
 #pragma once
 #include "ScreenCapture.h"
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include <memory>
 #include "GDIHelpers.h"
 

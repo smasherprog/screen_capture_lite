@@ -71,12 +71,12 @@ namespace Screen_Capture {
             bi.biWidth = ret.right;
             bi.biHeight = -ret.bottom;
             bi.biPlanes = 1;
-            bi.biBitCount = PixelStride * 8; // always 32 bits damnit!!!
+            bi.biBitCount = sizeof(ImageBGRA) * 8; // always 32 bits damnit!!!
             bi.biCompression = BI_RGB;
-            bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride * ret.bottom;
+            bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (sizeof(ImageBGRA) * 8)) * sizeof(ImageBGRA)  * ret.bottom;
             GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
             SelectObject(CaptureDC.DC, originalBmp);
-            ProcessCapture(Data->ScreenCaptureData, *this, currentmonitorinfo, NewImageBuffer.get(), Width(SelectedMonitor)* PixelStride);
+            ProcessCapture(Data->ScreenCaptureData, *this, currentmonitorinfo, NewImageBuffer.get(), Width(SelectedMonitor)* sizeof(ImageBGRA));
         }
 
         return Ret;
@@ -119,12 +119,12 @@ namespace Screen_Capture {
             bi.biWidth = Width(ret);
             bi.biHeight = -Height(ret);
             bi.biPlanes = 1;
-            bi.biBitCount = PixelStride * 8; // always 32 bits damnit!!!
+            bi.biBitCount = sizeof(ImageBGRA) * 8; // always 32 bits damnit!!!
             bi.biCompression = BI_RGB;
-            bi.biSizeImage = ((Width(ret) * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride * Height(ret);
+            bi.biSizeImage = ((Width(ret) * bi.biBitCount + 31) / (sizeof(ImageBGRA) * 8)) * sizeof(ImageBGRA)  * Height(ret);
             GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)Height(ret), NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
             SelectObject(CaptureDC.DC, originalBmp);
-            ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, NewImageBuffer.get(), Width(selectedwindow)* PixelStride);
+            ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, NewImageBuffer.get(), Width(selectedwindow)* sizeof(ImageBGRA));
         }
 
         return Ret;

@@ -1,4 +1,4 @@
-#include "ThreadManager.h"
+#include "internal/ThreadManager.h"
 #include <assert.h>
 #include <algorithm>
 

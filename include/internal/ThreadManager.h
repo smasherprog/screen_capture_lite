@@ -1,5 +1,5 @@
 #pragma once
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include "ScreenCapture.h"
 #include <atomic>
 #include <iostream>
@@ -28,7 +28,7 @@ namespace Screen_Capture {
     template <class T, class F, class... E> bool TryCaptureMouse(const F &data, E... args)
     {
         T frameprocessor;
-        frameprocessor.ImageBufferSize = frameprocessor.MaxCursurorSize * frameprocessor.MaxCursurorSize * PixelStride;
+        frameprocessor.ImageBufferSize = frameprocessor.MaxCursurorSize * frameprocessor.MaxCursurorSize * sizeof(ImageBGRA);
         frameprocessor.ImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
         auto ret = frameprocessor.Init(data);
         if (ret != DUPL_RETURN_SUCCESS) {
@@ -37,7 +37,7 @@ namespace Screen_Capture {
         while (!data->CommonData_.TerminateThreadsEvent) {
             // get a copy of the shared_ptr in a safe way
 
-            std::shared_ptr<ITimer> timer; 
+            std::shared_ptr<Timer> timer;
             if constexpr(sizeof...(args) == 1) {
                 timer = std::atomic_load(&data->WindowCaptureData.MouseTimer);
             }
@@ -84,7 +84,7 @@ namespace Screen_Capture {
     template <class T, class F> bool TryCaptureMonitor(const F &data, Monitor &monitor)
     {
         T frameprocessor;   
-        frameprocessor.ImageBufferSize = Width(monitor) * Height(monitor) * PixelStride;
+        frameprocessor.ImageBufferSize = Width(monitor) * Height(monitor) * sizeof(ImageBGRA);
         if (data->ScreenCaptureData.OnFrameChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
                                                       // image is always new
             frameprocessor.ImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
@@ -132,7 +132,7 @@ namespace Screen_Capture {
     template <class T, class F> bool TryCaptureWindow(const F &data, Window &wnd)
     {
         T frameprocessor;
-        frameprocessor.ImageBufferSize = wnd.Size.x * wnd.Size.y * PixelStride;
+        frameprocessor.ImageBufferSize = wnd.Size.x * wnd.Size.y * sizeof(ImageBGRA);
         if (data->WindowCaptureData.OnFrameChanged) { // only need the old buffer if difs are needed. If no dif is needed, then the
                                                       // image is always new
             frameprocessor.ImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);

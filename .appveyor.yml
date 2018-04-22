@@ -25,9 +25,9 @@ install:
 build_script: 
   - if %platform%==x86 set generator=Visual Studio 15 2017
   - if %platform%==x64 set generator=Visual Studio 15 2017 Win64
-  - cmd: echo %generator% %SHARED% %configuration%
-  - cmd: cmake .. -G"%generator%" -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
-  - cmd: cmake --build . --target INSTALL --config %configuration%
+  - echo %generator% %SHARED% %configuration%
+  - cmake .. -G"%generator%" -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
+  - cmake --build . --target INSTALL --config %configuration%
   - 7z a vc140_%configuration%_%PLATFORM%_%POSTFIXNAME%.zip  -i!%APPVEYOR_BUILD_FOLDER%\build\output\*
   - appveyor PushArtifact vc140_%configuration%_%PLATFORM%_%POSTFIXNAME%.zip
   

@@ -1,6 +1,6 @@
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include "ScreenCapture.h"
-#include "ThreadManager.h"
+#include "internal/ThreadManager.h"
 #include <algorithm>
 #include <assert.h>
 #include <atomic>
@@ -12,74 +12,6 @@
 namespace SL {
 namespace Screen_Capture {
 
-    void Extract(const Image &img, unsigned char *dst, size_t dst_size)
-    {
-        assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
-        auto startdst = dst;
-        auto startsrc = StartSrc(img);
-        if (RowPadding(img) == 0) { // no padding, the entire copy can be a single memcpy call
-            memcpy(startdst, startsrc, RowStride(img) * Height(img));
-        }
-        else {
-            for (auto i = 0; i < Height(img); i++) {
-                memcpy(startdst, startsrc, RowStride(img));
-                startdst += RowStride(img);                   // advance to the next row
-                startsrc += RowStride(img) + RowPadding(img); // advance to the next row
-            }
-        }
-    }
-
-    void ExtractAndConvertToRGBA(const Image &img, unsigned char *dst, size_t dst_size)
-    {
-
-        assert(dst_size >= static_cast<size_t>(RowStride(img) * Height(img)));
-        auto imgsrc = StartSrc(img);
-        auto imgdist = dst;
-        for (auto h = 0; h < Height(img); h++) {
-            for (auto w = 0; w < Width(img); w++) {
-                *imgdist++ = *(imgsrc + 2);
-                *imgdist++ = *(imgsrc + 1);
-                *imgdist++ = *(imgsrc);
-                *imgdist++ = 0; // alpha should be zero
-                imgsrc += img.Pixelstride;
-            }
-            imgsrc += RowPadding(img);
-        }
-    }
-    void ExtractAndConvertToRGB(const Image &img, unsigned char *dst, size_t dst_size)
-    {
-        assert(dst_size >= static_cast<size_t>(Width(img) * 3 * Height(img)));
-        auto imgsrc = StartSrc(img);
-        auto imgdist = dst;
-        for (auto h = 0; h < Height(img); h++) {
-            for (auto w = 0; w < Width(img); w++) {
-                *imgdist++ = *(imgsrc + 2);
-                *imgdist++ = *(imgsrc + 1);
-                *imgdist++ = *(imgsrc);
-                imgsrc += img.Pixelstride;
-            }
-            imgsrc += RowPadding(img);
-        }
-    }
-
-    void ExtractAndConvertToRGB565(const Image &img, unsigned char *dst, size_t dst_size)
-    {
-        assert(dst_size >= static_cast<size_t>(Width(img) * 2 * Height(img)));
-        auto imgsrc = StartSrc(img);
-        auto imgdist = dst;
-        for (auto h = 0; h < Height(img); h++) {
-            for (auto w = 0; w < Width(img); w++) {
-                unsigned char r = (*(imgsrc + 2)) & 0xF8;
-                unsigned char g = (*(imgsrc + 1)) & 0xFC;
-                unsigned char b = (*imgsrc) & 0xF8;
-                int short rgb = (r << 8) | (g << 3) | (b >> 3);
-                *imgdist++ = static_cast<unsigned char>(rgb);
-                *imgdist++ = static_cast<unsigned char>(rgb >> 8);
-                imgsrc += img.Pixelstride;
-            }
-            imgsrc += RowPadding(img);
-        }
-    }
 
     bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor)
     {
@@ -124,10 +56,10 @@ namespace Screen_Capture {
             ScreenCaptureManagerExists = true;
             Thread_Data_ = std::make_shared<Thread_Data>();
             Thread_Data_->CommonData_.Paused = false;
-            Thread_Data_->ScreenCaptureData.FrameTimer = std::make_shared<Timer<long long, std::milli>>(100ms);
-            Thread_Data_->ScreenCaptureData.MouseTimer = std::make_shared<Timer<long long, std::milli>>(50ms);
-            Thread_Data_->WindowCaptureData.FrameTimer = std::make_shared<Timer<long long, std::milli>>(100ms);
-            Thread_Data_->WindowCaptureData.MouseTimer = std::make_shared<Timer<long long, std::milli>>(50ms);
+            Thread_Data_->ScreenCaptureData.FrameTimer = std::make_shared<Timer>(100ms);
+            Thread_Data_->ScreenCaptureData.MouseTimer = std::make_shared<Timer>(50ms);
+            Thread_Data_->WindowCaptureData.FrameTimer = std::make_shared<Timer>(100ms);
+            Thread_Data_->WindowCaptureData.MouseTimer = std::make_shared<Timer>(50ms);
         }
         virtual ~ScreenCaptureManager()
         { 
@@ -166,7 +98,7 @@ namespace Screen_Capture {
                 ThreadMgr.Join();
             });
         }
-        virtual void setFrameChangeInterval(const std::shared_ptr<ITimer> &timer) override
+        virtual void setFrameChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
             
 #ifdef __APPLE__
@@ -176,7 +108,7 @@ namespace Screen_Capture {
             std::atomic_store(&Thread_Data_->WindowCaptureData.FrameTimer, timer);
 #endif
         }
-        virtual void setMouseChangeInterval(const std::shared_ptr<ITimer> &timer) override
+        virtual void setMouseChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
             std::atomic_store(&Thread_Data_->ScreenCaptureData.MouseTimer, timer);
             std::atomic_store(&Thread_Data_->WindowCaptureData.MouseTimer, timer);

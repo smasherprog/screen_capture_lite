@@ -2,9 +2,8 @@
 #include "GDIFrameProcessor.h"
 #include "GDIMouseProcessor.h"
 #include "ScreenCapture.h"
-#include "ThreadManager.h"
+#include "internal/ThreadManager.h"
 
-#define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 

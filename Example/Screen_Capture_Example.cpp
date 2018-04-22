@@ -1,4 +1,5 @@
 #include "ScreenCapture.h"
+#include "internal/SCCommon.h" //DONT USE THIS HEADER IN PRODUCTION CODE!!!! ITS INTERNAL FOR A REASON IT WILL CHANGE!!! ITS HERE FOR TESTS ONLY!!!
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -7,6 +8,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <climits>
 
 // THESE LIBRARIES ARE HERE FOR CONVINIENCE!! They are SLOW and ONLY USED FOR
 // HOW THE LIBRARY WORKS!
@@ -16,6 +18,24 @@
 #define LODEPNG_COMPILE_DISK
 #include "lodepng.h"
 /////////////////////////////////////////////////////////////////////////
+
+void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char *dst, size_t dst_size)
+{
+    assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
+    auto imgsrc = StartSrc(img);
+    auto imgdist = dst;
+    for (auto h = 0; h < Height(img); h++) {
+        auto startimgsrc = imgsrc;
+        for (auto w = 0; w < Width(img); w++) {
+            *imgdist++ = imgsrc->R;
+            *imgdist++ = imgsrc->G;
+            *imgdist++ = imgsrc->B;
+            *imgdist++ = 0; // alpha should be zero
+            imgsrc++;
+        }
+        imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
+    }
+}
 
 using namespace std::chrono_literals;
 std::shared_ptr<SL::Screen_Capture::IScreenCaptureManager> framgrabber;
@@ -51,21 +71,21 @@ void createframegrabber()
         // std::cout << "Difference detected!  " << img.Bounds << std::endl;
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
-        auto size = RowStride(img) * Height(img);
+        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+  /*      auto imgbuffer(std::make_unique<unsigned char[]>(size));
+        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());*/
 
-      //  auto imgbuffer(std::make_unique<unsigned char[]>(size));
-     //   ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-     //  tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     })
         ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
 
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
 
-        auto size = RowStride(img) * Height(img);
         // auto imgbuffer(std::make_unique<unsigned char[]>(size));
         // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
         // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+       //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
             1000) {
             std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
@@ -122,7 +142,7 @@ void createpartialframegrabber()
         // std::cout << "Difference detected!  " << img.Bounds << std::endl;
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
-        auto size = RowStride(img) * Height(img);
+        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
 
         // auto imgbuffer(std::make_unique<unsigned char[]>(size));
         // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
@@ -133,7 +153,7 @@ void createpartialframegrabber()
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
 
-        auto size = RowStride(img) * Height(img); 
+        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
         assert(Height(img) == 512);
         assert(Width(img) == 512);
         // auto imgbuffer(std::make_unique<unsigned char[]>(size));
@@ -197,7 +217,7 @@ void createwindowgrabber()
         // std::cout << "Difference detected!  " << img.Bounds << std::endl;
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("WINDIF_") + std::string(".jpg");
-        auto size = RowStride(img) * Height(img);
+        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
 
         /* auto imgbuffer(std::make_unique<unsigned char[]>(size));
         ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
@@ -208,12 +228,12 @@ void createwindowgrabber()
 
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("WINNEW_") + std::string(".jpg");
-        auto size = RowStride(img) * Height(img);
-    
-      // auto imgbuffer(std::make_unique<unsigned char[]>(size));
-      // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-       //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-    
+        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+
+        // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+         //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
             1000) {
             std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
@@ -246,24 +266,26 @@ void createwindowgrabber()
 }
 int main()
 {
+    std::srand(std::time(nullptr));
     std::cout << "Starting Capture Demo/Test" << std::endl;
     std::cout << "Testing captured monitor bounds check" << std::endl;
+
     auto goodmonitors = SL::Screen_Capture::GetMonitors();
     for (auto &m : goodmonitors) {
         std::cout << m << std::endl;
-        assert(isMonitorInsideBounds(goodmonitors, m));
+        assert(SL::Screen_Capture::isMonitorInsideBounds(goodmonitors, m));
     }
     auto badmonitors = SL::Screen_Capture::GetMonitors();
 
     for (auto m : badmonitors) {
         m.Height += 1;
         std::cout << m << std::endl;
-        assert(!isMonitorInsideBounds(goodmonitors, m));
+        assert(!SL::Screen_Capture::isMonitorInsideBounds(goodmonitors, m));
     }
     for (auto m : badmonitors) {
         m.Width += 1;
         std::cout << m << std::endl;
-        assert(!isMonitorInsideBounds(goodmonitors, m));
+        assert(!SL::Screen_Capture::isMonitorInsideBounds(goodmonitors, m));
     }
     std::cout << "Running window capturing for 10 seconds" << std::endl;
     createwindowgrabber();
@@ -280,8 +302,8 @@ int main()
 
     std::cout << "Pausing for 10 seconds. " << std::endl;
     framgrabber->pause();
-    auto i = 0;
-    while (i++ < 10) {
+    auto counti = 0;
+    while (counti++ < 10) {
         assert(framgrabber->isPaused());
         std::cout << " . ";
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -322,6 +344,57 @@ int main()
     std::cout << "Testing recreating" << std::endl;
     createframegrabber();
     std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    //4k image
+    int height = 2160;
+    int width = 3840;
+    std::vector<SL::Screen_Capture::ImageBGRA> image1, image2;
+    image1.resize(height* width);
+    for (auto& a : image1) {
+        a.B = static_cast<unsigned short>(std::rand() % 255);
+        a.A = static_cast<unsigned short>(std::rand() % 255);
+        a.G = static_cast<unsigned short>(std::rand() % 255);
+        a.R = static_cast<unsigned short>(std::rand() % 255);
+    }
+    image2.resize(height* width);
+    for (auto& a : image2) {
+        a.B = static_cast<unsigned short>(std::rand() % 255);
+        a.A = static_cast<unsigned short>(std::rand() % 255);
+        a.G = static_cast<unsigned short>(std::rand() % 255);
+        a.R = static_cast<unsigned short>(std::rand() % 255);
+    }
+    long long durationaverage = 0;
+    long long smallestduration = INT_MAX;
+    for (auto i = 0; i < 100; i++) {//run a few times to get an average
+        auto starttime = std::chrono::high_resolution_clock::now();
+        auto difs = SL::Screen_Capture::GetDifs(
+            SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
+            SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
+        long long  d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+        smallestduration = std::min(d, smallestduration);
+        durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+    }
+    durationaverage /= 100;
+    std::cout << "Best Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
+    std::cout << "Best Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
+    memset(image1.data(), 5, image1.size() * sizeof(SL::Screen_Capture::ImageBGRA));
+    memset(image2.data(), 5, image2.size() * sizeof(SL::Screen_Capture::ImageBGRA));
+
+    durationaverage = 0;
+    smallestduration = INT_MAX;
+    for (auto i = 0; i < 100; i++) {//run a few times to get an average
+        auto starttime = std::chrono::high_resolution_clock::now();
+        auto difs = SL::Screen_Capture::GetDifs(
+            SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
+            SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
+        long long  d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+        smallestduration = std::min(d, smallestduration);
+        durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+    }
+    durationaverage /= 100;
+    std::cout << "Worst Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
+    std::cout << "Worst Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
+
 
     return 0;
 }

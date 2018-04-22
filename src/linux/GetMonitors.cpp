@@ -2,6 +2,7 @@
 #include "internal/SCCommon.h"
 #include <X11/Xlib.h>
 #include <X11/extensions/Xinerama.h>
+#include <dlfcn.h>
 
 namespace SL
 {
@@ -24,6 +25,11 @@ namespace Screen_Capture
 #endif
             return ret;
         } 
+        auto test = dlsym(RTLD_NEXT, "XineramaQueryScreens");
+        if(!test){
+               printf("XineramaQueryScreens not found");
+               return ret;
+        }
         int nmonitors = 0;
         XineramaScreenInfo* screen = XineramaQueryScreens(display, &nmonitors);
          printf("got here2");

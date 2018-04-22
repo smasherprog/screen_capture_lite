@@ -1,5 +1,5 @@
 #pragma once
-#import "SCCommon.h"
+#import "internal/SCCommon.h"
 #import "NSFrameProcessor.h"
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>

@@ -51,7 +51,7 @@
     }
     auto data=self.nsframeprocessor->Data;
     auto& selectedmonitor =self.nsframeprocessor->SelectedMonitor;
-    SL::Screen_Capture::ImageRect ret = {0};
+    SL::Screen_Capture::ImageRect ret;
     ret.left = 0;
     ret.top = 0;
     ret.bottom = Height(selectedmonitor);
@@ -63,7 +63,7 @@
     
     auto buf = static_cast<unsigned char*>(CVPixelBufferGetBaseAddress(imageBuffer));
     
-    auto startbuf = buf + (SL::Screen_Capture::OffsetX(selectedmonitor)*SL::Screen_Capture::PixelStride);//advance to the start of this image
+    auto startbuf = buf + (SL::Screen_Capture::OffsetX(selectedmonitor));//advance to the start of this image
     startbuf += (SL::Screen_Capture::OffsetY(selectedmonitor) *  bytesperrow);
     SL::Screen_Capture::ProcessCapture(data->ScreenCaptureData, *(self.nsframeprocessor), selectedmonitor, startbuf, bytesperrow);
  

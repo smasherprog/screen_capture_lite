@@ -1,5 +1,5 @@
 #pragma once
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include <memory>
 #include "TargetConditionals.h"
 #include <ApplicationServices/ApplicationServices.h>

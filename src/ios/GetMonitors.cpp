@@ -1,5 +1,5 @@
 #include "ScreenCapture.h"
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include <ApplicationServices/ApplicationServices.h>
 
 

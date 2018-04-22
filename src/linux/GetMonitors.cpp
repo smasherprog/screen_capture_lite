@@ -11,43 +11,22 @@ namespace Screen_Capture
 
     std::vector<Monitor> GetMonitors()
     {
-        std::vector<Monitor> ret;
-        printf("got here");
-        Display* display = XOpenDisplay(NULL);
-        printf("got here1");
+        std::vector<Monitor> ret; 
+        Display* display = XOpenDisplay(NULL); 
         if(display == NULL){
             return ret;
         }
-        int er1, er2;
-        if(XineramaQueryExtension(display, &er1, &er2)==False || XineramaIsActive(display) ==False){
-#ifdef _DEBUG
-            printf("GetMonitors() failed as Xinerama is not properly configured");
-#endif
-            return ret;
-        } 
-        auto test = dlsym(RTLD_NEXT, "XineramaQueryScreens");
-        if(!test){
-               printf("XineramaQueryScreens not found");
-               return ret;
-        }
-        int nmonitors = 0;
-        XineramaScreenInfo* screen = XineramaQueryScreens(display, &nmonitors);
-         printf("got here2");
-        if(screen == NULL){
-            XCloseDisplay(display);
-            return ret;
-        }
+        auto nmonitors = ScreenCount(display);
         ret.reserve(nmonitors);
-       
+        
         for(auto i = 0; i < nmonitors; i++) {
-
+            auto screen = ScreenOfDisplay(display, i);
+        
             auto name = std::string("Display ") + std::to_string(i);
             ret.push_back(CreateMonitor(
-                i, screen[i].screen_number, screen[i].height, screen[i].width, screen[i].x_org, screen[i].y_org, name, 1.0f));
-        }   printf("got here3");
-        XFree(screen);    printf("got here4");
-        XCloseDisplay(display);
-           printf("got here5");
+                i, i, screen->height, screen->width, 0, 0, name, 1.0f));
+        }     
+        XCloseDisplay(display); 
         return ret;
     }
 }

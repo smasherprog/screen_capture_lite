@@ -1,10 +1,8 @@
 # screen capture lite
-<p><b>Note:</b> This library is is stable and contains no known bugs. I will continue to fix any bugs and test against the platforms as they are updated. </p>
 <p>Master is where development happens and should NOT be considered stable. Use tags for stable releases.</p>
 <p>Linux/Mac <img src="https://travis-ci.org/smasherprog/screen_capture_lite.svg?branch=master" /></p>
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/6nlqo1csbkgdxorx"/><p>
-<p>Cross-platform screen and window capturing library . . . this is made to be lightweight and fast.
-see the Exmaple folder for a demo</p>
+<p>Cross-platform screen and window capturing library<p>
 <h2>No External Dependencies except:</h2>
 <p>linux: sudo apt-get install libxtst-dev libxinerama-dev libx11-dev libxfixes-dev</p>
 <h4>Platforms supported:</h4>
@@ -69,6 +67,7 @@ windowframgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 
 <h3>Library Usage</h3>
 <p>Only define what are are interested in. Do not define a callback for onMouseChanged if you dont want that information. If you do, the library will assume that you want mouse information and monitor that --so DONT!</p>
 <p>Again, DONT DEFINE CALLBACKS FOR EVENTS YOU DONT CARE ABOUT. If you do, the library will do extra work assuming you want the information.</p>
+<p>The library owns all image data so if you want to use it for your own purpose after the callback has completed you MUST copy the data out!</p>
 <p>Each monitor or window will run in its own thread so there is no blocking or internal synchronization. If you are capturing three monitors, a thread is capturing each monitor.</p>
 <h4>ICaptureConfiguration</h4>
 <p>Calls to ICaptureConfiguration cannot be changed after start_capturing is called. You must destroy it and recreate it!</p>

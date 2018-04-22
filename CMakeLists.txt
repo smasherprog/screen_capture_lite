@@ -141,7 +141,5 @@ install (FILES
 	include/ScreenCapture.h 
 	DESTINATION include
 )
-
-if(BUILD_EXAMPLE)
-  add_subdirectory(Example)
-endif()
+enable_testing() 
+add_subdirectory(Example) 

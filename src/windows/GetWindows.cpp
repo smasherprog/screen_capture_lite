@@ -1,8 +1,7 @@
 #include "GDIHelpers.h"
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include "ScreenCapture.h"
 
-#define NOMINMAX
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
 

@@ -58,20 +58,20 @@ namespace SL {
             bi.biWidth = ret.right;
             bi.biHeight = -ret.bottom;
             bi.biPlanes = 1;
-            bi.biBitCount = PixelStride * 8; //always 32 bits damnit!!!
+            bi.biBitCount = sizeof(ImageBGRA) * 8; //always 32 bits damnit!!!
             bi.biCompression = BI_RGB;
-            bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (PixelStride * 8)) * PixelStride* ret.bottom;
+            bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (sizeof(ImageBGRA) * 8)) * sizeof(ImageBGRA) * ret.bottom;
 
             GetDIBits(MonitorDC.DC, bitmap.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO*)&bi, DIB_RGB_COLORS);
 
             SelectObject(CaptureDC.DC, originalBmp);
 
-            auto wholeimg = Create(ret, PixelStride, 0, NewImageBuffer.get());
+            auto wholeimg = CreateImage(ret,  0, (ImageBGRA*)NewImageBuffer.get());
 
             //need to make sure the alpha channel is correct
             if (ii.wResID == 32513) { // when its just the i beam
                 auto ptr = (unsigned int*)NewImageBuffer.get();
-                for (auto i = 0; i < RowStride(wholeimg) *Height(wholeimg) / 4; i++) {
+                for (auto i = 0; i < Width(wholeimg) *Height(wholeimg); i++) {
                     if (ptr[i] != 0) {
                         ptr[i] = 0xff000000;
                     }

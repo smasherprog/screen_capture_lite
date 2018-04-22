@@ -3,10 +3,13 @@
 #include <atomic>
 #include <thread>
 
-// this is INTERNAL DO NOT USE!
+// this is INTERNAL DO NOT USE for the public api!
 namespace SL {
     namespace Screen_Capture {
-
+#ifdef __APPLE__
+        class FrameProcessor;
+        void SetFrameInterval(FrameProcessor* f, int ms);
+#endif
         template <typename F, typename M, typename W> struct CaptureData {
             std::shared_ptr<ITimer> FrameTimer;
             F OnNewFrame;
@@ -30,6 +33,9 @@ namespace SL {
             CaptureData<ScreenCaptureCallback, MouseCallback, MonitorCallback> ScreenCaptureData;
             CaptureData<WindowCaptureCallback, MouseCallback, WindowCallback> WindowCaptureData;
             CommonData CommonData_;
+#ifdef __APPLE__
+            FrameProcessor* FrameProcessor_;
+#endif
         };
 
         class BaseFrameProcessor {

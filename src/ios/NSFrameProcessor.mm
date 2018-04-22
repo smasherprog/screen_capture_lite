@@ -1,8 +1,7 @@
 #include "NSFrameProcessorm.h"
 #include <thread>
 #include <chrono>
-
-static int counter=0;
+ 
 @implementation FrameProcessor
 
 -(SL::Screen_Capture::DUPL_RETURN) Init:(SL::Screen_Capture::NSFrameProcessor*) parent
@@ -13,22 +12,24 @@ static int counter=0;
         self.nsframeprocessor = parent;
         self.avcapturesession = [[AVCaptureSession alloc] init];
         
-        auto input = [[[AVCaptureScreenInput alloc] initWithDisplayID:SL::Screen_Capture::Id(parent->SelectedMonitor)] autorelease];
-        [self.avcapturesession addInput:input];
+        self.avinput = [[[AVCaptureScreenInput alloc] initWithDisplayID:SL::Screen_Capture::Id(parent->SelectedMonitor)] autorelease];
+        [self.avcapturesession addInput:self.avinput];
         
         auto output = [[[AVCaptureVideoDataOutput alloc] init] autorelease];
         NSDictionary* videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey, nil];
         
         [output setVideoSettings:videoSettings];
         [output setAlwaysDiscardsLateVideoFrames:true];
-        [input setMinFrameDuration:CMTimeMake(1, 30)]; 
-        input.capturesCursor = false;
-        input.capturesMouseClicks = false;
+        [self.avinput setMinFrameDuration:CMTimeMake(1, 30)];
+    
+        self.avinput.capturesCursor = false;
+        self.avinput.capturesMouseClicks = false;
         
         [self.avcapturesession addOutput:output];
         [output setSampleBufferDelegate:self queue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0)];
         [self.avcapturesession startRunning];
-           return SL::Screen_Capture::DUPL_RETURN::DUPL_RETURN_SUCCESS;
+
+        return SL::Screen_Capture::DUPL_RETURN::DUPL_RETURN_SUCCESS;
     }
     return SL::Screen_Capture::DUPL_RETURN::DUPL_RETURN_ERROR_UNEXPECTED;
 }
@@ -73,6 +74,9 @@ static int counter=0;
 
 namespace SL{
     namespace Screen_Capture{
+        void SetFrameInterval(FrameProcessor* f, int ms){
+            
+        }
         struct NSFrameProcessorImpl{
             FrameProcessor* ptr=nullptr;
             NSFrameProcessorImpl(){

@@ -128,12 +128,11 @@ void createpartialframegrabber()
         for (auto &m : mons) {
             // capture just a 512x512 square...  USERS SHOULD MAKE SURE bounds are
             // valid!!!!
-
-            m.OffsetX += 512;
-            m.OffsetY += 512;
-            m.Height = 512;
-            m.Width = 512;
-
+            SL::Screen_Capture::OffsetX(m, SL::Screen_Capture::OffsetX(m) + 512);
+            SL::Screen_Capture::OffsetY(m, SL::Screen_Capture::OffsetY(m) + 512);
+            SL::Screen_Capture::Height(m, 512);
+            SL::Screen_Capture::Width(m, 512);
+      
             std::cout << m << std::endl;
         }
         return mons;

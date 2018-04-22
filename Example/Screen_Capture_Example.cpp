@@ -291,7 +291,6 @@ int main()
     createwindowgrabber();
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
-
     std::cout << "Running display capturing for 10 seconds" << std::endl;
     createframegrabber();
     std::this_thread::sleep_for(std::chrono::seconds(10));

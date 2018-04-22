@@ -18,7 +18,7 @@ namespace Screen_Capture
             return ret;
         }
         int er1, er2;
-        if(XineramaQueryExtension(display, &er1, &er2)==False){
+        if(XineramaQueryExtension(display, &er1, &er2)==False || XineramaIsActive(display) ==False){
 #ifdef _DEBUG
             printf("GetMonitors() failed as Xinerama is not properly configured");
 #endif

@@ -17,6 +17,13 @@ namespace Screen_Capture
         if(display == NULL){
             return ret;
         }
+        int er1, er2;
+        if(XineramaQueryExtension(display, &er1, &er2)==False){
+#ifdef _DEBUG
+            printf("GetMonitors() failed as Xinerama is not properly configured");
+#endif
+            return ret;
+        } 
         int nmonitors = 0;
         XineramaScreenInfo* screen = XineramaQueryScreens(display, &nmonitors);
          printf("got here2");

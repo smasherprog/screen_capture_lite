@@ -374,8 +374,8 @@ int main()
         durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
     }
     durationaverage /= 100;
-    std::cout << "Time to get diffs " << durationaverage << " microseconds" << std::endl;
-    std::cout << "Lowest Time " << smallestduration << " microseconds" << std::endl;
+    std::cout << "Best Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
+    std::cout << "Best Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
     memset(image1.data(), 5, image1.size() * sizeof(SL::Screen_Capture::ImageBGRA));
     memset(image2.data(), 5, image2.size() * sizeof(SL::Screen_Capture::ImageBGRA));
 
@@ -391,8 +391,8 @@ int main()
         durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
     }
     durationaverage /= 100;
-    std::cout << "Time to get diffs " << durationaverage << " microseconds" << std::endl;
-    std::cout << "Lowest Time " << smallestduration << " microseconds" << std::endl;
+    std::cout << "Worst Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
+    std::cout << "Worst Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
 
 
     return 0;

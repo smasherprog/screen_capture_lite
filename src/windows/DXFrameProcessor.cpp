@@ -55,7 +55,7 @@ namespace Screen_Capture {
     {
         HRESULT TranslatedHr;
 #if defined _DEBUG || !defined NDEBUG
-        std::wcout << Str << "\t" << Title << std::endl;
+        std::wcout << "HRESULT: "<< hr<< "\t"<<Str << "\t" << Title << std::endl;
 #endif
         // On an error check if the DX device is lost
         if (Device) {

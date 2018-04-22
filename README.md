@@ -10,16 +10,16 @@ see the Exmaple folder for a demo</p>
 <h4>Platforms supported:</h4>
 
 <ul>
-<li>Windows 8 and Up</li>
+<li>Windows 7 and Up</li>
 <li>MacOS</li>
 <li>Linux</li>
 </ul>
 
-<h2>USAGE</h2>
 <p>The image format is raw BGRA 32 bits per pixel. Alpha is unused! <p>
 <p>The data exists like this if you were to march through with a for loop [A,R,G,B], [A,R,G,B], [A,R,G,B]. For a read on why this is check out the post here <a href="https://stackoverflow.com/questions/8104461/pixelformat-format32bppargb-seems-to-have-wrong-byte-order">post here</a><p>
-https://github.com/smasherprog/screen_capture_lite/blob/master/Example/Screen_Capture_Example.cpp
 
+<h2>Example</h2>
+<p>https://github.com/smasherprog/screen_capture_lite/blob/master/Example/Screen_Capture_Example.cpp</p>
 
 ```c++
 //Setup Screen Capture for all monitors
@@ -38,10 +38,10 @@ framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
 framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
 
 
-//Setup Screen Capture for windows that have the title "cmake 3.8" in it
+//Setup Screen Capture for windows that have the title "cmake" in it
 auto windowframgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
   auto windows = SL::Screen_Capture::GetWindows();
-  std::string srchterm = "cmake 3.8";
+  std::string srchterm = "cmake";
   // convert to lower case for easier comparisons
   std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale());});
   decltype(windows) filtereditems;
@@ -65,3 +65,40 @@ windowframgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));//100 
 windowframgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
 
 ```
+
+<h3>Library Usage</h3>
+<p>Only define what are are interested in. Do not define a callback for onMouseChanged if you dont want that information. If you do, the library will assume that you want mouse information and monitor that --so DONT!</p>
+<p>Again, DONT DEFINE CALLBACKS FOR EVENTS YOU DONT CARE ABOUT. If you do, the library will do extra work assuming you want the information.</p>
+<p>Each monitor or window will run in its own thread so there is no blocking or internal synchronization. If you are capturing three monitors, a thread is capturing each monitor.</p>
+<h4>ICaptureConfiguration</h4>
+<p>Calls to ICaptureConfiguration cannot be changed after start_capturing is called. You must destroy it and recreate it!</p>
+<ul>
+    <li>
+    ICaptureConfiguration::onNewFrame: This will call back when a new frame is ready on the interval specified in setFrameChangeInterval
+    </li>
+    <li>
+    ICaptureConfiguration::onFrameChanged: This will call back when differences are detected between the last frame and the current one. This is usefull when you want to stream data that you are only sending what has changed, not everything!
+    </li>
+    <li>
+    ICaptureConfiguration::onMouseChanged: This will call back when the mouse has changed location or the mouse image has changed up to a maximum rate specified in setMouseChangeInterval
+    </li>
+</ul>
+<h4>IScreenCaptureManager</h4>
+<p>Calls to IScreenCaptureManager can be changed at any time from any thread as all calls are thread safe!</p>
+<ul>
+    <li>
+    IScreenCaptureManager::setFrameChangeInterval: This will set the maximum rate that the library will attempt to capture frame events.
+    </li>
+    <li>
+ IScreenCaptureManager::setMouseChangeInterval: This will set the maximum rate that the library will attempt to capture mouse events.
+    </li>
+    <li>
+    IScreenCaptureManager::pause: all threads will stop capturing.
+    </li>
+    <li>
+    IScreenCaptureManager::isPaused: obvious!
+    </li>
+    <li>
+    IScreenCaptureManager::resume: all threads will resume capturing.
+    </li>
+</ul>

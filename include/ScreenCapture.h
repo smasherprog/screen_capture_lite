@@ -25,7 +25,7 @@ namespace SL {
         struct Window;
         struct Image;
         struct ImageBGRA {
-            unsigned char A, R, G, B;
+            unsigned char B,G,R,A;
         };
 
         // index to self in the GetMonitors() function

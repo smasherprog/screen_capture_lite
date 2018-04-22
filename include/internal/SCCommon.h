@@ -91,7 +91,7 @@ namespace SL {
         enum DUPL_RETURN { DUPL_RETURN_SUCCESS = 0, DUPL_RETURN_ERROR_EXPECTED = 1, DUPL_RETURN_ERROR_UNEXPECTED = 2 };
         Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string &n, float scale);
         Monitor CreateMonitor(int index, int id, int adapter, int h, int w, int ox, int oy, const std::string &n, float scale);
-        SC_LITE_EXTERN  bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
+        SC_LITE_EXTERN bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
         SC_LITE_EXTERN Image CreateImage(const ImageRect &imgrect, int rowpadding, const ImageBGRA *data);
         // this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
         // void Copy(const Image& dst, const Image& src);
@@ -108,13 +108,13 @@ namespace SL {
             imageract.right = Width(mointor); 
             auto dstrowstride = (int)sizeof(ImageBGRA) * Width(mointor);
             if (data.OnNewFrame) {//each frame we still let the caller know if asked for
-                auto wholeimg = CreateImage(imageract,  srcrowstride - dstrowstride, (ImageBGRA*)startsrc);
+                auto wholeimg = CreateImage(imageract,  srcrowstride, (ImageBGRA*)startsrc);
                 data.OnNewFrame(wholeimg, mointor);
             }
             if (data.OnFrameChanged) {//difs are needed!
                 if (base.FirstRun) {
                     // first time through, just send the whole image
-                    auto wholeimg = CreateImage(imageract,  srcrowstride - dstrowstride, (ImageBGRA*)startsrc);
+                    auto wholeimg = CreateImage(imageract,  srcrowstride, (ImageBGRA*)startsrc);
                     data.OnFrameChanged(wholeimg, mointor);
                     base.FirstRun = false;
                 }

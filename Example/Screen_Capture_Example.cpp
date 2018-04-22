@@ -18,6 +18,24 @@
 #include "lodepng.h"
 /////////////////////////////////////////////////////////////////////////
 
+void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char *dst, size_t dst_size)
+{
+    assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
+    auto imgsrc = StartSrc(img);
+    auto imgdist = dst;
+    for (auto h = 0; h < Height(img); h++) {
+        auto startimgsrc = imgsrc;
+        for (auto w = 0; w < Width(img); w++) {
+            *imgdist++ = imgsrc->R;
+            *imgdist++ = imgsrc->G;
+            *imgdist++ = imgsrc->B;
+            *imgdist++ = 0; // alpha should be zero
+            imgsrc++;
+        }
+        imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
+    }
+}
+
 using namespace std::chrono_literals;
 std::shared_ptr<SL::Screen_Capture::IScreenCaptureManager> framgrabber;
 std::atomic<int> realcounter;
@@ -53,20 +71,20 @@ void createframegrabber()
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
         auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+        // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+        // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
 
-        //  auto imgbuffer(std::make_unique<unsigned char[]>(size));
-       //   ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-       //  tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
     })
         ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
 
         auto r = realcounter.fetch_add(1);
         auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
 
-        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
         // auto imgbuffer(std::make_unique<unsigned char[]>(size));
         // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
         // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
         if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
             1000) {
             std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
@@ -249,7 +267,7 @@ int main()
 {
     std::srand(std::time(nullptr));
     std::cout << "Starting Capture Demo/Test" << std::endl;
-    std::cout << "Testing captured monitor bounds check" << std::endl; 
+    std::cout << "Testing captured monitor bounds check" << std::endl;
 
     auto goodmonitors = SL::Screen_Capture::GetMonitors();
     for (auto &m : goodmonitors) {
@@ -357,7 +375,7 @@ int main()
     }
     durationaverage /= 100;
     std::cout << "Time to get diffs " << durationaverage << " microseconds" << std::endl;
-    std::cout << "Lowest Time " << smallestduration << " microseconds" << std::endl; 
+    std::cout << "Lowest Time " << smallestduration << " microseconds" << std::endl;
     memset(image1.data(), 5, image1.size() * sizeof(SL::Screen_Capture::ImageBGRA));
     memset(image2.data(), 5, image2.size() * sizeof(SL::Screen_Capture::ImageBGRA));
 
@@ -374,8 +392,7 @@ int main()
     }
     durationaverage /= 100;
     std::cout << "Time to get diffs " << durationaverage << " microseconds" << std::endl;
-    std::cout << "Lowest Time " << smallestduration << " microseconds" << std::endl; 
-
+    std::cout << "Lowest Time " << smallestduration << " microseconds" << std::endl;
 
 
     return 0;

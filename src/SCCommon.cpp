@@ -234,7 +234,8 @@ namespace SL {
         int Y(const Point &p) { return p.y; }
         const ImageRect &Rect(const Image &img) { return img.Bounds; } 
         const ImageBGRA *GotoNextRow(const Image &img, const ImageBGRA* current) {
-            return (ImageBGRA*)((unsigned char*)current) + img.BytesToNextRow;
+            auto c = reinterpret_cast<const unsigned char*>(current); 
+            return reinterpret_cast<const ImageBGRA*>(c + img.BytesToNextRow);
         } 
         bool isDataContiguous(const Image &img) { return img.BytesToNextRow == 0; }
         // number of bytes per row, NOT including the Rowpadding

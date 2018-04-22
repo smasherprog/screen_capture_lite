@@ -106,37 +106,38 @@ namespace SL {
             imageract.top = 0;
             imageract.bottom = Height(mointor);
             imageract.right = Width(mointor); 
-            auto dstrowstride = (int)sizeof(ImageBGRA) * Width(mointor);
+            const auto sizeofimgbgra = static_cast<int>(sizeof(ImageBGRA));
+            const auto startimgsrc = reinterpret_cast<const ImageBGRA*>(startsrc);
+            auto dstrowstride = sizeofimgbgra * Width(mointor);
             if (data.OnNewFrame) {//each frame we still let the caller know if asked for
-                auto wholeimg = CreateImage(imageract,  srcrowstride, (ImageBGRA*)startsrc);
+                auto wholeimg = CreateImage(imageract,  srcrowstride, startimgsrc);
                 data.OnNewFrame(wholeimg, mointor);
             }
             if (data.OnFrameChanged) {//difs are needed!
                 if (base.FirstRun) {
                     // first time through, just send the whole image
-                    auto wholeimg = CreateImage(imageract,  srcrowstride, (ImageBGRA*)startsrc);
+                    auto wholeimg = CreateImage(imageract,  srcrowstride, startimgsrc);
                     data.OnFrameChanged(wholeimg, mointor);
                     base.FirstRun = false;
                 }
                 else {
                     // user wants difs, lets do it!
-                    auto newimg = CreateImage(imageract,  srcrowstride - dstrowstride, (ImageBGRA*) startsrc);
-                    auto oldimg = CreateImage(imageract,  0, (ImageBGRA*)base.ImageBuffer.get());
+                    auto newimg = CreateImage(imageract,  srcrowstride - dstrowstride, startimgsrc);
+                    auto oldimg = CreateImage(imageract,  0, reinterpret_cast<const ImageBGRA*>(base.ImageBuffer.get()));
                     auto imgdifs = GetDifs(oldimg, newimg);
 
                     for (auto &r : imgdifs) {
-                        auto leftoffset = r.left * (int)sizeof(ImageBGRA);
-                        auto rightpadding = ( (Width(newimg)* (int)sizeof(ImageBGRA))+ newimg.BytesToNextRow) - (r.right * (int)sizeof(ImageBGRA));
+                        auto leftoffset = r.left * sizeofimgbgra;
+                        auto rightpadding = ( (Width(newimg)* sizeofimgbgra)+ newimg.BytesToNextRow) - (r.right *sizeofimgbgra);
                         auto padding = leftoffset + rightpadding;
-                        auto thisstartsrc = startsrc;
-                        thisstartsrc += leftoffset + (r.top * srcrowstride);
+                        auto thisstartsrc = startsrc +  leftoffset + (r.top * srcrowstride);
 
-                        auto difimg = CreateImage(r, padding, (ImageBGRA*)thisstartsrc);
+                        auto difimg = CreateImage(r, padding, reinterpret_cast<const ImageBGRA*>(thisstartsrc));
                         data.OnFrameChanged(difimg, mointor);
                     }
                 }
                 auto startdst = base.ImageBuffer.get();
-                if (dstrowstride == static_cast<int>(srcrowstride)) { // no need for multiple calls, there is no padding here
+                if (dstrowstride == srcrowstride) { // no need for multiple calls, there is no padding here
                     memcpy(startdst, startsrc, dstrowstride * Height(mointor));
                 }
                 else {

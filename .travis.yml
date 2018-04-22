@@ -33,9 +33,7 @@ before_install:
   
 script:
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
-  - ctest -V;
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_SHARED_LIBS=ON -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
-  - ctest -V;
     
 notifications:
   email: false

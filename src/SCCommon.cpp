@@ -111,8 +111,8 @@ namespace SL {
             std::vector<ImageRect> rects;
             rects.reserve(map.width() * map.height());
 
-            for (int x = 0; x < map.height(); ++x) {
-                for (int y = 0; y < map.width(); ++y) {
+            for (decltype(map.height())  x = 0; x < map.height(); ++x) {
+                for (decltype(map.width()) y = 0; y < map.width(); ++y) {
                     if (map.get(x, y)) {
                         ImageRect rect;
 

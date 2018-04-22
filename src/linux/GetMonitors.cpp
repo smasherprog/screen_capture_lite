@@ -1,5 +1,5 @@
 #include "ScreenCapture.h"
-#include "SCCommon.h"
+#include "internal/SCCommon.h"
 #include <X11/Xlib.h>
 #include <X11/extensions/Xinerama.h>
 

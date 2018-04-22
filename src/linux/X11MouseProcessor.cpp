@@ -50,10 +50,10 @@ namespace SL {
             imgrect.left = imgrect.top = 0;
             imgrect.right = img->width;
             imgrect.bottom = img->height;
-            auto newsize = PixelStride*imgrect.right*imgrect.bottom;
+            auto newsize = sizeof(ImageBGRA)*imgrect.right*imgrect.bottom;
             if(newsize>ImageBufferSize || !OldImageBuffer){
-                ImageBuffer = std::make_unique<unsigned char[]>(PixelStride*imgrect.right*imgrect.bottom);
-                OldImageBuffer=std::make_unique<unsigned char[]>(PixelStride*imgrect.right*imgrect.bottom);
+                ImageBuffer = std::make_unique<unsigned char[]>(sizeof(ImageBGRA)*imgrect.right*imgrect.bottom);
+                OldImageBuffer=std::make_unique<unsigned char[]>(sizeof(ImageBGRA)*imgrect.right*imgrect.bottom);
             }
             
             memcpy(ImageBuffer.get(), img->pixels, newsize);
@@ -71,7 +71,7 @@ namespace SL {
 
             if (Data->ScreenCaptureData.OnMouseChanged) {
 
-                auto wholeimg = Create(imgrect, PixelStride, 0, OldImageBuffer.get());
+                auto wholeimg = CreateImage(imgrect, 0, reinterpret_cast<const ImageBGRA*>(OldImageBuffer.get()));
                     
                 //if the mouse image is different, send the new image and swap the data 
                 if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), newsize) != 0) {

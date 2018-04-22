@@ -254,19 +254,19 @@ int main()
     auto goodmonitors = SL::Screen_Capture::GetMonitors();
     for (auto &m : goodmonitors) {
         std::cout << m << std::endl;
-        assert(isMonitorInsideBounds(goodmonitors, m));
+        assert(SL::Screen_Capture::isMonitorInsideBounds(goodmonitors, m));
     }
     auto badmonitors = SL::Screen_Capture::GetMonitors();
 
     for (auto m : badmonitors) {
         m.Height += 1;
         std::cout << m << std::endl;
-        assert(!isMonitorInsideBounds(goodmonitors, m));
+        assert(!SL::Screen_Capture::isMonitorInsideBounds(goodmonitors, m));
     }
     for (auto m : badmonitors) {
         m.Width += 1;
         std::cout << m << std::endl;
-        assert(!isMonitorInsideBounds(goodmonitors, m));
+        assert(!SL::Screen_Capture::isMonitorInsideBounds(goodmonitors, m));
     }
     std::cout << "Running window capturing for 10 seconds" << std::endl;
     createwindowgrabber();

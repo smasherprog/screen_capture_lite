@@ -104,13 +104,9 @@ namespace SL {
         // will return all windows
         SC_LITE_EXTERN std::vector<Window> GetWindows();
 
-        SC_LITE_EXTERN bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
-
         typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;
         typedef std::function<void(const SL::Screen_Capture::Image &img, const Monitor &monitor)> ScreenCaptureCallback;
-
         typedef std::function<void(const SL::Screen_Capture::Image *img, const Point &point)> MouseCallback;
-
         typedef std::function<std::vector<Monitor>()> MonitorCallback;
         typedef std::function<std::vector<Window>()> WindowCallback;
 

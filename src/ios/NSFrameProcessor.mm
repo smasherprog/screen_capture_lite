@@ -28,7 +28,7 @@
                 CGRect r;
                 r.origin.x = parent->SelectedMonitor.OffsetX;
                 //apple uses the opengl texture coords where the bottom left is 0,0
-                r.origin.y = parent->SelectedMonitor.OriginalHeight - (parent->SelectedMonitor.OffsetY + parent->SelectedMonitor.Height);
+                r.origin.y = parent->SelectedMonitor.OriginalHeight - ((parent->SelectedMonitor.OffsetY - parent->SelectedMonitor.OriginalOffsetY) + parent->SelectedMonitor.Height);
                 r.size.height =parent->SelectedMonitor.Height;
                 r.size.width =parent->SelectedMonitor.Width;
                 [self.avinput setCropRect:r];

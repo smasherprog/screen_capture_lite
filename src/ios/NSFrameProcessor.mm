@@ -20,13 +20,21 @@
         
         [output setVideoSettings:videoSettings];
         [output setAlwaysDiscardsLateVideoFrames:true];
-        CGRect r;
-        r.origin.x = parent->SelectedMonitor.OffsetX;
-        r.origin.y = parent->SelectedMonitor.OffsetY;
+        //partial capture needed
+        if(parent->SelectedMonitor.OffsetX != parent->SelectedMonitor.OriginalOffsetX ||
+           parent->SelectedMonitor.OffsetY != parent->SelectedMonitor.OriginalOffsetY ||
+           parent->SelectedMonitor.Height != parent->SelectedMonitor.OriginalHeight ||
+           parent->SelectedMonitor.Width != parent->SelectedMonitor.OriginalWidth){
+                CGRect r;
+                r.origin.x = parent->SelectedMonitor.OffsetX;
+                //apple uses the opengl texture coords where the bottom left is 0,0
+                r.origin.y = parent->SelectedMonitor.OriginalHeight - (parent->SelectedMonitor.OffsetY + parent->SelectedMonitor.Height);
+                r.size.height =parent->SelectedMonitor.Height;
+                r.size.width =parent->SelectedMonitor.Width;
+                [self.avinput setCropRect:r];
+        }
         
-        
-        [self.avinput setCropRect:r];
-        [self.avinput setMinFrameDuration:CMTimeMake(1, 30)];
+        [self.avinput setMinFrameDuration:CMTimeMake(1, 10)];
     
         self.avinput.capturesCursor = false;
         self.avinput.capturesMouseClicks = false;

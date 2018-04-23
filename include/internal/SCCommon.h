@@ -139,7 +139,7 @@ namespace SL {
                         auto thisstartsrc = startsrc +  leftoffset + (r.top * srcrowstride);
 
                         auto difimg = CreateImage(r, srcrowstride, reinterpret_cast<const ImageBGRA*>(thisstartsrc));
-                        wholeimg.isContiguous = false;
+                        difimg.isContiguous = false;
                         data.OnFrameChanged(difimg, mointor);
                     }
                 }

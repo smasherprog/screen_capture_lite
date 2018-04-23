@@ -20,6 +20,12 @@
         
         [output setVideoSettings:videoSettings];
         [output setAlwaysDiscardsLateVideoFrames:true];
+        CGRect r;
+        r.origin.x = parent->SelectedMonitor.OffsetX;
+        r.origin.y = parent->SelectedMonitor.OffsetY;
+        
+        
+        [self.avinput setCropRect:r];
         [self.avinput setMinFrameDuration:CMTimeMake(1, 30)];
     
         self.avinput.capturesCursor = false;
@@ -51,22 +57,12 @@
     }
     auto data=self.nsframeprocessor->Data;
     auto& selectedmonitor =self.nsframeprocessor->SelectedMonitor;
-    SL::Screen_Capture::ImageRect ret;
-    ret.left = 0;
-    ret.top = 0;
-    ret.bottom = Height(selectedmonitor);
-    ret.right = Width(selectedmonitor);
-    
+
     auto imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CVPixelBufferLockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
     auto bytesperrow = CVPixelBufferGetBytesPerRow(imageBuffer);
-    
     auto buf = static_cast<unsigned char*>(CVPixelBufferGetBaseAddress(imageBuffer));
-    
-    auto startbuf = buf + (SL::Screen_Capture::OffsetX(selectedmonitor));//advance to the start of this image
-    startbuf += (SL::Screen_Capture::OffsetY(selectedmonitor) *  bytesperrow);
-    SL::Screen_Capture::ProcessCapture(data->ScreenCaptureData, *(self.nsframeprocessor), selectedmonitor, startbuf, bytesperrow);
- 
+    SL::Screen_Capture::ProcessCapture(data->ScreenCaptureData, *(self.nsframeprocessor), selectedmonitor, buf, bytesperrow);
     CVPixelBufferUnlockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
     self.Working = false;
 }

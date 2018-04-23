@@ -27,6 +27,7 @@ namespace SL {
         struct Window {
             size_t Handle;
             Point Position;
+            
             Point Size;
             // Name will always be lower case. It is converted to lower case internally by the library for comparisons
             char Name[128] = { 0 };

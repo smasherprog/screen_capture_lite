@@ -9,7 +9,9 @@
     @property(nonatomic, retain) AVCaptureSession *avcapturesession;
     @property(nonatomic, retain) AVCaptureScreenInput* avinput;
     @property(atomic) bool Working;
-    -(SL::Screen_Capture::DUPL_RETURN) Init:(SL::Screen_Capture::NSFrameProcessor*) parent;
+    -(SL::Screen_Capture::DUPL_RETURN) Init:(SL::Screen_Capture::NSFrameProcessor*) parent second:(CMTime)interval;
+    -(void) setFrameRate:(CMTime)interval;
+    -(void) Stop;
 @end
 
 

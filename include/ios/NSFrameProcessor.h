@@ -7,10 +7,13 @@ namespace SL {
         struct NSFrameProcessorImpl;
         NSFrameProcessorImpl* CreateNSFrameProcessorImpl();
         void DestroyNSFrameProcessorImpl(NSFrameProcessorImpl*);
-        DUPL_RETURN Init(NSFrameProcessorImpl* createdimpl, NSFrameProcessor* parent);
+        void setMinFrameDuration(NSFrameProcessorImpl*, const std::chrono::microseconds& );
+        
+        DUPL_RETURN Init(NSFrameProcessorImpl* createdimpl, NSFrameProcessor* parent, const std::chrono::microseconds& );
         
         class NSFrameProcessor : public BaseFrameProcessor {
             NSFrameProcessorImpl* NSFrameProcessorImpl_ = nullptr;
+            std::chrono::microseconds LastDuration;
         public:
             NSFrameProcessor();
             ~NSFrameProcessor();

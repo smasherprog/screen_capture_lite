@@ -106,6 +106,7 @@ namespace SL {
                     std::this_thread::sleep_for(Deadline - now);
                 }
             }
+            std::chrono::microseconds duration() const { return Duration;}
         };
         // will return all attached monitors
         SC_LITE_EXTERN std::vector<Monitor> GetMonitors();

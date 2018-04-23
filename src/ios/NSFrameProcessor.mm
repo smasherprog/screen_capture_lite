@@ -4,7 +4,7 @@
  
 @implementation FrameProcessor
 
--(SL::Screen_Capture::DUPL_RETURN) Init:(SL::Screen_Capture::NSFrameProcessor*) parent
+-(SL::Screen_Capture::DUPL_RETURN) Init:(SL::Screen_Capture::NSFrameProcessor*) parent second:(CMTime)interval
 {
     self = [super init];
     if (self) {
@@ -34,7 +34,7 @@
                 [self.avinput setCropRect:r];
         }
         
-        [self.avinput setMinFrameDuration:CMTimeMake(1, 10)];
+        [self.avinput setMinFrameDuration:interval];
     
         self.avinput.capturesCursor = false;
         self.avinput.capturesMouseClicks = false;
@@ -53,10 +53,16 @@
     while(self.avcapturesession.isRunning || self.Working){
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+    [self.avinput release];
     [self.avcapturesession release];
     [super dealloc];
 }
-
+-(void) setFrameRate:(CMTime)interval{
+     [self.avinput setMinFrameDuration:interval];
+}
+-(void) Stop{
+    [self.avcapturesession stopRunning];
+}
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
     self.Working = true;
     if(!self.avcapturesession.isRunning){
@@ -88,12 +94,47 @@ namespace SL{
             }
             ~NSFrameProcessorImpl(){
                 if(ptr) {
+                    [ptr Stop];
                     [ptr release];
+                    auto r = CFGetRetainCount(ptr);
+                    while(r!=1){
+                        r = CFGetRetainCount(ptr);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    }
                     ptr = nullptr;
                 }
             }
-            DUPL_RETURN Init(NSFrameProcessor* parent){
-                return [ptr Init:parent];
+            void setMinFrameDuration(const std::chrono::microseconds& duration){
+                if(duration.count()>1){
+                    auto microsecondsinsec = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1));
+                    auto secs =std::chrono::duration_cast<std::chrono::seconds>(duration);
+                    if(secs.count()>0){//more than 1 second duration. Im not going to do the math right now for that
+                        [ptr setFrameRate:CMTimeMake(1, 1)];
+                    } else {
+                        auto f =duration.count();
+                        auto f1 =microsecondsinsec.count();
+                        auto interv = f1/f;
+                        [ptr setFrameRate:CMTimeMake(1, interv)];
+                    }
+                } else {
+                    [ptr setFrameRate:CMTimeMake(1, 100)];
+                }
+            }
+            DUPL_RETURN Init(NSFrameProcessor* parent, const std::chrono::microseconds& duration){
+                if(duration.count()>1){
+                    auto microsecondsinsec = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1));
+                    auto secs =std::chrono::duration_cast<std::chrono::seconds>(duration);
+                    if(secs.count()>0){//more than 1 second duration. Im not going to do the math right now for that
+                        return [ptr Init:parent second:CMTimeMake(1, 1)];
+                    } else {
+                        auto f =duration.count();
+                        auto f1 =microsecondsinsec.count();
+                        auto interv = f1/f;
+                        return [ptr Init:parent second:CMTimeMake(1, interv)];
+                    }
+                } else {
+                    return [ptr Init:parent second:CMTimeMake(1, 1000)];
+                }
             }
         };
         NSFrameProcessorImpl* CreateNSFrameProcessorImpl(){
@@ -104,9 +145,14 @@ namespace SL{
                 delete p;
             }
         }
-        DUPL_RETURN Init(NSFrameProcessorImpl* createdimpl, NSFrameProcessor* parent){
+        void setMinFrameDuration(NSFrameProcessorImpl* p, const std::chrono::microseconds& duration){
+            if(p){
+                p->setMinFrameDuration(duration);
+            }
+        }
+        DUPL_RETURN Init(NSFrameProcessorImpl* createdimpl, NSFrameProcessor* parent, const std::chrono::microseconds& duration){
             if(createdimpl){
-                return createdimpl->Init(parent);
+                return createdimpl->Init(parent, duration);
             }
             return DUPL_RETURN::DUPL_RETURN_ERROR_UNEXPECTED;
         }

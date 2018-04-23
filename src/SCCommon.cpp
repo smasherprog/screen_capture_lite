@@ -186,13 +186,14 @@ namespace SL {
         {
             Monitor ret = {};
             ret.Index = index;
-            ret.Height = h;
+         
             ret.Id = id;
             assert(n.size() + 1 < sizeof(ret.Name));
             memcpy(ret.Name, n.c_str(), n.size() + 1);
-            ret.OffsetX = ox;
-            ret.OffsetY = oy;
-            ret.Width = w;
+            ret.OriginalOffsetX = ret.OffsetX = ox;
+            ret.OriginalOffsetY = ret.OffsetY = oy;
+            ret.OriginalWidth = ret.Width = w;
+            ret.OriginalHeight = ret.Height = h;
             ret.Scaling = scaling;
             return ret;
         }
@@ -232,8 +233,7 @@ namespace SL {
         int Height(const Window &mointor) { return mointor.Size.y; }
         int Width(const Window &mointor) { return mointor.Size.x; }
         void Height(Window &mointor, int h) { mointor.Size.y = h; }
-        void Width(Window &mointor, int w) { mointor.Size.x = w; }
-
+        void Width(Window &mointor, int w) { mointor.Size.x = w; } 
         int Height(const ImageRect &rect) { return rect.bottom - rect.top; }
         int Width(const ImageRect &rect) { return rect.right - rect.left; }
         int Height(const Image &img) { return Height(img.Bounds); }
@@ -245,7 +245,7 @@ namespace SL {
             auto c = reinterpret_cast<const unsigned char*>(current); 
             return reinterpret_cast<const ImageBGRA*>(c + img.BytesToNextRow);
         } 
-        bool isDataContiguous(const Image &img) { return img.BytesToNextRow == 0; }
+        bool isDataContiguous(const Image &img) { return img.isContiguous; }
         // number of bytes per row, NOT including the Rowpadding
         int RowStride(const Image &img) { return sizeof(ImageBGRA) * Width(img); }
         const ImageBGRA *StartSrc(const Image &img) { return img.Data; }

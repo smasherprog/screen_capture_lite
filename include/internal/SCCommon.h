@@ -16,10 +16,14 @@ namespace SL {
             int Adapter = INT32_MAX;
             int Height = 0;
             int Width = 0;
+            int OriginalHeight = 0;
+            int OriginalWidth = 0;
             // Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their
             // monitors around so this affects their offset.
             int OffsetX = 0;
             int OffsetY = 0;
+            int OriginalOffsetX = 0;
+            int OriginalOffsetY = 0;
             char Name[128] = { 0 };
             float Scaling = 1.0f;
         };
@@ -44,6 +48,7 @@ namespace SL {
         struct Image {
             ImageRect Bounds;
             int BytesToNextRow = 0;
+            bool isContiguous = false;
             // alpha is always unused and might contain garbage
             const ImageBGRA *Data = nullptr;
         };
@@ -112,12 +117,14 @@ namespace SL {
             auto dstrowstride = sizeofimgbgra * Width(mointor);
             if (data.OnNewFrame) {//each frame we still let the caller know if asked for
                 auto wholeimg = CreateImage(imageract,  srcrowstride, startimgsrc);
+                wholeimg.isContiguous = dstrowstride == srcrowstride;
                 data.OnNewFrame(wholeimg, mointor);
             }
             if (data.OnFrameChanged) {//difs are needed!
                 if (base.FirstRun) {
                     // first time through, just send the whole image
                     auto wholeimg = CreateImage(imageract,  srcrowstride, startimgsrc);
+                    wholeimg.isContiguous = dstrowstride == srcrowstride;
                     data.OnFrameChanged(wholeimg, mointor);
                     base.FirstRun = false;
                 }
@@ -132,6 +139,7 @@ namespace SL {
                         auto thisstartsrc = startsrc +  leftoffset + (r.top * srcrowstride);
 
                         auto difimg = CreateImage(r, srcrowstride, reinterpret_cast<const ImageBGRA*>(thisstartsrc));
+                        wholeimg.isContiguous = false;
                         data.OnFrameChanged(difimg, mointor);
                     }
                 }

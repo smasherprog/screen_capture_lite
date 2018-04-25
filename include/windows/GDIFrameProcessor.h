@@ -17,6 +17,8 @@ namespace SL {
 
             std::shared_ptr<Thread_Data> Data;
         public:
+            void Pause() {}
+            void Resume() {}
             DUPL_RETURN Init(std::shared_ptr<Thread_Data> data, const Monitor& monitor);
             DUPL_RETURN ProcessFrame(const Monitor& currentmonitorinfo);
             DUPL_RETURN Init(std::shared_ptr<Thread_Data> data, const Window& selectedwindow);

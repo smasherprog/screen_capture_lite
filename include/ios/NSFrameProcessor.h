@@ -8,6 +8,8 @@ namespace SL {
         NSFrameProcessorImpl* CreateNSFrameProcessorImpl();
         void DestroyNSFrameProcessorImpl(NSFrameProcessorImpl*);
         void setMinFrameDuration(NSFrameProcessorImpl*, const std::chrono::microseconds& );
+        void Pause_(NSFrameProcessorImpl*);
+        void Resume_(NSFrameProcessorImpl*);
         
         DUPL_RETURN Init(NSFrameProcessorImpl* createdimpl, NSFrameProcessor* parent, const std::chrono::microseconds& );
         
@@ -18,6 +20,8 @@ namespace SL {
             NSFrameProcessor();
             ~NSFrameProcessor();
             Monitor SelectedMonitor;
+            void Pause();
+            void Resume();
             
             DUPL_RETURN Init(std::shared_ptr<Thread_Data> data, Monitor& monitor);
             DUPL_RETURN ProcessFrame(const Monitor& curentmonitorinfo);

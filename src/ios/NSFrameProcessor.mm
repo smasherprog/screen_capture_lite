@@ -9,17 +9,18 @@
     self = [super init];
     if (self) {
         self.Working = false;
+        self.Paused = false;
         self.nsframeprocessor = parent;
         self.avcapturesession = [[AVCaptureSession alloc] init];
-        
+       
         self.avinput = [[[AVCaptureScreenInput alloc] initWithDisplayID:SL::Screen_Capture::Id(parent->SelectedMonitor)] autorelease];
         [self.avcapturesession addInput:self.avinput];
         
-        auto output = [[[AVCaptureVideoDataOutput alloc] init] autorelease];
+        self.output = [[AVCaptureVideoDataOutput alloc] init];
         NSDictionary* videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], (id)kCVPixelBufferPixelFormatTypeKey, nil];
-        
-        [output setVideoSettings:videoSettings];
-        [output setAlwaysDiscardsLateVideoFrames:true];
+
+        [self.output setVideoSettings:videoSettings];
+        [self.output setAlwaysDiscardsLateVideoFrames:true];
         //partial capture needed
         if(parent->SelectedMonitor.OffsetX != parent->SelectedMonitor.OriginalOffsetX ||
            parent->SelectedMonitor.OffsetY != parent->SelectedMonitor.OriginalOffsetY ||
@@ -35,12 +36,13 @@
         }
         
         [self.avinput setMinFrameDuration:interval];
-    
+        
+        
         self.avinput.capturesCursor = false;
         self.avinput.capturesMouseClicks = false;
-        
-        [self.avcapturesession addOutput:output];
-        [output setSampleBufferDelegate:self queue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0)];
+       
+        [self.avcapturesession addOutput:self.output];
+        [self.output setSampleBufferDelegate:self queue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0)];
         [self.avcapturesession startRunning];
 
         return SL::Screen_Capture::DUPL_RETURN::DUPL_RETURN_SUCCESS;
@@ -63,6 +65,21 @@
 -(void) Stop{
     [self.avcapturesession stopRunning];
 }
+-(void) Pause{
+    if(self.Paused) return;
+    self.Paused = true;
+    if(self.output){
+        self.output.connections[0].enabled = NO;
+    }
+}
+-(void) Resume{
+    if(!self.Paused) return;
+    self.Paused = false;
+    if(self.output){
+        self.output.connections[0].enabled = YES;
+    } 
+}
+
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
     self.Working = true;
     if(!self.avcapturesession.isRunning){
@@ -102,6 +119,16 @@ namespace SL{
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     }
                     ptr = nullptr;
+                }
+            }
+            void Pause(){
+                if(ptr) {
+                     [ptr Pause];
+                }
+            }
+            void Resume(){
+                 if(ptr) {
+                    [ptr Resume];
                 }
             }
             void setMinFrameDuration(const std::chrono::microseconds& duration){
@@ -155,6 +182,16 @@ namespace SL{
                 return createdimpl->Init(parent, duration);
             }
             return DUPL_RETURN::DUPL_RETURN_ERROR_UNEXPECTED;
+        }
+        void Pause_(NSFrameProcessorImpl* p){
+            if(p){
+                return p->Pause();
+            }
+        }
+        void Resume_(NSFrameProcessorImpl* p){
+            if(p){
+                return p->Resume();
+            }
         }
     }
 }

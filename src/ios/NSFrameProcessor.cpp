@@ -29,5 +29,11 @@ namespace SL {
             }
             return DUPL_RETURN_SUCCESS;
         }
+        void NSFrameProcessor::Pause(){
+            Pause_(NSFrameProcessorImpl_);
+        }
+        void NSFrameProcessor::Resume(){
+              Resume_(NSFrameProcessorImpl_);
+        }
     }
 }

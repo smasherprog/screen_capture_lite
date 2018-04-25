@@ -97,6 +97,8 @@ namespace Screen_Capture {
     
         while (!data->CommonData_.TerminateThreadsEvent) {
             // get a copy of the shared_ptr in a safe way
+            
+            frameprocessor.Resume();
             auto timer = std::atomic_load(&data->ScreenCaptureData.FrameTimer);
             timer->start();
             auto monitors = GetMonitors();
@@ -107,7 +109,6 @@ namespace Screen_Capture {
                 // something happened, rebuild
                 ret = DUPL_RETURN_ERROR_EXPECTED;
             }
-
             if (ret != DUPL_RETURN_SUCCESS) {
                 if (ret == DUPL_RETURN_ERROR_EXPECTED) {
                     // The system is in a transition state so request the duplication be restarted
@@ -123,6 +124,7 @@ namespace Screen_Capture {
             }
             timer->wait();
             while (data->CommonData_.Paused) {
+                frameprocessor.Pause();
                 std::this_thread::sleep_for(50ms);
             }
         }

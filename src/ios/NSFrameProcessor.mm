@@ -55,6 +55,7 @@
     while(self.avcapturesession.isRunning || self.Working){
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+    [self.output release];
     [self.avinput release];
     [self.avcapturesession release];
     [super dealloc];

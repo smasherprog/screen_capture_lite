@@ -15,7 +15,14 @@ namespace Screen_Capture {
     {
         Window w;
         char buffer[sizeof(w.Name)];
-        GetWindowTextA(hwnd, buffer, sizeof(buffer));
+        { // exclude windows for current process
+			DWORD pid;
+			GetWindowThreadProcessId(hwnd, &pid);
+			if (pid != GetProcessId(GetCurrentProcess()))
+			{
+				GetWindowTextA(hwnd, buffer, sizeof(buffer));
+			}
+		}
         srch *s = (srch *)lParam;
         std::string name = buffer;
         w.Handle = reinterpret_cast<size_t>(hwnd);

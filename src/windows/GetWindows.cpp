@@ -18,7 +18,7 @@ namespace Screen_Capture {
         { // exclude windows for current process
 			DWORD pid;
 			GetWindowThreadProcessId(hwnd, &pid);
-			if (pid != GetProcessId(GetCurrentProcess()))
+			if (pid != GetCurrentProcessId())
 			{
 				GetWindowTextA(hwnd, buffer, sizeof(buffer));
 			}

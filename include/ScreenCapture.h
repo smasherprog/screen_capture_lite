@@ -24,6 +24,10 @@ namespace Screen_Capture {
         int x;
         int y;
     };
+    struct SC_LITE_EXTERN MousePoint {
+        Point Position;
+        Point HotSpot;
+    };
     struct SC_LITE_EXTERN Window {
         size_t Handle;
         Point Position;
@@ -139,7 +143,7 @@ namespace Screen_Capture {
 
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Monitor &monitor)> ScreenCaptureCallback;
-    typedef std::function<void(const SL::Screen_Capture::Image *img, const Point &point)> MouseCallback;
+    typedef std::function<void(const SL::Screen_Capture::Image *img, const MousePoint &mousepoint)> MouseCallback;
     typedef std::function<std::vector<Monitor>()> MonitorCallback;
     typedef std::function<std::vector<Window>()> WindowCallback;
 

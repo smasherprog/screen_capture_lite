@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <climits>
 #include <iostream>
 #include <locale>
 #include <string>
 #include <thread>
 #include <vector>
-#include <climits>
 
 // THESE LIBRARIES ARE HERE FOR CONVINIENCE!! They are SLOW and ONLY USED FOR
 // HOW THE LIBRARY WORKS!
@@ -49,7 +49,7 @@ inline std::ostream &operator<<(std::ostream &os, const SL::Screen_Capture::Imag
 inline std::ostream &operator<<(std::ostream &os, const SL::Screen_Capture::Monitor &p)
 {
     return os << "Id=" << p.Id << " Index=" << p.Index << " Height=" << p.Height << " Width=" << p.Width << " OffsetX=" << p.OffsetX
-        << " OffsetY=" << p.OffsetY << " Name=" << p.Name;
+              << " OffsetY=" << p.OffsetY << " Name=" << p.Name;
 }
 
 auto onNewFramestart = std::chrono::high_resolution_clock::now();
@@ -60,57 +60,53 @@ void createframegrabber()
     framgrabber = nullptr;
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
-        auto mons = SL::Screen_Capture::GetMonitors();
-        std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
-        for (auto &m : mons) {
-            std::cout << m << std::endl;
-        }
-        return mons;
-    })
-        ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-        // std::cout << "Difference detected!  " << img.Bounds << std::endl;
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
-        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-        //auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+            auto mons = SL::Screen_Capture::GetMonitors();
+            std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
+            for (auto &m : mons) {
+                std::cout << m << std::endl;
+            }
+            return mons;
+        })
+            ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
+                auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+                // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+            })
+            ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
 
-    })
-        ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
-
-        // auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-       //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
-            1000) {
-            std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
-            onNewFramecounter = 0;
-            onNewFramestart = std::chrono::high_resolution_clock::now();
-        }
-        onNewFramecounter += 1;
-    })
-        ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {
-
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string(" M") + std::string(".png");
-        if (img) {
-            // std::cout << "New mouse coordinates  AND NEW Image received." << " x= " << point.x << " y= " <<
-            // point.y << std::endl;
-            // lodepng::encode(s,StartSrc(*img), Width(*img), Height(*img));
-        }
-        else {
-            // std::cout << "New mouse coordinates received." << " x= " << point.x << " y= " << point.y << " The
-            // mouse image is still the same
-            // as the last" << std::endl;
-        }
-
-    })
-        ->start_capturing();
+                // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+                if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
+                    1000) {
+                    std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
+                    onNewFramecounter = 0;
+                    onNewFramestart = std::chrono::high_resolution_clock::now();
+                }
+                onNewFramecounter += 1;
+            })
+            ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint) {
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string(" M") + std::string(".png");
+                if (img) {
+                    // std::cout << "New mouse coordinates  AND NEW Image received." << " x= " << point.x << " y= " <<
+                    // point.y << std::endl;
+                    // lodepng::encode(s,StartSrc(*img), Width(*img), Height(*img));
+                }
+                else {
+                    // std::cout << "New mouse coordinates received." << " x= " << point.x << " y= " << point.y << " The
+                    // mouse image is still the same
+                    // as the last" << std::endl;
+                }
+            })
+            ->start_capturing();
 
     framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));
     framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
@@ -123,66 +119,63 @@ void createpartialframegrabber()
     framgrabber = nullptr;
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
-        auto mons = SL::Screen_Capture::GetMonitors();
-        std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
-        for (auto &m : mons) {
-            // capture just a 512x512 square...  USERS SHOULD MAKE SURE bounds are
-            // valid!!!!
-            SL::Screen_Capture::OffsetX(m, SL::Screen_Capture::OffsetX(m) + 512);
-            SL::Screen_Capture::OffsetY(m, SL::Screen_Capture::OffsetY(m) + 512);
-            SL::Screen_Capture::Height(m, 512);
-            SL::Screen_Capture::Width(m, 512);
-      
-            std::cout << m << std::endl;
-        }
-        return mons;
-    })
-        ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-        // std::cout << "Difference detected!  " << img.Bounds << std::endl;
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
-        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+            auto mons = SL::Screen_Capture::GetMonitors();
+            std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
+            for (auto &m : mons) {
+                // capture just a 512x512 square...  USERS SHOULD MAKE SURE bounds are
+                // valid!!!!
+                SL::Screen_Capture::OffsetX(m, SL::Screen_Capture::OffsetX(m) + 512);
+                SL::Screen_Capture::OffsetY(m, SL::Screen_Capture::OffsetY(m) + 512);
+                SL::Screen_Capture::Height(m, 512);
+                SL::Screen_Capture::Width(m, 512);
 
-        // auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-    })
-        ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                std::cout << m << std::endl;
+            }
+            return mons;
+        })
+            ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string("MONITORDIF_") + std::string(".jpg");
+                auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
 
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
+                // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+            })
+            ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
 
-        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-        assert(Height(img) == 512);
-        assert(Width(img) == 512);
-        // auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
-            1000) {
-            std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
-            onNewFramecounter = 0;
-            onNewFramestart = std::chrono::high_resolution_clock::now();
-        }
-        onNewFramecounter += 1;
-    })
-        ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {
-
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string(" M") + std::string(".png");
-        if (img) {
-            // std::cout << "New mouse coordinates  AND NEW Image received." << " x= " << point.x << " y= " <<
-            // point.y << std::endl;
-            // lodepng::encode(s,StartSrc(*img), Width(*img), Height(*img));
-        }
-        else {
-            // std::cout << "New mouse coordinates received." << " x= " << point.x << " y= " << point.y << " The
-            // mouse image is still the same
-            // as the last" << std::endl;
-        }
-
-    })
-        ->start_capturing();
+                auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+                assert(Height(img) == 512);
+                assert(Width(img) == 512);
+                // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+                if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
+                    1000) {
+                    std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
+                    onNewFramecounter = 0;
+                    onNewFramestart = std::chrono::high_resolution_clock::now();
+                }
+                onNewFramecounter += 1;
+            })
+            ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint) {
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string(" M") + std::string(".png");
+                if (img) {
+                    // std::cout << "New mouse coordinates  AND NEW Image received." << " x= " << point.x << " y= " <<
+                    // point.y << std::endl;
+                    // lodepng::encode(s,StartSrc(*img), Width(*img), Height(*img));
+                }
+                else {
+                    // std::cout << "New mouse coordinates received." << " x= " << point.x << " y= " << point.y << " The
+                    // mouse image is still the same
+                    // as the last" << std::endl;
+                }
+            })
+            ->start_capturing();
 
     framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));
     framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
@@ -195,70 +188,65 @@ void createwindowgrabber()
     framgrabber = nullptr;
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
-
-        auto windows = SL::Screen_Capture::GetWindows();
-        std::string srchterm = "cmake";
-        // convert to lower case for easier comparisons
-        std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
-        decltype(windows) filtereditems;
-        for (auto &a : windows) {
-            std::string name = a.Name;
-            std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
-            if (name.find(srchterm) != std::string::npos) {
-                filtereditems.push_back(a);
-                std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
+            auto windows = SL::Screen_Capture::GetWindows();
+            std::string srchterm = "cmake";
+            // convert to lower case for easier comparisons
+            std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
+            decltype(windows) filtereditems;
+            for (auto &a : windows) {
+                std::string name = a.Name;
+                std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
+                if (name.find(srchterm) != std::string::npos) {
+                    filtereditems.push_back(a);
+                    std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
+                }
             }
-        }
-        return filtereditems;
-    })
+            return filtereditems;
+        })
 
-        ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window) {
-        // std::cout << "Difference detected!  " << img.Bounds << std::endl;
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string("WINDIF_") + std::string(".jpg");
-        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+            ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window) {
+                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string("WINDIF_") + std::string(".jpg");
+                auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
 
-        /* auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-        */
-    })
-        ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window) {
+                /* auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+                */
+            })
+            ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window) {
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string("WINNEW_") + std::string(".jpg");
+                auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
 
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string("WINNEW_") + std::string(".jpg");
-        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+                // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
 
-        // auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-         //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
-            1000) {
-            std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
-            onNewFramecounter = 0;
-            onNewFramestart = std::chrono::high_resolution_clock::now();
-        }
-        onNewFramecounter += 1;
-
-    })
-        ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::Point &point) {
-
-        auto r = realcounter.fetch_add(1);
-        auto s = std::to_string(r) + std::string(" M") + std::string(".png");
-        if (img) {
-            // std::cout << "New mouse coordinates  AND NEW Image received." << " x= " << point.x << " y= " <<
-            // point.y << std::endl;
-            // lodepng::encode(s,StartSrc(*img), Width(*img), Height(*img));
-        }
-        else {
-            // std::cout << "New mouse coordinates received." << " x= " << point.x << " y= " << point.y << " The
-            // mouse image is still the same
-            // as the last" << std::endl;
-        }
-
-    })
-        ->start_capturing();
+                if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
+                    1000) {
+                    std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
+                    onNewFramecounter = 0;
+                    onNewFramestart = std::chrono::high_resolution_clock::now();
+                }
+                onNewFramecounter += 1;
+            })
+            ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint) {
+                auto r = realcounter.fetch_add(1);
+                auto s = std::to_string(r) + std::string(" M") + std::string(".png");
+                if (img) {
+                    // std::cout << "New mouse coordinates  AND NEW Image received." << " x= " << point.x << " y= " <<
+                    // point.y << std::endl;
+                    // lodepng::encode(s,StartSrc(*img), Width(*img), Height(*img));
+                }
+                else {
+                    // std::cout << "New mouse coordinates received." << " x= " << point.x << " y= " << point.y << " The
+                    // mouse image is still the same
+                    // as the last" << std::endl;
+                }
+            })
+            ->start_capturing();
 
     framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));
     framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
@@ -322,7 +310,6 @@ int main()
         }
     }
 
-
     std::cout << "Changing the cpature rate to 1 second" << std::endl;
     framgrabber->setFrameChangeInterval(std::chrono::seconds(1));
     std::this_thread::sleep_for(std::chrono::seconds(5));
@@ -343,19 +330,19 @@ int main()
     createframegrabber();
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    //4k image
+    // 4k image
     int height = 2160;
     int width = 3840;
     std::vector<SL::Screen_Capture::ImageBGRA> image1, image2;
-    image1.resize(height* width);
-    for (auto& a : image1) {
+    image1.resize(height * width);
+    for (auto &a : image1) {
         a.B = static_cast<unsigned short>(std::rand() % 255);
         a.A = static_cast<unsigned short>(std::rand() % 255);
         a.G = static_cast<unsigned short>(std::rand() % 255);
         a.R = static_cast<unsigned short>(std::rand() % 255);
     }
-    image2.resize(height* width);
-    for (auto& a : image2) {
+    image2.resize(height * width);
+    for (auto &a : image2) {
         a.B = static_cast<unsigned short>(std::rand() % 255);
         a.A = static_cast<unsigned short>(std::rand() % 255);
         a.G = static_cast<unsigned short>(std::rand() % 255);
@@ -363,12 +350,12 @@ int main()
     }
     long long durationaverage = 0;
     long long smallestduration = INT_MAX;
-    for (auto i = 0; i < 100; i++) {//run a few times to get an average
+    for (auto i = 0; i < 100; i++) { // run a few times to get an average
         auto starttime = std::chrono::high_resolution_clock::now();
-        auto difs = SL::Screen_Capture::GetDifs(
-            SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
-            SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
-        long long  d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+        auto difs =
+            SL::Screen_Capture::GetDifs(SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
+                                        SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
+        long long d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
         smallestduration = std::min(d, smallestduration);
         durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
     }
@@ -380,19 +367,18 @@ int main()
 
     durationaverage = 0;
     smallestduration = INT_MAX;
-    for (auto i = 0; i < 100; i++) {//run a few times to get an average
+    for (auto i = 0; i < 100; i++) { // run a few times to get an average
         auto starttime = std::chrono::high_resolution_clock::now();
-        auto difs = SL::Screen_Capture::GetDifs(
-            SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
-            SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
-        long long  d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+        auto difs =
+            SL::Screen_Capture::GetDifs(SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
+                                        SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
+        long long d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
         smallestduration = std::min(d, smallestduration);
         durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
     }
     durationaverage /= 100;
     std::cout << "Worst Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
     std::cout << "Worst Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
-
 
     return 0;
 }

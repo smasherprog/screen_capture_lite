@@ -13,17 +13,18 @@
 void SLScreen_Capture_InitMouseCapture(){
     [NSApplication sharedApplication];
 }
-CGImageRef SLScreen_Capture_GetCurrentMouseImage(){
-    CGImageRef img=NULL;
+SL_MouseCur SLScreen_Capture_GetCurrentMouseImage(){
+	SL_MouseCur ret= {}; 
  
     @autoreleasepool {
         NSCursor *cur = [NSCursor currentSystemCursor];
-        if(cur==nil) return img;
+        if(cur==nil) return ret;
         NSImage *overlay    =  [cur image];
         CGImageSourceRef source = CGImageSourceCreateWithData((CFDataRef)[overlay TIFFRepresentation], NULL);
-        img = CGImageSourceCreateImageAtIndex(source, 0, NULL);
+        ret.Image = CGImageSourceCreateImageAtIndex(source, 0, NULL);
+		ret.HotSpot = [cur hotSpot];
         CFRelease(source);
     }
  
-    return img;
+    return ret;
 } 

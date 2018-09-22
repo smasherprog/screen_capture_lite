@@ -68,6 +68,11 @@ namespace SL {
                 
             XFree(img);
 
+            int lastx = static_cast<int>(cursorInfo.ptScreenPos.x);
+            int lasty = static_cast<int>(cursorInfo.ptScreenPos.y);
+            MousePoint mousepoint = {};
+            mousepoint.Position = Point{lastx, lasty};
+            mousepoint.HotSpot = Point{static_cast<int>(img->xhot), static_cast<int>(img->yhot)};
 
             if (Data->ScreenCaptureData.OnMouseChanged) {
 
@@ -75,11 +80,11 @@ namespace SL {
                     
                 //if the mouse image is different, send the new image and swap the data 
                 if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), newsize) != 0) {
-                    Data->ScreenCaptureData.OnMouseChanged(&wholeimg, Point{x, y});
+                    Data->ScreenCaptureData.OnMouseChanged(&wholeimg, mousepoint);
                     std::swap(ImageBuffer, OldImageBuffer);
                 }
                 else if(Last_x != x || Last_y != y){
-                    Data->ScreenCaptureData.OnMouseChanged(nullptr, Point{x, y});
+                    Data->ScreenCaptureData.OnMouseChanged(nullptr, mousepoint);
                 }
                 Last_x = x;
                 Last_y = y;

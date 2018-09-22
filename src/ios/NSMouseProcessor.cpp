@@ -61,7 +61,7 @@ namespace Screen_Capture {
 
             MousePoint mousepoint = {};
             mousepoint.Position = Point{lastx, lasty};
-            mousepoint.HotSpot = Point{static_cast<int>(imageRef.HotSpot.x), static_cast<int>(imageRef.HotSpot.y)};
+            mousepoint.HotSpot = Point{imageRef.HotSpotx, imageRef.HotSpoty};
 
             // if the mouse image is different, send the new image and swap the data
 

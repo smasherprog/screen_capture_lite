@@ -3,7 +3,8 @@
 
 struct SL_MouseCur{
 	CGImageRef Image;
-	NSPoint HotSpot;
+	int HotSpotx;
+	int HotSpoty;
 };
 
 #ifdef __cplusplus

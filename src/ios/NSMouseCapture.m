@@ -22,7 +22,9 @@ struct SL_MouseCur SLScreen_Capture_GetCurrentMouseImage(){
         NSImage *overlay    =  [cur image];
         CGImageSourceRef source = CGImageSourceCreateWithData((CFDataRef)[overlay TIFFRepresentation], NULL);
         ret.Image = CGImageSourceCreateImageAtIndex(source, 0, NULL);
-		ret.HotSpot = [cur hotSpot];
+		NSPointp p = [cur hotSpot];
+		ret.HotSpotx = p.x;
+		ret.HotSpoty = p.y;
         CFRelease(source);
     }
  

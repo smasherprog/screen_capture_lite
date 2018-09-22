@@ -27,12 +27,12 @@ namespace Screen_Capture {
 
             auto imageRef = SLScreen_Capture_GetCurrentMouseImage();
 
-            if (imageRef == NULL)
+            if (imageRef.Image == NULL)
                 return Ret;
-            auto width = CGImageGetWidth(imageRef);
-            auto height = CGImageGetHeight(imageRef);
+            auto width = CGImageGetWidth(imageRef.Image);
+            auto height = CGImageGetHeight(imageRef.Image);
 
-            auto prov = CGImageGetDataProvider(imageRef);
+            auto prov = CGImageGetDataProvider(imageRef.Image);
 
             auto rawdatas = CGDataProviderCopyData(prov);
             auto buf = CFDataGetBytePtr(rawdatas);
@@ -48,7 +48,7 @@ namespace Screen_Capture {
             // this is not needed. It is freed when the image is released
             // CGDataProviderRelease(prov);
 
-            CGImageRelease(imageRef);
+            CGImageRelease(imageRef.Image);
 
             ImageRect imgrect;
             imgrect.left = imgrect.top = 0;

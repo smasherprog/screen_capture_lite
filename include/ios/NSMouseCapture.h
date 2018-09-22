@@ -4,7 +4,7 @@
 struct SL_MouseCur{
 	CGImageRef Image;
 	NSPoint HotSpot;
-}
+};
 
 #ifdef __cplusplus
 extern "C" {

@@ -99,11 +99,7 @@ namespace Screen_Capture
 
         auto wm_name = GetWMName(display, window);
         auto candidates = TextPropertyToStrings(display, wm_name.get());
-
-        auto name = candidates.empty() ? ""s : std::move(candidates.front());
-
-        auto w = Window{};
-
+        Window w = {};
         w.Handle = reinterpret_cast<size_t>(window);
 
         XWindowAttributes wndattr;
@@ -111,8 +107,9 @@ namespace Screen_Capture
 
         w.Position = Point{ wndattr.x, wndattr.y };
         w.Size = Point{ wndattr.width, wndattr.height };
-
-        strncpy(w.Name, name.c_str(), sizeof(w.Name) - 1);
+		
+        auto name = candidates.empty() ? ""s : std::move(candidates.front());
+        std::transform(name.begin(), name.end(), std::begin(w.Name), ::tolower);
         wnd.push_back(w);
     }
 

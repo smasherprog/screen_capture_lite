@@ -1,6 +1,7 @@
 #include "GDIHelpers.h"
-#include "internal/SCCommon.h"
 #include "ScreenCapture.h"
+#include "internal/SCCommon.h"
+#include <algorithm>
 
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
@@ -13,25 +14,26 @@ namespace Screen_Capture {
     };
     BOOL CALLBACK EnumWindowsProc(_In_ HWND hwnd, _In_ LPARAM lParam)
     {
-        Window w;
-        char buffer[sizeof(w.Name)];
-        { // exclude windows for current process
-			DWORD pid;
-			GetWindowThreadProcessId(hwnd, &pid);
-			if (pid != GetCurrentProcessId())
-			{
-				GetWindowTextA(hwnd, buffer, sizeof(buffer));
-			}
-		}
+        Window w = {};
+
+        DWORD pid;
+        GetWindowThreadProcessId(hwnd, &pid);
+        if (pid != GetCurrentProcessId()) {
+            auto textlen = GetWindowTextA(hwnd, w.Name, sizeof(w.Name));
+            // clamp the bounds
+            textlen = std::max(textlen - 1, static_cast<int>(sizeof(w.Name)) - 1);
+            textlen = std::min(textlen, 0);
+            w.Name[textlen] = '\n';
+        }
+
         srch *s = (srch *)lParam;
-        std::string name = buffer;
         w.Handle = reinterpret_cast<size_t>(hwnd);
         auto windowrect = SL::Screen_Capture::GetWindowRect(hwnd);
         w.Position.x = windowrect.ClientRect.left;
         w.Position.y = windowrect.ClientRect.top;
         w.Size.x = windowrect.ClientRect.right - windowrect.ClientRect.left;
         w.Size.y = windowrect.ClientRect.bottom - windowrect.ClientRect.top;
-        memcpy(w.Name, name.c_str(), name.size() + 1);
+        std::transform(std::begin(w.Name), std::end(w.Name), std::begin(w.Name), ::tolower);
         s->Found.push_back(w);
         return TRUE;
     }

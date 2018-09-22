@@ -48,14 +48,14 @@ namespace Screen_Capture
         CFIndex numWindows = CFArrayGetCount(windowList );
    
         for( int i = 0; i < (int)numWindows; i++ ) {
-            char buffer[400] ={0};
+            Window w = {};
             uint32_t windowid=0;
             auto dict = static_cast<CFDictionaryRef>(CFArrayGetValueAtIndex(windowList, i));
             auto cfwindowname = static_cast<CFStringRef>(CFDictionaryGetValue(dict, kCGWindowName));
-            CFStringGetCString(cfwindowname, buffer, 400, kCFStringEncodingUTF8);
-            std::string windowname=buffer;
-
-            Window w;
+            CFStringGetCString(cfwindowname, w.Name, sizeof(w.Name), kCFStringEncodingUTF8);
+            w.Name[sizeof(w.Name)-1] = '\n';
+     
+         
             CFNumberGetValue(static_cast<CFNumberRef>(CFDictionaryGetValue(dict, kCGWindowNumber)), kCFNumberIntType, &windowid);
             w.Handle = static_cast<size_t>(windowid);
                
@@ -66,8 +66,8 @@ namespace Screen_Capture
             w.Position.y = static_cast<int>(rect.origin.y);
                 
             w.Size.x = static_cast<int>(rect.size.width * xscale);
-            w.Size.y = static_cast<int>(rect.size.height* yscale);
-            memcpy(w.Name, windowname.c_str(), windowname.size() + 1);
+            w.Size.y = static_cast<int>(rect.size.height* yscale);  
+	        std::transform(std::begin(w.Name), std::end(w.Name), std::begin(w.Name), ::tolower); 
             ret.push_back(w);
         }
         CFRelease(windowList);

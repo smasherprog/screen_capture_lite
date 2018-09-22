@@ -13,8 +13,8 @@
 void SLScreen_Capture_InitMouseCapture(){
     [NSApplication sharedApplication];
 }
-SL_MouseCur SLScreen_Capture_GetCurrentMouseImage(){
-	SL_MouseCur ret= {}; 
+struct SL_MouseCur SLScreen_Capture_GetCurrentMouseImage(){
+	struct SL_MouseCur ret= {}; 
  
     @autoreleasepool {
         NSCursor *cur = [NSCursor currentSystemCursor];

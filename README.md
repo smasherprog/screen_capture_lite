@@ -1,4 +1,6 @@
-# screen capture lite
+<img src="Logotype primary.png" width="60%" height="60%" />
+
+<p>Above Logo created by https://github.com/mansya</p>
 <p>Master is where development happens and should NOT be considered stable. Use tags for stable releases.</p>
 <p>Linux/Mac <img src="https://travis-ci.org/smasherprog/screen_capture_lite.svg?branch=master" /></p>
 <p>Windows <img src="https://ci.appveyor.com/api/projects/status/6nlqo1csbkgdxorx"/><p>

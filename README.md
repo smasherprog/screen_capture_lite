@@ -30,7 +30,7 @@ auto framgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
   
   })->onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
   
-  })->onMouseChanged([&](const SL::Screen_Capture::Image* img, const SL::Screen_Capture::Point& point) {
+  })->onMouseChanged([&](const SL::Screen_Capture::Image* img, const SL::Screen_Capture::MousePoint &mousepoint) {
   
   })->start_capturing();
 
@@ -57,7 +57,7 @@ auto windowframgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
   
   })->onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Window& window) {
   
-  })->onMouseChanged([&](const SL::Screen_Capture::Image* img, const SL::Screen_Capture::Point& point) {
+  })->onMouseChanged([&](const SL::Screen_Capture::Image* img, const SL::Screen_Capture::MousePoint &mousepoint) {
   
   })->start_capturing();
 

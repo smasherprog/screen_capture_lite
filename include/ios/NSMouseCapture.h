@@ -1,11 +1,12 @@
 #ifndef Header_h
 #define Header_h
-#ifdef __cplusplus
+
 struct SL_MouseCur{
 	CGImageRef Image;
 	NSPoint HotSpot;
 }
 
+#ifdef __cplusplus
 extern "C" {
 #endif
     void SLScreen_Capture_InitMouseCapture();

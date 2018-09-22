@@ -63,15 +63,11 @@ namespace SL {
             unsigned int mask = 0;
             XID child_win, root_win;
             XQueryPointer(SelectedDisplay, RootWindow, &child_win, &root_win, &root_x, &root_y, &x, &y, &mask);
-            x -= img->xhot;
-            y -= img->yhot;
                 
             XFree(img);
-
-            int lastx = static_cast<int>(cursorInfo.ptScreenPos.x);
-            int lasty = static_cast<int>(cursorInfo.ptScreenPos.y);
+             
             MousePoint mousepoint = {};
-            mousepoint.Position = Point{lastx, lasty};
+            mousepoint.Position = Point{x, y};
             mousepoint.HotSpot = Point{static_cast<int>(img->xhot), static_cast<int>(img->yhot)};
 
             if (Data->ScreenCaptureData.OnMouseChanged) {

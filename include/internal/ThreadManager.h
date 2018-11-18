@@ -38,7 +38,11 @@ namespace Screen_Capture {
             // get a copy of the shared_ptr in a safe way
 
             std::shared_ptr<Timer> timer;
+            #if defined(__GNUC__) && __GNUC__ > 6
             if constexpr(sizeof...(args) == 1) {
+            #else
+            if (sizeof...(args) == 1) {
+            #endif
                 timer = std::atomic_load(&data->WindowCaptureData.MouseTimer);
             }
             else {

@@ -95,10 +95,10 @@ void createframegrabber()
             ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint) {
                 auto r = realcounter.fetch_add(1);
                 auto s = std::to_string(r) + std::string(" M") + std::string(".png");
-                if (img) {
-                    // std::cout << "New mouse coordinates  AND NEW Image received." << " x= " << point.x << " y= " <<
-                    // point.y << std::endl;
-                    // lodepng::encode(s,StartSrc(*img), Width(*img), Height(*img));
+                if (img) {/*
+                    std::cout << "New mouse coordinates  AND NEW Image received."
+                              << " x= " << mousepoint.Position.x << " y= " << mousepoint.Position.y << std::endl;
+                    lodepng::encode(s, (unsigned char*)StartSrc(*img), Width(*img), Height(*img));*/
                 }
                 else {
                     // std::cout << "New mouse coordinates received." << " x= " << point.x << " y= " << point.y << " The
@@ -164,10 +164,10 @@ void createpartialframegrabber()
             ->onMouseChanged([&](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint) {
                 auto r = realcounter.fetch_add(1);
                 auto s = std::to_string(r) + std::string(" M") + std::string(".png");
-                if (img) {
-                    // std::cout << "New mouse coordinates  AND NEW Image received." << " x= " << point.x << " y= " <<
-                    // point.y << std::endl;
-                    // lodepng::encode(s,StartSrc(*img), Width(*img), Height(*img));
+                if (img) {/*
+                    std::cout << "New mouse coordinates  AND NEW Image received."
+                              << " x= " << mousepoint.Position.x << " y= " << mousepoint.Position.y << std::endl;
+                    lodepng::encode(s, (unsigned char *)StartSrc(*img), Width(*img), Height(*img));*/
                 }
                 else {
                     // std::cout << "New mouse coordinates received." << " x= " << point.x << " y= " << point.y << " The

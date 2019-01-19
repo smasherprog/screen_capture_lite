@@ -15,7 +15,7 @@
 <li>Linux</li>
 </ul>
 
-<p>The image format is raw BGRA 32 bits per pixel. Alpha is unused! <p>
+<p>The image format is raw BGRA 32 bits per pixel. Alpha is unused for onNewFrame and onFrameChanged except for onMouseChanged where it IS USED! <p>
 <p>The data exists like this if you were to march through with a for loop [A,R,G,B], [A,R,G,B], [A,R,G,B]. For a read on why this is check out the post here <a href="https://stackoverflow.com/questions/8104461/pixelformat-format32bppargb-seems-to-have-wrong-byte-order">post here</a><p>
 
 <h2>Example</h2>

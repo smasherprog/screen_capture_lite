@@ -18,6 +18,7 @@ namespace Screen_Capture {
 
         DWORD pid;
         GetWindowThreadProcessId(hwnd, &pid);
+        w.Name[0] = '\n';
         if (pid != GetCurrentProcessId()) {
             auto textlen = GetWindowTextA(hwnd, w.Name, sizeof(w.Name));
         }

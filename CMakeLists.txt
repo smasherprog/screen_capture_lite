@@ -142,4 +142,6 @@ install (FILES
 	DESTINATION include
 )
 enable_testing() 
-add_subdirectory(Example) 
+if (${BUILD_EXAMPLE})
+  add_subdirectory(Example) 
+endif()

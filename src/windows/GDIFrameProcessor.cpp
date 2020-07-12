@@ -82,6 +82,90 @@ namespace Screen_Capture {
         return Ret;
     }
 
+    static bool IsChildWindowToComposite( HWND rootWindow, HWND candidate ) {
+        if (rootWindow == candidate)
+            return false;
+
+        if (!IsWindowVisible(candidate))
+            return false;
+
+        LONG exStyle = GetWindowLong(candidate, GWL_EXSTYLE);
+        return 0 != (exStyle & WS_EX_NOREDIRECTIONBITMAP);
+    }
+
+    static bool IsTopLevelWindowToComposite(HWND rootWindow, HWND candidate)
+    {
+        if (!IsWindowVisible(candidate))
+            return false;
+
+        // make sure it's a popup
+        LONG style = GetWindowLong(candidate, GWL_STYLE);
+        if (0 == (style & WS_POPUP) ) {
+            return false;
+        }
+
+        // sometimes ownership is described to Windows
+        if (GetAncestor(candidate, GA_ROOTOWNER) == rootWindow) {
+            return true;
+        }
+
+        // for some popups we can use being owned by the same thread as a proxy for
+        // ownership
+        DWORD topLevelPid = 0;
+        DWORD topLevelTid = GetWindowThreadProcessId(rootWindow, &topLevelPid);
+        DWORD enumPid = 0;
+        DWORD enumTid = GetWindowThreadProcessId(candidate, &enumPid);
+
+        if (enumTid != 0 && enumTid == topLevelTid && enumPid == topLevelPid) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static std::vector<HWND> CollectWindowsToComposite(HWND hRootWindow)
+    {
+         DWORD topLevelPid = 0;
+        DWORD topLevelTid = GetWindowThreadProcessId(hRootWindow, &topLevelPid);
+
+        std::vector<HWND> compositeWindows;
+
+        // find all top level popup windows that belong to this window and capture those
+        auto fnTopLevelCallback = [&hRootWindow, &compositeWindows, topLevelPid, topLevelTid](HWND hwnd, LPARAM unused) {
+            (void)unused;
+
+            // EnumWindows calls the callback with windows in top-down order,
+            // so once we reach our target window we've been called with all its
+            // children already
+            if (hwnd == hRootWindow)
+                return FALSE;
+
+            if ( IsTopLevelWindowToComposite( hRootWindow, hwnd )) {
+                compositeWindows.push_back(hwnd);
+            }
+
+            return TRUE;
+        };
+         EnumWindows([]( HWND hwnd, LPARAM callbackParam) { return (*static_cast<decltype(fnTopLevelCallback) *>((void *)callbackParam))(hwnd, 0); },
+                    (LPARAM)&fnTopLevelCallback);
+
+        // find all child popup windows that need compositing
+        auto fnChildCallback = [&hRootWindow, &compositeWindows, topLevelPid, topLevelTid](HWND hwnd, LPARAM unused) {
+            (void)unused;
+
+            if (IsChildWindowToComposite(hRootWindow, hwnd)) {
+                compositeWindows.push_back(hwnd);
+            }
+
+            return TRUE;
+        };
+         EnumChildWindows(
+             hRootWindow, [](HWND hwnd, LPARAM callbackParam) { return (*static_cast<decltype(fnChildCallback) *>((void *)callbackParam))(hwnd, 0); },
+            (LPARAM)&fnChildCallback);
+
+         return compositeWindows;
+    }
+
     DUPL_RETURN GDIFrameProcessor::ProcessFrame(Window &selectedwindow)
     {
         auto Ret = DUPL_RETURN_SUCCESS;
@@ -104,12 +188,28 @@ namespace Screen_Capture {
         auto left = -windowrect.ClientBorder.left;
         auto top = -windowrect.ClientBorder.top;
 
-        if (BitBlt(CaptureDC.DC, left, top, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY) == FALSE) {
+        if (BitBlt(CaptureDC.DC, left, top, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
             // if the screen cannot be captured, return
             SelectObject(CaptureDC.DC, originalBmp);
             return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED; // likely a permission issue
         }
         else {
+            std::vector<HWND> childrenToComposite = CollectWindowsToComposite((HWND)selectedwindow.Handle);
+            
+            // list is ordered topmost to bottommost, so we visit them in reverse order to let painter's algorithm work
+            for ( auto child = childrenToComposite.rbegin(); child != childrenToComposite.rend(); child++ ) {
+                auto childRect = SL::Screen_Capture::GetWindowRect( *child );
+
+                HDC srcDC = GetWindowDC(*child);
+
+                // if this fails we just won't composite this window, so continue with the others to get what we can
+                BitBlt(CaptureDC.DC, childRect.ClientRect.left - windowrect.ClientRect.left, childRect.ClientRect.top - windowrect.ClientRect.top,
+                       childRect.ClientRect.right - childRect.ClientRect.left, childRect.ClientRect.bottom - childRect.ClientRect.top, 
+                       srcDC, 0, 0,
+                       SRCCOPY | CAPTUREBLT);
+
+                ReleaseDC(*child, srcDC);
+            }
 
             BITMAPINFOHEADER bi;
             memset(&bi, 0, sizeof(bi));

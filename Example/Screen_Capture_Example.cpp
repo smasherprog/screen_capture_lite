@@ -189,7 +189,7 @@ void createwindowgrabber()
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
             auto windows = SL::Screen_Capture::GetWindows();
-            std::string srchterm = "cmake";
+            std::string srchterm = "steam";
             // convert to lower case for easier comparisons
             std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
             decltype(windows) filtereditems;
@@ -210,10 +210,10 @@ void createwindowgrabber()
                 auto s = std::to_string(r) + std::string("WINDIF_") + std::string(".jpg");
                 auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
 
-                /* auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                 auto imgbuffer(std::make_unique<unsigned char[]>(size));
                 ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
                 tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-                */
+                
             })
             ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window) {
                 auto r = realcounter.fetch_add(1);
@@ -282,103 +282,103 @@ int main()
     createwindowgrabber();
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    std::cout << "Running Partial display capturing for 10 seconds" << std::endl;
-    createpartialframegrabber();
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    //std::cout << "Running Partial display capturing for 10 seconds" << std::endl;
+    //createpartialframegrabber();
+    //std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    std::cout << "Pausing for 10 seconds. " << std::endl;
-    framgrabber->pause();
-    auto counti = 0;
-    while (counti++ < 10) {
-        assert(framgrabber->isPaused());
-        std::cout << " . ";
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
+    //std::cout << "Pausing for 10 seconds. " << std::endl;
+    //framgrabber->pause();
+    //auto counti = 0;
+    //while (counti++ < 10) {
+    //    assert(framgrabber->isPaused());
+    //    std::cout << " . ";
+    //    std::this_thread::sleep_for(std::chrono::seconds(1));
+    //}
 
-    std::cout << std::endl << "Resuming  . . . for 5 seconds" << std::endl;
-    framgrabber->resume();
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    //std::cout << std::endl << "Resuming  . . . for 5 seconds" << std::endl;
+    //framgrabber->resume();
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    std::cout << "Testing changing the interval during runtime for race conditions " << std::endl;
+    //std::cout << "Testing changing the interval during runtime for race conditions " << std::endl;
 
-    // HAMMER THE SET FRAME INTERVAL FOR RACE CONDITIONS!!
-    auto start = std::chrono::high_resolution_clock::now();
-    while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start).count() < 10) {
-        for (auto t = 0; t < 100; t++) {
-            framgrabber->setFrameChangeInterval(std::chrono::microseconds(100));
-            framgrabber->setMouseChangeInterval(std::chrono::microseconds(100));
-        }
-    }
+    //// HAMMER THE SET FRAME INTERVAL FOR RACE CONDITIONS!!
+    //auto start = std::chrono::high_resolution_clock::now();
+    //while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start).count() < 10) {
+    //    for (auto t = 0; t < 100; t++) {
+    //        framgrabber->setFrameChangeInterval(std::chrono::microseconds(100));
+    //        framgrabber->setMouseChangeInterval(std::chrono::microseconds(100));
+    //    }
+    //}
 
-    std::cout << "Changing the cpature rate to 1 second" << std::endl;
-    framgrabber->setFrameChangeInterval(std::chrono::seconds(1));
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    //std::cout << "Changing the cpature rate to 1 second" << std::endl;
+    //framgrabber->setFrameChangeInterval(std::chrono::seconds(1));
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    std::cout << "Setting timer using chrono literals" << std::endl;
-    // You can use chron's literals as well!
-    framgrabber->setFrameChangeInterval(10ms);
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    //std::cout << "Setting timer using chrono literals" << std::endl;
+    //// You can use chron's literals as well!
+    //framgrabber->setFrameChangeInterval(10ms);
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    std::cout << "Testing recreating" << std::endl;
-    createframegrabber();
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    //std::cout << "Testing recreating" << std::endl;
+    //createframegrabber();
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    std::cout << "Testing destroy" << std::endl;
-    framgrabber = nullptr;
+    //std::cout << "Testing destroy" << std::endl;
+    //framgrabber = nullptr;
 
-    std::cout << "Testing recreating" << std::endl;
-    createframegrabber();
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    //std::cout << "Testing recreating" << std::endl;
+    //createframegrabber();
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    // 4k image
-    int height = 2160;
-    int width = 3840;
-    std::vector<SL::Screen_Capture::ImageBGRA> image1, image2;
-    image1.resize(height * width);
-    for (auto &a : image1) {
-        a.B = static_cast<unsigned short>(std::rand() % 255);
-        a.A = static_cast<unsigned short>(std::rand() % 255);
-        a.G = static_cast<unsigned short>(std::rand() % 255);
-        a.R = static_cast<unsigned short>(std::rand() % 255);
-    }
-    image2.resize(height * width);
-    for (auto &a : image2) {
-        a.B = static_cast<unsigned short>(std::rand() % 255);
-        a.A = static_cast<unsigned short>(std::rand() % 255);
-        a.G = static_cast<unsigned short>(std::rand() % 255);
-        a.R = static_cast<unsigned short>(std::rand() % 255);
-    }
-    long long durationaverage = 0;
-    long long smallestduration = INT_MAX;
-    for (auto i = 0; i < 100; i++) { // run a few times to get an average
-        auto starttime = std::chrono::high_resolution_clock::now();
-        auto difs =
-            SL::Screen_Capture::GetDifs(SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
-                                        SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
-        long long d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
-        smallestduration = std::min(d, smallestduration);
-        durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
-    }
-    durationaverage /= 100;
-    std::cout << "Best Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
-    std::cout << "Best Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
-    memset(image1.data(), 5, image1.size() * sizeof(SL::Screen_Capture::ImageBGRA));
-    memset(image2.data(), 5, image2.size() * sizeof(SL::Screen_Capture::ImageBGRA));
+    //// 4k image
+    //int height = 2160;
+    //int width = 3840;
+    //std::vector<SL::Screen_Capture::ImageBGRA> image1, image2;
+    //image1.resize(height * width);
+    //for (auto &a : image1) {
+    //    a.B = static_cast<unsigned short>(std::rand() % 255);
+    //    a.A = static_cast<unsigned short>(std::rand() % 255);
+    //    a.G = static_cast<unsigned short>(std::rand() % 255);
+    //    a.R = static_cast<unsigned short>(std::rand() % 255);
+    //}
+    //image2.resize(height * width);
+    //for (auto &a : image2) {
+    //    a.B = static_cast<unsigned short>(std::rand() % 255);
+    //    a.A = static_cast<unsigned short>(std::rand() % 255);
+    //    a.G = static_cast<unsigned short>(std::rand() % 255);
+    //    a.R = static_cast<unsigned short>(std::rand() % 255);
+    //}
+    //long long durationaverage = 0;
+    //long long smallestduration = INT_MAX;
+    //for (auto i = 0; i < 100; i++) { // run a few times to get an average
+    //    auto starttime = std::chrono::high_resolution_clock::now();
+    //    auto difs =
+    //        SL::Screen_Capture::GetDifs(SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
+    //                                    SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
+    //    long long d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+    //    smallestduration = std::min(d, smallestduration);
+    //    durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+    //}
+    //durationaverage /= 100;
+    //std::cout << "Best Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
+    //std::cout << "Best Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
+    //memset(image1.data(), 5, image1.size() * sizeof(SL::Screen_Capture::ImageBGRA));
+    //memset(image2.data(), 5, image2.size() * sizeof(SL::Screen_Capture::ImageBGRA));
 
-    durationaverage = 0;
-    smallestduration = INT_MAX;
-    for (auto i = 0; i < 100; i++) { // run a few times to get an average
-        auto starttime = std::chrono::high_resolution_clock::now();
-        auto difs =
-            SL::Screen_Capture::GetDifs(SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
-                                        SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
-        long long d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
-        smallestduration = std::min(d, smallestduration);
-        durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
-    }
-    durationaverage /= 100;
-    std::cout << "Worst Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
-    std::cout << "Worst Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
+    //durationaverage = 0;
+    //smallestduration = INT_MAX;
+    //for (auto i = 0; i < 100; i++) { // run a few times to get an average
+    //    auto starttime = std::chrono::high_resolution_clock::now();
+    //    auto difs =
+    //        SL::Screen_Capture::GetDifs(SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image1.data()),
+    //                                    SL::Screen_Capture::CreateImage(SL::Screen_Capture::ImageRect(0, 0, width, height), 0, image2.data()));
+    //    long long d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+    //    smallestduration = std::min(d, smallestduration);
+    //    durationaverage += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - starttime).count();
+    //}
+    //durationaverage /= 100;
+    //std::cout << "Worst Case -- Time to get diffs " << durationaverage << " microseconds" << std::endl;
+    //std::cout << "Worst Case -- Lowest Time " << smallestduration << " microseconds" << std::endl;
 
     return 0;
 }

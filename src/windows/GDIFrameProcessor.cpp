@@ -188,44 +188,52 @@ namespace Screen_Capture {
         auto left = -windowrect.ClientBorder.left;
         auto top = -windowrect.ClientBorder.top;
 
-        if (BitBlt(CaptureDC.DC, left, top, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT) == FALSE) {
+        BOOL result = PrintWindow((HWND)selectedwindow.Handle, CaptureDC.DC, PW_RENDERFULLCONTENT );
+
+        if ( !result ) {
+            result = BitBlt(CaptureDC.DC, left, top, ret.right, ret.bottom, MonitorDC.DC, 0, 0, SRCCOPY | CAPTUREBLT);
+        }
+
+        if ( !result ) {
             // if the screen cannot be captured, return
             SelectObject(CaptureDC.DC, originalBmp);
             return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED; // likely a permission issue
         }
-        else {
-            std::vector<HWND> childrenToComposite = CollectWindowsToComposite((HWND)selectedwindow.Handle);
-            
-            // list is ordered topmost to bottommost, so we visit them in reverse order to let painter's algorithm work
-            for ( auto child = childrenToComposite.rbegin(); child != childrenToComposite.rend(); child++ ) {
-                auto childRect = SL::Screen_Capture::GetWindowRect( *child );
 
-                HDC srcDC = GetWindowDC(*child);
+        //std::vector<HWND> childrenToComposite = CollectWindowsToComposite((HWND)selectedwindow.Handle);
+        //
+        //// list is ordered topmost to bottommost, so we visit them in reverse order to let painter's algorithm work
+        //for ( auto child = childrenToComposite.rbegin(); child != childrenToComposite.rend(); child++ ) {
+        //    auto childRect = SL::Screen_Capture::GetWindowRect( *child );
 
-                // if this fails we just won't composite this window, so continue with the others to get what we can
-                BitBlt(CaptureDC.DC, childRect.ClientRect.left - windowrect.ClientRect.left, childRect.ClientRect.top - windowrect.ClientRect.top,
-                       childRect.ClientRect.right - childRect.ClientRect.left, childRect.ClientRect.bottom - childRect.ClientRect.top, 
-                       srcDC, 0, 0,
-                       SRCCOPY | CAPTUREBLT);
+        //    HDC srcDC = GetWindowDC(*child);
 
-                ReleaseDC(*child, srcDC);
-            }
+        //    // if this fails we just won't composite this window, so continue with the others to get what we can
+        //    BOOL childBlitSuccess = BitBlt(CaptureDC.DC, childRect.ClientRect.left - windowrect.ClientRect.left, childRect.ClientRect.top - windowrect.ClientRect.top,
+        //           childRect.ClientRect.right - childRect.ClientRect.left, childRect.ClientRect.bottom - childRect.ClientRect.top, 
+        //           srcDC, 0, 0,
+        //           SRCCOPY | CAPTUREBLT);
+        //    if ( !childBlitSuccess ) {
+        //        DWORD err = GetLastError();
+        //    }
 
-            BITMAPINFOHEADER bi;
-            memset(&bi, 0, sizeof(bi));
+        //    ReleaseDC(*child, srcDC);
+        //}
 
-            bi.biSize = sizeof(BITMAPINFOHEADER);
+        BITMAPINFOHEADER bi;
+        memset(&bi, 0, sizeof(bi));
 
-            bi.biWidth = Width(ret);
-            bi.biHeight = -Height(ret);
-            bi.biPlanes = 1;
-            bi.biBitCount = sizeof(ImageBGRA) * 8; // always 32 bits damnit!!!
-            bi.biCompression = BI_RGB;
-            bi.biSizeImage = ((Width(ret) * bi.biBitCount + 31) / (sizeof(ImageBGRA) * 8)) * sizeof(ImageBGRA)  * Height(ret);
-            GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)Height(ret), NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
-            SelectObject(CaptureDC.DC, originalBmp);
-            ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, NewImageBuffer.get(), Width(selectedwindow)* sizeof(ImageBGRA));
-        }
+        bi.biSize = sizeof(BITMAPINFOHEADER);
+
+        bi.biWidth = Width(ret);
+        bi.biHeight = -Height(ret);
+        bi.biPlanes = 1;
+        bi.biBitCount = sizeof(ImageBGRA) * 8; // always 32 bits damnit!!!
+        bi.biCompression = BI_RGB;
+        bi.biSizeImage = ((Width(ret) * bi.biBitCount + 31) / (sizeof(ImageBGRA) * 8)) * sizeof(ImageBGRA)  * Height(ret);
+        GetDIBits(MonitorDC.DC, CaptureBMP.Bitmap, 0, (UINT)Height(ret), NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
+        SelectObject(CaptureDC.DC, originalBmp);
+        ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, NewImageBuffer.get(), Width(selectedwindow)* sizeof(ImageBGRA));
 
         return Ret;
     }

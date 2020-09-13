@@ -30,6 +30,7 @@ namespace Screen_Capture {
         w.Position.y = windowrect.ClientRect.top;
         w.Size.x = windowrect.ClientRect.right - windowrect.ClientRect.left;
         w.Size.y = windowrect.ClientRect.bottom - windowrect.ClientRect.top;
+
         std::transform(std::begin(w.Name), std::end(w.Name), std::begin(w.Name), ::tolower);
         s->Found.push_back(w);
         return TRUE;

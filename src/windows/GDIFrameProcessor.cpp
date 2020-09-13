@@ -27,7 +27,6 @@ namespace Screen_Capture {
         str.cbSize = sizeof(str);
         str.iMinAnimate = 0;
         SystemParametersInfo(SPI_SETANIMATION, sizeof(str), (void *)&str, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
-
         SelectedWindow = reinterpret_cast<HWND>(selectedwindow.Handle);
         auto Ret = DUPL_RETURN_SUCCESS;
         NewImageBuffer = std::make_unique<unsigned char[]>(ImageBufferSize);
@@ -221,10 +220,8 @@ namespace Screen_Capture {
         //}
 
         BITMAPINFOHEADER bi;
-        memset(&bi, 0, sizeof(bi));
-
-        bi.biSize = sizeof(BITMAPINFOHEADER);
-
+        memset(&bi, 0, sizeof(bi)); 
+        bi.biSize = sizeof(BITMAPINFOHEADER); 
         bi.biWidth = Width(ret);
         bi.biHeight = -Height(ret);
         bi.biPlanes = 1;

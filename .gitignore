@@ -232,3 +232,4 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+.vs/*

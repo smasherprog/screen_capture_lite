@@ -189,7 +189,7 @@ void createwindowgrabber()
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
             auto windows = SL::Screen_Capture::GetWindows();
-            std::string srchterm = "cmake";
+            std::string srchterm = "blizzard";
             // convert to lower case for easier comparisons
             std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
             decltype(windows) filtereditems;
@@ -201,28 +201,19 @@ void createwindowgrabber()
                     std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
                 }
             }
+
             return filtereditems;
         })
 
-            ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window) {
-                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
-                auto r = realcounter.fetch_add(1);
-                auto s = std::to_string(r) + std::string("WINDIF_") + std::string(".jpg");
-                auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
 
-                /* auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
-                */
-            })
             ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window) {
                 auto r = realcounter.fetch_add(1);
                 auto s = std::to_string(r) + std::string("WINNEW_") + std::string(".jpg");
                 auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
 
-                // auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
+                 //auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                 //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                 //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char*)imgbuffer.get());
 
                 if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
                     1000) {
@@ -251,8 +242,9 @@ void createwindowgrabber()
     framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));
     framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
 }
+
 int main()
-{
+{ 
     std::srand(std::time(nullptr));
     std::cout << "Starting Capture Demo/Test" << std::endl;
     std::cout << "Testing captured monitor bounds check" << std::endl;

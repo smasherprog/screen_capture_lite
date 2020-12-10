@@ -109,7 +109,6 @@ namespace Screen_Capture
         w.Size = Point{ wndattr.width, wndattr.height };
 		
         auto name = candidates.empty() ? ""s : std::move(candidates.front());
-        std::transform(name.begin(), name.end(), std::begin(w.Name), ::tolower);
         wnd.push_back(w);
     }
 

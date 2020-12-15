@@ -113,12 +113,12 @@ namespace SL{
             ~NSFrameProcessorImpl(){
                 if(ptr) {
                     [ptr Stop];
-                    [ptr release];
                     auto r = CFGetRetainCount(ptr);
                     while(r!=1){
                         r = CFGetRetainCount(ptr);
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     }
+                    [ptr release];
                     ptr = nullptr;
                 }
             }

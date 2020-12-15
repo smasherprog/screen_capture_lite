@@ -224,6 +224,8 @@ namespace SL {
         int OffsetY(const Window &mointor) { return mointor.Position.y; }
         void OffsetX(Window &mointor, int x) { mointor.Position.x = x; }
         void OffsetY(Window &mointor, int y) { mointor.Position.y = y; }
+        int OffsetX(const Image &img) { return img.Bounds.left; }
+        int OffsetY(const Image &img) { return img.Bounds.top; }
         const char *Name(const Monitor &mointor) { return mointor.Name; }
         const char *Name(const Window &mointor) { return mointor.Name; }
         int Height(const Monitor &mointor) { return mointor.Height; }

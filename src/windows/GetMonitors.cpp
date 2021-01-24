@@ -1,7 +1,6 @@
 #include "ScreenCapture.h"
 #include "internal/SCCommon.h"
 #include <DXGI.h>
-#include <codecvt>
 
 namespace SL {
 namespace Screen_Capture {
@@ -43,8 +42,12 @@ namespace Screen_Capture {
                     pOutput->GetDesc(&desc);
                     pOutput->Release();
                     std::wstring wname = desc.DeviceName;
-                    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> conv;
-                    auto name = conv.to_bytes(wname);
+                    auto size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wname[0], wname.size(), NULL, 0, NULL, NULL);
+                    std::string name = std::string(size, 0);
+                    WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wname[0], wname.size(), &name[0], size, NULL, NULL);
+                    if (name.size() > static_cast<decltype(size)>(sizeof(Monitor::Name))) {
+                        name.resize(sizeof(Monitor::Name));
+                    }
                     DEVMODEW devMode = {};
                     EnumDisplaySettingsW(desc.DeviceName, ENUM_CURRENT_SETTINGS, &devMode);
 

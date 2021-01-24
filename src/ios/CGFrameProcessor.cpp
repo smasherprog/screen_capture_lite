@@ -43,7 +43,6 @@ namespace Screen_Capture {
         auto rawdatas = CGDataProviderCopyData(prov);
         auto buf = CFDataGetBytePtr(rawdatas);
 
-        auto datalen = width * height * sizeof(ImageBGRA);
 		ProcessCapture(Data->WindowCaptureData, *this, window, buf, bytesperrow);
 	  
         CFRelease(rawdatas);

@@ -20,7 +20,7 @@ namespace Screen_Capture {
         GetWindowThreadProcessId(hwnd, &pid);
         w.Name[0] = '\n';
         if (pid != GetCurrentProcessId()) {
-            auto textlen = GetWindowTextA(hwnd, w.Name, sizeof(w.Name));
+            GetWindowTextA(hwnd, w.Name, sizeof(w.Name));
         }
 
         srch *s = (srch *)lParam;
@@ -31,7 +31,7 @@ namespace Screen_Capture {
         w.Size.x = windowrect.ClientRect.right - windowrect.ClientRect.left;
         w.Size.y = windowrect.ClientRect.bottom - windowrect.ClientRect.top;
 
-        std::transform(std::begin(w.Name), std::end(w.Name), std::begin(w.Name), ::tolower);
+        std::transform(std::begin(w.Name), std::end(w.Name), std::begin(w.Name), [](char c) { return static_cast<char>(std::tolower(c)); });
         s->Found.push_back(w);
         return TRUE;
     }

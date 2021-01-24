@@ -42,9 +42,9 @@ namespace Screen_Capture {
                     pOutput->GetDesc(&desc);
                     pOutput->Release();
                     std::wstring wname = desc.DeviceName;
-                    auto size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wname[0], wname.size(), NULL, 0, NULL, NULL);
+                    auto size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wname[0], static_cast<int>(wname.size()), NULL, 0, NULL, NULL);
                     std::string name = std::string(size, 0);
-                    WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wname[0], wname.size(), &name[0], size, NULL, NULL);
+                    WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wname[0], wname.size(), &name[0], static_cast<int>(size), NULL, NULL);
                     if (name.size() > static_cast<decltype(size)>(sizeof(Monitor::Name))) {
                         name.resize(sizeof(Monitor::Name));
                     }

@@ -7,7 +7,7 @@ matrix:
       compiler: clang
     - os: linux 
       env: CLANG_VERSION=12.0 BUILD_TYPE=Release
-      addons: 
+      addons: &clang12
         apt:
           packages:
             - clang-12

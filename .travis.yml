@@ -6,11 +6,11 @@ matrix:
       osx_image: xcode12.2
       compiler: clang
     - os: linux 
-      env: CLANG_VERSION=12.0 BUILD_TYPE=Release
-      addons: &clang12
+      env: CLANG_VERSION=11.0 BUILD_TYPE=Release
+      addons: &clang11
         apt:
           packages:
-            - clang-12
+            - clang-11
             - libx11-dev
             - libxfixes-dev 
             - libxtst-dev

@@ -100,7 +100,7 @@ namespace Screen_Capture
         auto wm_name = GetWMName(display, window);
         auto candidates = TextPropertyToStrings(display, wm_name.get());
         Window w = {};
-        w.Handle = reinterpret_cast<size_t>( (size_t) window);
+        w.Handle = static_cast<size_t>( (size_t) window);
 
         XWindowAttributes wndattr;
         XGetWindowAttributes(display, window, &wndattr);

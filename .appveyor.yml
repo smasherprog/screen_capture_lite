@@ -23,8 +23,10 @@ install:
   - cd build
 
 build_script:  
-  - echo Visual Studio 16 2019 -A %platform% %SHARED% %configuration%
-  - cmake .. -G"Visual Studio 16 2019" -A %platform% -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
+  - if %platform%==x86 set generator=Win32
+  - if %platform%==x64 set generator=x64
+  - echo Visual Studio 16 2019 -A %generator% %SHARED% %configuration%
+  - cmake .. -G"Visual Studio 16 2019" -A %generator% -DBUILD_SHARED_LIBS=%SHARED% -DCMAKE_INSTALL_PREFIX=./output
   - cmake --build . --target INSTALL --config %configuration%
   - 7z a vc140_%configuration%_%PLATFORM%_%POSTFIXNAME%.zip  -i!%APPVEYOR_BUILD_FOLDER%\build\output\*
   - appveyor PushArtifact vc140_%configuration%_%PLATFORM%_%POSTFIXNAME%.zip

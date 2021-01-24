@@ -5,11 +5,12 @@ matrix:
     - os: osx
       osx_image: xcode12.2
       compiler: clang
-    - os: linux
-      env: BUILD_TYPE=Release
+    - os: linux 
+      env: CLANG_VERSION=12.0 BUILD_TYPE=Release
       addons: 
         apt:
           packages:
+            - clang-12.0
             - libx11-dev
             - libxfixes-dev 
             - libxtst-dev
@@ -17,9 +18,12 @@ matrix:
             - cmake
           sources: 
             - ubuntu-toolchain-r-test
+before_install:
+  - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi
+
 script:
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_SHARED_LIBS=OFF . && make;
-  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_SHARED_LIBS=ON . && make;
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
+  - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_SHARED_LIBS=ON -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;
     
 notifications:
   email: false

@@ -17,7 +17,7 @@ void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>&
     if (data->ScreenCaptureData.getThingsToWatch) {
         auto monitors = data->ScreenCaptureData.getThingsToWatch();
         auto mons = GetMonitors();
-        for (auto& m : monitors) {
+        for ([[maybe_unused]] auto &m : monitors) {
             assert(isMonitorInsideBounds(mons, m));
         }
 

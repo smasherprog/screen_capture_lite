@@ -7,7 +7,7 @@ matrix:
       osx_image: xcode12.2
       compiler: clang
     - os: linux 
-      env: CLANG_VERSION=7.0 BUILD_TYPE=Release
+      env: BUILD_TYPE=Release
       addons:
         apt:
           packages:
@@ -17,7 +17,8 @@ matrix:
             - libxinerama-dev
             - cmake
 before_install:
-  - if [[ -n "$CLANG_VERSION" ]]; then export CXX=clang++-$CLANG_VERSION CC=clang-$CLANG_VERSION; fi
+  - if [[ "$CXX" == "g++" ]]; then export CC="gcc-9"                                                                    ;fi
+  - if [[ "$CXX" == "g++" ]]; then export CXX="g++-9"                                                                   ;fi
 
 script:
   - cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_C_COMPILER="$CC" . && make;

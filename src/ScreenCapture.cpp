@@ -1,5 +1,6 @@
 #include "internal/SCCommon.h"
 #include "ScreenCapture.h"
+#include "ScreenCaptureInterface.h"
 #include "internal/ThreadManager.h"
 #include <algorithm>
 #include <assert.h>

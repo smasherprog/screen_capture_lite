@@ -79,6 +79,7 @@ include_directories(
 	${SCREEN_CAPTURE_PLATFORM_INC} 
 )
 add_library(${PROJECT_NAME} 
+	include/ScreenCaptureInterface.h
 	include/ScreenCapture.h 
 	include/internal/SCCommon.h 
 	include/internal/ThreadManager.h 

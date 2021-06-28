@@ -29,6 +29,22 @@ bld/
 *.VisualState.xml
 TestResult.xml
 
+# Unity Game Engine
+/*_UP/[Ll]ibrary/
+/*_UP/[Tt]emp/
+/*_UP/[Oo]bj/
+/*_UP/[Bb]uild/
+/*_UP/[Bb]uilds/
+/*_UP/[Ll]ogs/
+/*_UP/[Mm]emoryCaptures/
+/*_UP/SteamBuildUploader/ContentBuilder/content
+/*_UP/SteamBuildUploader/ContentBuilder/builder
+/*_UP/*.sln
+/*_UP/*.csproj
+/*_UP/.vscode/
+# Never ignore Asset meta data
+!/*_UP/[Aa]ssets/**/*.meta
+
 # Build Results of an ATL Project
 [Dd]ebugPS/
 [Rr]eleasePS/

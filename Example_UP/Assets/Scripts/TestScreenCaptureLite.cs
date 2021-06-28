@@ -269,7 +269,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
     }
 
     public void SaveFrameChangedTex () {
-        String dirPath = Application.dataPath + "/../SaveImages/" + "frameChangedTex.png";
+        String dirPath = Application.dataPath + "/../" + "frameChangedTex.png";
         byte[] _bytes =frameChangedTex.EncodeToPNG();
         System.IO.File.WriteAllBytes(dirPath, _bytes);
         Debug.Log(_bytes.Length/1024  + "Kb was saved as: " + dirPath);

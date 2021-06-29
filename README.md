@@ -1,5 +1,5 @@
 ## Based on Screen_Capture_Light
-(original screen_capture_lite)[https://github.com/smasherprog/screen_capture_lite/]
+https://github.com/smasherprog/screen_capture_lite/
 
 ## Status
 - barebone implementation how data transfers could work

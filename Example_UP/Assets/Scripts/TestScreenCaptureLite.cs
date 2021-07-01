@@ -96,6 +96,9 @@ public class TestScreenCaptureLite : MonoBehaviour {
     public static extern void C_GetWindows_Index_Out(int index, out Window window);
 
     [DllImport("libscreen_capture_lite")]
+    public static extern void C_GetWindows(IntPtr windows);
+
+    [DllImport("libscreen_capture_lite")]
     public static extern int C_GetMonitors_Count();
 
     [DllImport("libscreen_capture_lite")]
@@ -216,22 +219,20 @@ public class TestScreenCaptureLite : MonoBehaviour {
     int onFrameChangedSize;
     // if there is data in the onFrameChangedBytes, the texture should be updated with it
     byte[] onFrameChangedBytes;
-
     
-    byte[] onNewFrameBytes;
     int onNewFrameWidth;
     int onNewFrameHeight;
     int onNewFrameSize;
-    byte[] onMouseChangedBytes;
+    byte[] onNewFrameBytes;
+    
     int onMouseChangedWidth;
     int onMouseChangedHeight;
     int onMouseChangedSize;
-
+    byte[] onMouseChangedBytes;
 
     // unity doesnt allow writing the texture here
     [MonoPInvokeCallback (typeof (ImageRefWindowRefCallbackType))]
     void OnFrameChanged (int w, int h, int s, IntPtr array) {
-
         if ((w * h * 4) != s) {
             Debug.Log($"OnFrameChanged w:{w} h:{h} s:{s} : Invalid size of Data for given Size");
         }

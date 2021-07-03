@@ -1,6 +1,5 @@
 #include "internal/SCCommon.h"
-#include "ScreenCapture.h"
-#include "ScreenCaptureInterface.h"
+#include "ScreenCapture.h" 
 #include "internal/ThreadManager.h"
 #include <algorithm>
 #include <assert.h>
@@ -13,6 +12,18 @@
 namespace SL {
 namespace Screen_Capture {
 
+    void GetMonitors(Monitor **monitors, int *size) { 
+        static auto local_monitors = GetMonitors();
+        *monitors = local_monitors.data();
+        *size = static_cast<int>(local_monitors.size());
+    }
+
+    void GetWindows(Window **windows, int *size)
+    {
+        static auto local_windows = GetWindows();
+        *windows = local_windows.data();
+        *size = static_cast<int>(local_windows.size());
+    }
 
     bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor)
     {

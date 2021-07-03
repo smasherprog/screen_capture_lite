@@ -14,7 +14,7 @@ if(WIN32)
 		../include/windows/GDIHelpers.h
     )
     set(SCREEN_CAPTURE_PLATFORM_INC     
-       include/windows 
+       ../include/windows 
     )
 	add_definitions(-DNOMINMAX)
 elseif(APPLE)
@@ -62,11 +62,10 @@ endif()
 
 
 include_directories(
-	include 
+	../include 
 	${SCREEN_CAPTURE_PLATFORM_INC} 
 )
 add_library(${PROJECT_NAME} 
-	../include/ScreenCaptureInterface.h
 	../include/ScreenCapture.h 
 	../include/internal/SCCommon.h 
 	../include/internal/ThreadManager.h 

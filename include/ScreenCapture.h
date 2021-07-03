@@ -8,6 +8,12 @@
 #include <thread>
 #include <vector>
 
+#if defined(SC_LITE_DLL)
+#define SC_LITE_C_EXTERN extern "C"
+#else
+#define SC_LITE_C_EXTERN
+#endif
+
 #if defined(WINDOWS) || defined(WIN32)
 #if defined(SC_LITE_DLL)
 #define SC_LITE_EXTERN __declspec(dllexport)
@@ -139,9 +145,12 @@ namespace Screen_Capture {
         std::chrono::microseconds duration() const { return Duration; }
     };
     // will return all attached monitors
+
+    SC_LITE_C_EXTERN void GetMonitors(Monitor** monitors, int* size);
     SC_LITE_EXTERN std::vector<Monitor> GetMonitors();
     // will return all windows
     SC_LITE_EXTERN std::vector<Window> GetWindows();
+    SC_LITE_C_EXTERN void GetWindows(Window **windows, int *size);
 
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Monitor &monitor)> ScreenCaptureCallback;

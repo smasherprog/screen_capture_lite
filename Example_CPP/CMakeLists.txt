@@ -39,6 +39,9 @@ else()
 	)
 endif()
 
+include_directories(
+	../include 
+)
 add_executable(${PROJECT_NAME}  
 	lodepng.cpp
 	Screen_Capture_Example.cpp

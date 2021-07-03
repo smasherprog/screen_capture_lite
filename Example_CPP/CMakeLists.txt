@@ -1,4 +1,4 @@
-project(screen_capture_example)
+project(screen_capture_example_cpp)
 
 if(WIN32)
 	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)

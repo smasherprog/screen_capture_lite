@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+   <EnableDefaultCompileItems>false</EnableDefaultCompileItems> 
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="screen_capture_lite_shared.dll" />
+  </ItemGroup>
+ 
+  <ItemGroup>   
+    <Compile Include="Program.cs" />
+    <Compile Include="..\src_csharp\Screen_Capture_Lite.cs" Link="Screen_Capture_Lite.cs" />
+  </ItemGroup>
+ 
+  <ItemGroup>
+    <Content Include="screen_capture_lite_shared.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

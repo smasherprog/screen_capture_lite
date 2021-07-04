@@ -1,4 +1,4 @@
-project(screen_capture_lite_csharp)
+project(screen_capture_lite_example_csharp)
     
 set(OUTPUT ${PROJECT_NAME}.dll)
 set(CSPROJ ${PROJECT_NAME}.csproj)
@@ -12,19 +12,19 @@ if(result)
 else()
     message(STATUS "Found dotnet executable CSHARP bindings will be generated!")
     add_custom_command(OUTPUT ${OUTPUT} 
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_CURRENT_LIST_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_BINARY_DIR}/src_csharp
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_CURRENT_LIST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_BINARY_DIR}/Example_CSharp
     COMMAND ${CMAKE_COMMAND} -E copy
       ${CMAKE_CURRENT_LIST_DIR}/${CSPROJ}
-      ${CMAKE_BINARY_DIR}/src_csharp
+      ${CMAKE_BINARY_DIR}/Example_CSharp
     COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_LIST_DIR}/Screen_Capture_Lite.cs
-      ${CMAKE_BINARY_DIR}/src_csharp
-    COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} ${CMAKE_BINARY_DIR}/src_csharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
+      ${CMAKE_CURRENT_LIST_DIR}/Program.cs
+      ${CMAKE_BINARY_DIR}/Example_CSharp
+    COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} ${CMAKE_BINARY_DIR}/Example_CSharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
     COMMENT "Building DOTNET assembly ${NAME}.dll"
   )
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
-    add_dependencies(${PROJECT_NAME} screen_capture_lite_shared)
+    add_dependencies(${PROJECT_NAME} screen_capture_lite_csharp)
 endif()
 
 

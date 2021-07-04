@@ -58,10 +58,39 @@ namespace SL
             public char A;
         }
 
-        public static class FreeFunctions
+        public static class NativeFunctions
         { 
             [DllImport("screen_capture_lite_shared")]
-            public static extern void GetMonitors(Monitor[] monitors, ref int monitorslen);
+            private static extern int GetMonitors(ref IntPtr monitors);
+            public static Monitor[] GetMonitors()
+            {
+                var unmanagedArray = IntPtr.Zero;
+                var length = GetMonitors(ref unmanagedArray);
+                var size = Marshal.SizeOf(typeof(Monitor));
+                var mangagedArray = new Monitor[length]; 
+
+                for (int i = 0; i < length; i++)
+                {
+                    if (IntPtr.Size == 8)
+                    {
+                        var ins = new IntPtr(unmanagedArray.ToInt64() + i * size);
+                        mangagedArray[i] = Marshal.PtrToStructure<Monitor>(ins);
+                    }
+                    else
+                    {
+                        var ins = new IntPtr(unmanagedArray.ToInt32() + i * size);
+                        mangagedArray[i] = Marshal.PtrToStructure<Monitor>(ins);
+                    }
+                }
+                return mangagedArray;
+            }
+
+            [DllImport("screen_capture_lite_shared")]
+            private static extern bool isMonitorInsideBounds(ref Monitor[] monitors, int monitorsize, ref Monitor monitor);
+            public static bool isMonitorInsideBounds(Monitor[] monitors, Monitor monitor)
+            {
+                return true;
+            }
         }
     }
 }

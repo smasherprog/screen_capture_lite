@@ -149,11 +149,11 @@ namespace Screen_Capture {
     };
     // will return all attached monitors
 
-    SC_LITE_C_EXTERN void GetMonitors(Monitor** monitors, int* size);
+    SC_LITE_C_EXTERN int GetMonitors(Monitor **monitors);
     SC_LITE_EXTERN std::vector<Monitor> GetMonitors();
     // will return all windows
     SC_LITE_EXTERN std::vector<Window> GetWindows();
-    SC_LITE_C_EXTERN void GetWindows(Window **windows, int *size);
+    SC_LITE_C_EXTERN int GetWindows(Window **windows);
 
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Monitor &monitor)> ScreenCaptureCallback;

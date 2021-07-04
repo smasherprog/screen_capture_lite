@@ -1,5 +1,5 @@
+#include "ScreenCapture.h"
 #include "internal/SCCommon.h"
-#include "ScreenCapture.h" 
 #include "internal/ThreadManager.h"
 #include <algorithm>
 #include <assert.h>
@@ -7,27 +7,28 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <span>
 #include <thread>
 
 namespace SL {
 namespace Screen_Capture {
 
-    void GetMonitors(Monitor **monitors, int *size) { 
+    int GetMonitors(Monitor **monitors)
+    {
         static auto local_monitors = GetMonitors();
         *monitors = local_monitors.data();
-        *size = static_cast<int>(local_monitors.size());
+        return static_cast<int>(local_monitors.size());
     }
 
-    void GetWindows(Window **windows, int *size)
+    int GetWindows(Window **windows, int *size)
     {
         static auto local_windows = GetWindows();
         *windows = local_windows.data();
-        *size = static_cast<int>(local_windows.size());
+        return static_cast<int>(local_windows.size());
     }
 
-    bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor)
+    bool isMonitorInsideBounds(auto monitors, const Monitor &monitor)
     {
-
         auto totalwidth = 0;
         for (auto &m : monitors) {
             totalwidth += Width(m);
@@ -51,9 +52,19 @@ namespace Screen_Capture {
         }
         return true;
     }
+
+    bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor)
+    {
+        return isMonitorInsideBounds(std::span(monitors.data(), monitors.size()), monitor);
+    }
+
+    bool isMonitorInsideBounds(const Monitor *monitors, const int monitorsize, const Monitor *monitor)
+    { 
+        return isMonitorInsideBounds(std::span(monitors, monitorsize), *monitor);
+    }
+
     static bool ScreenCaptureManagerExists = false;
     class ScreenCaptureManager : public IScreenCaptureManager {
-        
 
       public:
         // allreads share the same data!!!
@@ -63,7 +74,7 @@ namespace Screen_Capture {
 
         ScreenCaptureManager()
         {
-            //you must ONLY HAVE ONE INSTANCE RUNNING AT A TIME. Destroy the first instance then create one!
+            // you must ONLY HAVE ONE INSTANCE RUNNING AT A TIME. Destroy the first instance then create one!
             assert(!ScreenCaptureManagerExists);
             ScreenCaptureManagerExists = true;
             Thread_Data_ = std::make_shared<Thread_Data>();
@@ -74,7 +85,7 @@ namespace Screen_Capture {
             Thread_Data_->WindowCaptureData.MouseTimer = std::make_shared<Timer>(50ms);
         }
         virtual ~ScreenCaptureManager()
-        { 
+        {
             Thread_Data_->CommonData_.TerminateThreadsEvent = true; // set the exit flag for the threads
             Thread_Data_->CommonData_.Paused = false;               // unpaused the threads to let everything exit
             if (Thread_.get_id() == std::this_thread::get_id()) {
@@ -112,13 +123,13 @@ namespace Screen_Capture {
         }
         virtual void setFrameChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
-            std::atomic_store(&Thread_Data_->ScreenCaptureData.FrameTimer, timer);
-            std::atomic_store(&Thread_Data_->WindowCaptureData.FrameTimer, timer);
+            Thread_Data_->ScreenCaptureData.FrameTimer = timer;
+            Thread_Data_->WindowCaptureData.FrameTimer = timer; 
         }
         virtual void setMouseChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
-            std::atomic_store(&Thread_Data_->ScreenCaptureData.MouseTimer, timer);
-            std::atomic_store(&Thread_Data_->WindowCaptureData.MouseTimer, timer);
+            Thread_Data_->ScreenCaptureData.MouseTimer = timer;
+            Thread_Data_->WindowCaptureData.MouseTimer = timer;  
         }
         virtual void pause() override { Thread_Data_->CommonData_.Paused = true; }
         virtual bool isPaused() const override { return Thread_Data_->CommonData_.Paused; }

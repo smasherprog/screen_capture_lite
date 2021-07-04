@@ -8,17 +8,22 @@
 #include <thread>
 #include <vector>
 
-#define SC_LITE_C_EXTERN
-#define SC_LITE_EXTERN
 
 #if defined(WINDOWS) || defined(WIN32)
     #if defined(SC_LITE_DLL)
         #define SC_LITE_C_EXTERN extern "C" __declspec(dllexport)
         #define SC_LITE_EXTERN __declspec(dllexport)
+    #else
+        #define SC_LITE_C_EXTERN
+        #define SC_LITE_EXTERN
     #endif
 #else
     #if defined(SC_LITE_DLL)
         #define SC_LITE_C_EXTERN extern "C" 
+        #define SC_LITE_EXTERN
+    #else
+        #define SC_LITE_C_EXTERN
+        #define SC_LITE_EXTERN
     #endif
 #endif
 

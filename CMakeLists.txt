@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.20)
 project(screen_capture_lite_build)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS OFF) 
 option(BUILD_EXAMPLE "Build example" ON)
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Build shared libraries")
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
@@ -13,8 +14,9 @@ if(MSVC)
 else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 endif()
- 
+
 add_subdirectory(src_cpp) 
+add_subdirectory(src_csharp) 
 
 install (TARGETS screen_capture_lite_static  
 	RUNTIME DESTINATION bin

@@ -63,24 +63,31 @@ endif()
 
 include_directories(
 	../include 
-	${SCREEN_CAPTURE_PLATFORM_INC} 
+	${SCREEN_CAPTURE_PLATFORM_INC}
 )
-add_library(${PROJECT_NAME} 
-	../include/ScreenCapture.h 
-	../include/internal/SCCommon.h 
-	../include/internal/ThreadManager.h 
-	ScreenCapture.cpp 
-	SCCommon.cpp 
-	ThreadManager.cpp
-	${SCREEN_CAPTURE_PLATFORM_SRC}
- )
 
- if(${BUILD_SHARED_LIBS})	
+set(libsrc 
+	../include/ScreenCapture.h 
+		../include/internal/SCCommon.h 
+		../include/internal/ThreadManager.h 
+		ScreenCapture.cpp 
+		SCCommon.cpp 
+		ThreadManager.cpp
+		${SCREEN_CAPTURE_PLATFORM_SRC}
+)
+ 
+
+message("Building STATIC Library")
+add_library(${PROJECT_NAME}_static STATIC ${libsrc})
+
   message("Building SHARED Library")
-	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
+  
+    add_library(${PROJECT_NAME}_shared SHARED ${libsrc})
+
+	set_target_properties(${PROJECT_NAME}_shared PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
 	 if(WIN32) 
-		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES}  Dwmapi)
-		install (FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+		target_link_libraries(${PROJECT_NAME}_shared Dwmapi)
+		install (FILES $<TARGET_PDB_FILE:${PROJECT_NAME}_shared> DESTINATION bin OPTIONAL)
 	elseif(APPLE)
 		find_package(Threads REQUIRED)
         find_library(corefoundation_lib CoreFoundation REQUIRED)
@@ -89,9 +96,9 @@ add_library(${PROJECT_NAME}
         find_library(avfoundation_lib AVFoundation REQUIRED)
         find_library(coregraphics_lib CoreGraphics REQUIRED)
         find_library(corevideo_lib CoreVideo REQUIRED)
-
+       
         target_link_libraries(
-            ${PROJECT_NAME}
+           ${PROJECT_NAME}_shared
             ${CMAKE_THREAD_LIBS_INIT}
             ${corefoundation_lib}
             ${cocoa_lib}
@@ -109,16 +116,13 @@ add_library(${PROJECT_NAME}
  			message(FATAL_ERROR "X11 fixes extension is required, but not found!")
 		endif()
 		find_package(Threads REQUIRED)
-		set(${PROJECT_NAME}_PLATFORM_LIBS
+		target_link_libraries(
+            ${PROJECT_NAME}_shared
 			${X11_LIBRARIES}
 			${X11_Xfixes_LIB}
 			${X11_XTest_LIB}
 			${X11_Xinerama_LIB}
 			${CMAKE_THREAD_LIBS_INIT}
-		)	
-		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} dl)
+		)	 
 	endif()
-else()
-      message("Building STATIC Library")
-endif()
- 
+  

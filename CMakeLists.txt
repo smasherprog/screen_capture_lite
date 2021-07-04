@@ -4,8 +4,9 @@ project(screen_capture_lite_build)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-option(BUILD_SHARED_LIBS "Build shared library" OFF) 
 option(BUILD_EXAMPLE "Build example" ON)
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 if(MSVC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
@@ -15,7 +16,12 @@ endif()
  
 add_subdirectory(src_cpp) 
 
-install (TARGETS screen_capture_lite  
+install (TARGETS screen_capture_lite_static  
+	RUNTIME DESTINATION bin
+	ARCHIVE DESTINATION lib
+	LIBRARY DESTINATION lib
+)
+install (TARGETS screen_capture_lite_shared  
 	RUNTIME DESTINATION bin
 	ARCHIVE DESTINATION lib
 	LIBRARY DESTINATION lib

@@ -44,4 +44,5 @@ enable_testing()
 
 if (${BUILD_EXAMPLE})
   add_subdirectory(Example_CPP) 
+  add_subdirectory(Example_Unity) 
 endif()

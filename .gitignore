@@ -255,3 +255,4 @@ CTestTestfile.cmake
 Makefile
 cmake_install.cmake
 cmake_uninstall.cmake
+CMakeSettings.json

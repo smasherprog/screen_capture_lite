@@ -8,20 +8,18 @@
 #include <thread>
 #include <vector>
 
-#if defined(SC_LITE_DLL)
-#define SC_LITE_C_EXTERN extern "C"
-#else
 #define SC_LITE_C_EXTERN
-#endif
+#define SC_LITE_EXTERN
 
 #if defined(WINDOWS) || defined(WIN32)
-#if defined(SC_LITE_DLL)
-#define SC_LITE_EXTERN __declspec(dllexport)
+    #if defined(SC_LITE_DLL)
+        #define SC_LITE_C_EXTERN extern "C" __declspec(dllexport)
+        #define SC_LITE_EXTERN __declspec(dllexport)
+    #endif
 #else
-#define SC_LITE_EXTERN
-#endif
-#else
-#define SC_LITE_EXTERN
+    #if defined(SC_LITE_DLL)
+        #define SC_LITE_C_EXTERN extern "C" 
+    #endif
 #endif
 
 namespace SL {

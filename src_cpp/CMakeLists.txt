@@ -76,6 +76,7 @@ add_library(${PROJECT_NAME}
  )
 
  if(${BUILD_SHARED_LIBS})	
+  message("Building SHARED Library")
 	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
 	 if(WIN32) 
 		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES}  Dwmapi)
@@ -117,5 +118,7 @@ add_library(${PROJECT_NAME}
 		)	
 		target_link_libraries(${PROJECT_NAME} ${COMMON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} dl)
 	endif()
+else()
+      message("Building STATIC Library")
 endif()
  

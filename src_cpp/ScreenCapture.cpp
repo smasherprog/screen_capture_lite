@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <atomic>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <span>
@@ -12,28 +13,36 @@
 
 namespace SL {
 namespace Screen_Capture {
+    namespace C_API {
+        class ICaptureConfigurationScreenCaptureCallbackWrapper {
+          public:
+            std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> ptr;
+        };
+        class IScreenCaptureManagerWrapper {
+          public:
+            std::shared_ptr<IScreenCaptureManager> ptr;
+        };
+        int GetMonitors(Monitor **monitors)
+        {
+            static auto local_monitors = Screen_Capture::GetMonitors();
+            *monitors = local_monitors.data();
+            return static_cast<int>(local_monitors.size());
+        }
 
-    int GetMonitors(Monitor **monitors)
-    {
-        static auto local_monitors = GetMonitors();
-        *monitors = local_monitors.data();
-        return static_cast<int>(local_monitors.size());
-    }
+        int GetWindows(Window **windows, int *size)
+        {
+            static auto local_windows = Screen_Capture::GetWindows();
+            *windows = local_windows.data();
+            return static_cast<int>(local_windows.size());
+        }
 
-    int GetWindows(Window **windows, int *size)
-    {
-        static auto local_windows = GetWindows();
-        *windows = local_windows.data();
-        return static_cast<int>(local_windows.size());
-    }
-
+    }; // namespace C_API
     bool isMonitorInsideBounds(auto monitors, const Monitor &monitor)
     {
         auto totalwidth = 0;
         for (auto &m : monitors) {
             totalwidth += Width(m);
         }
-
         // if the monitor doesnt exist any more!
         if (std::find_if(begin(monitors), end(monitors), [&](auto &m) { return m.Id == monitor.Id; }) == end(monitors)) {
             return false;
@@ -57,12 +66,12 @@ namespace Screen_Capture {
     {
         return isMonitorInsideBounds(std::span(monitors.data(), monitors.size()), monitor);
     }
-
-    bool isMonitorInsideBounds(const Monitor *monitors, const int monitorsize, const Monitor *monitor)
-    { 
-        return isMonitorInsideBounds(std::span(monitors, monitorsize), *monitor);
-    }
-
+    namespace C_API {
+        bool isMonitorInsideBounds(const Monitor *monitors, const int monitorsize, const Monitor *monitor)
+        {
+            return isMonitorInsideBounds(std::span(monitors, monitorsize), *monitor);
+        }
+    }; // namespace C_API
     static bool ScreenCaptureManagerExists = false;
     class ScreenCaptureManager : public IScreenCaptureManager {
 
@@ -124,12 +133,12 @@ namespace Screen_Capture {
         virtual void setFrameChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
             Thread_Data_->ScreenCaptureData.FrameTimer = timer;
-            Thread_Data_->WindowCaptureData.FrameTimer = timer; 
+            Thread_Data_->WindowCaptureData.FrameTimer = timer;
         }
         virtual void setMouseChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
             Thread_Data_->ScreenCaptureData.MouseTimer = timer;
-            Thread_Data_->WindowCaptureData.MouseTimer = timer;  
+            Thread_Data_->WindowCaptureData.MouseTimer = timer;
         }
         virtual void pause() override { Thread_Data_->CommonData_.Paused = true; }
         virtual bool isPaused() const override { return Thread_Data_->CommonData_.Paused; }
@@ -144,18 +153,21 @@ namespace Screen_Capture {
 
         virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> onNewFrame(const ScreenCaptureCallback &cb) override
         {
+            assert(cb);
             assert(!Impl_->Thread_Data_->ScreenCaptureData.OnNewFrame);
             Impl_->Thread_Data_->ScreenCaptureData.OnNewFrame = cb;
             return std::make_shared<ScreenCaptureConfiguration>(Impl_);
         }
         virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> onFrameChanged(const ScreenCaptureCallback &cb) override
         {
+            assert(cb);
             assert(!Impl_->Thread_Data_->ScreenCaptureData.OnFrameChanged);
             Impl_->Thread_Data_->ScreenCaptureData.OnFrameChanged = cb;
             return std::make_shared<ScreenCaptureConfiguration>(Impl_);
         }
         virtual std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> onMouseChanged(const MouseCallback &cb) override
         {
+            assert(cb);
             assert(!Impl_->Thread_Data_->ScreenCaptureData.OnMouseChanged);
             Impl_->Thread_Data_->ScreenCaptureData.OnMouseChanged = cb;
             return std::make_shared<ScreenCaptureConfiguration>(Impl_);
@@ -168,6 +180,21 @@ namespace Screen_Capture {
             return Impl_;
         }
     };
+    namespace C_API {
+        void onNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, ScreenCaptureCallback cb)
+        {
+            // this works.. looks strange though
+            ptr->ptr = ptr->ptr->onNewFrame(cb);
+        }
+        IScreenCaptureManagerWrapper *start_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr)
+        {
+            auto p = new IScreenCaptureManagerWrapper{ptr->ptr->start_capturing()};
+            FreeCaptureConfiguration(ptr);
+            return p;
+        }
+        void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr) { delete ptr; }
+
+    }; // namespace C_API
 
     class WindowCaptureConfiguration : public ICaptureConfiguration<WindowCaptureCallback> {
         std::shared_ptr<ScreenCaptureManager> Impl_;
@@ -202,13 +229,23 @@ namespace Screen_Capture {
             return Impl_;
         }
     };
+
+    namespace C_API {
+
+        ICaptureConfigurationScreenCaptureCallbackWrapper *CreateCaptureConfiguration(MonitorCallback monitorstocapture)
+        {
+            return new ICaptureConfigurationScreenCaptureCallbackWrapper{Screen_Capture::CreateCaptureConfiguration(monitorstocapture)};
+        }
+        void FreeCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr) { delete ptr; }
+    }; // namespace C_API
+
     std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture)
     {
+        assert(monitorstocapture);
         auto impl = std::make_shared<ScreenCaptureManager>();
         impl->Thread_Data_->ScreenCaptureData.getThingsToWatch = monitorstocapture;
         return std::make_shared<ScreenCaptureConfiguration>(impl);
     }
-
     std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback &windowtocapture)
     {
         auto impl = std::make_shared<ScreenCaptureManager>();

@@ -17,7 +17,7 @@
  
   <ItemGroup>
     <Content Include="screen_capture_lite_shared.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

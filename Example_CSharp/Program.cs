@@ -5,19 +5,59 @@ namespace screen_capture_lite_example_csharp
 {
     public class Program
     {
-        private static void WriteLine(SL.Screen_Capture.Monitor p)
+        private static void WriteLine(ref SL.Screen_Capture.Monitor p)
         {
             Console.WriteLine($"Id = {p.Id} Index = {p.Index} Height = {p.Height} Width = {p.Width} OffsetX = {p.OffsetX} OffsetY= {p.OffsetY} Name= {p.Name}");
+        }
+        private static void WriteLine(ref SL.Screen_Capture.Image p)
+        {
+            Console.WriteLine($"BytesToNextRow = {p.BytesToNextRow} isContiguous = {p.isContiguous} Bounds.bottom = {p.Bounds.bottom} Bounds.left = {p.Bounds.left} Bounds.right = {p.Bounds.right} Bounds.top = {p.Bounds.top}");
+        }
+        public static SL.Screen_Capture.CaptureConfiguration.ScreenCaptureManager createframegrabber()
+        {
+            return SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfiguration(() =>
+            {
+                var mons = SL.Screen_Capture.GetMonitors();
+                Console.WriteLine("Library is requesting the list of monitors to capture!");
+                for (int i = 0; i < mons.Length; ++i)
+                {
+                    WriteLine(ref mons[i]);
+                }
+                return mons;
+            }).onNewFrame((ref SL.Screen_Capture.Image img, ref SL.Screen_Capture.Monitor monitor) =>
+            {
+                WriteLine(ref img);
+            }).start_capturing();
         }
 
         public static void Main(string[] args)
         {
-            Console.WriteLine("Starting Capture Demo/Test"); 
-            var goodmonitors = SL.Screen_Capture.NativeFunctions.GetMonitors(); 
-            foreach (var m in goodmonitors)
+            Console.WriteLine("Starting Capture Demo/Test");
+            var goodmonitors = SL.Screen_Capture.GetMonitors();
+            for (int i = 0; i < goodmonitors.Length; ++i)
             {
-                WriteLine(m);
-                Debug.Assert(SL.Screen_Capture.NativeFunctions.isMonitorInsideBounds(goodmonitors, m));
+                WriteLine(ref goodmonitors[i]);
+                Debug.Assert(SL.Screen_Capture.isMonitorInsideBounds(goodmonitors, goodmonitors[i]));
+            }
+
+            var badmonitors = SL.Screen_Capture.GetMonitors();
+            for (int i = 0; i < badmonitors.Length; ++i)
+            {
+                badmonitors[i].Height += 1;
+                WriteLine(ref badmonitors[i]);
+                Debug.Assert(!SL.Screen_Capture.isMonitorInsideBounds(goodmonitors, badmonitors[i]));
+            }
+            for (int i = 0; i < badmonitors.Length; ++i)
+            {
+                badmonitors[i].Width += 1;
+                WriteLine(ref badmonitors[i]);
+                Debug.Assert(!SL.Screen_Capture.isMonitorInsideBounds(goodmonitors, badmonitors[i]));
+            }
+
+            Console.WriteLine("Running display capturing for 10 seconds");
+            using (var grabber = createframegrabber())
+            {
+                System.Threading.Thread.Sleep(10 * 1000);
             }
         }
     }

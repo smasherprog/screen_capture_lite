@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SL
 {
-    namespace Screen_Capture
+    public static class Screen_Capture
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct Point
@@ -48,7 +48,24 @@ namespace SL
             public string Name;
             public float Scaling;
         }
-
+        [StructLayout(LayoutKind.Sequential)]
+        public struct ImageRect
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Image
+        {
+            public ImageRect Bounds;
+            public int BytesToNextRow;
+            [MarshalAs(UnmanagedType.I1)]
+            public bool isContiguous;
+            // alpha is always unused and might contain garbage
+            public IntPtr Data;
+        }
         [StructLayout(LayoutKind.Sequential)]
         public struct ImageBGRA
         {
@@ -58,39 +75,165 @@ namespace SL
             public char A;
         }
 
-        public static class NativeFunctions
-        { 
-            [DllImport("screen_capture_lite_shared")]
-            private static extern int GetMonitors(ref IntPtr monitors);
-            public static Monitor[] GetMonitors()
-            {
-                var unmanagedArray = IntPtr.Zero;
-                var length = GetMonitors(ref unmanagedArray);
-                var size = Marshal.SizeOf(typeof(Monitor));
-                var mangagedArray = new Monitor[length]; 
+        public delegate Monitor[] MonitorCallback();
+        public delegate void ScreenCaptureCallback(ref Image img, ref Monitor monitor);
 
-                for (int i = 0; i < length; i++)
+        public class CaptureConfiguration : IDisposable
+        {
+            public class CaptureData<MonitorCallback, ScreenCaptureCallback>
+            {
+                public MonitorCallback getThingsToWatch;
+                public ScreenCaptureCallback OnFrameChanged;
+                public ScreenCaptureCallback OnNewFrame;
+                public int FrameTimerInMS = 100;
+            };
+            public class ScreenCaptureManager : IDisposable
+            {
+                private CaptureData<MonitorCallback, ScreenCaptureCallback> ScreenCaptureData;
+                private bool disposedValue;
+                private IntPtr ScreenCapturePtr = IntPtr.Zero;
+
+                public ScreenCaptureManager(IntPtr p, CaptureData<MonitorCallback, ScreenCaptureCallback> d)
                 {
-                    if (IntPtr.Size == 8)
+                    ScreenCapturePtr = p;
+                    ScreenCaptureData = d;
+                }
+
+                void start()
+                {
+
+                }
+
+                protected virtual void Dispose(bool disposing)
+                {
+                    if (!disposedValue)
                     {
-                        var ins = new IntPtr(unmanagedArray.ToInt64() + i * size);
-                        mangagedArray[i] = Marshal.PtrToStructure<Monitor>(ins);
-                    }
-                    else
-                    {
-                        var ins = new IntPtr(unmanagedArray.ToInt32() + i * size);
-                        mangagedArray[i] = Marshal.PtrToStructure<Monitor>(ins);
+                        if (disposing)
+                        {
+                            // TODO: dispose managed state (managed objects)
+                        }
+
+                        NativeFunctions.FreeIScreenCaptureManagerWrapper(ScreenCapturePtr);
+                        ScreenCapturePtr = IntPtr.Zero;
+                        disposedValue = true;
                     }
                 }
-                return mangagedArray;
+
+                ~ScreenCaptureManager()
+                {
+                    // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+                    Dispose(disposing: false);
+                }
+
+                public void Dispose()
+                {
+                    // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+                    Dispose(disposing: true);
+                    GC.SuppressFinalize(this);
+                }
             }
 
-            [DllImport("screen_capture_lite_shared")]
-            private static extern bool isMonitorInsideBounds(ref Monitor[] monitors, int monitorsize, ref Monitor monitor);
-            public static bool isMonitorInsideBounds(Monitor[] monitors, Monitor monitor)
+            private CaptureData<MonitorCallback, ScreenCaptureCallback> Impl_;
+            private bool disposedValue;
+            private IntPtr CaptureConfigurationPtr = IntPtr.Zero;
+            public static CaptureConfiguration CreateCaptureConfiguration(MonitorCallback monitorstocapture)
             {
-                return true;
+                return new CaptureConfiguration
+                {
+                    Impl_ = new CaptureData<MonitorCallback, ScreenCaptureCallback>
+                    {
+                        getThingsToWatch = monitorstocapture
+                    },
+                    CaptureConfigurationPtr = NativeFunctions.CreateCaptureConfiguration(monitorstocapture)
+                };
             }
+
+            public CaptureConfiguration onNewFrame(ScreenCaptureCallback cb)
+            {
+                Impl_.OnNewFrame = cb;
+                NativeFunctions.onNewFrame(CaptureConfigurationPtr, cb);
+                return this;
+            }
+
+            public CaptureConfiguration onFrameChanged(ScreenCaptureCallback cb)
+            {
+                Impl_.OnFrameChanged = cb;
+                return this;
+            }
+
+            public ScreenCaptureManager start_capturing()
+            {
+                var r = new ScreenCaptureManager(NativeFunctions.start_capturing(CaptureConfigurationPtr), Impl_);
+                CaptureConfigurationPtr = IntPtr.Zero;
+                return r;
+            }
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+                    if (disposing)
+                    {
+                        // TODO: dispose managed state (managed objects)
+                    }
+
+                    NativeFunctions.FreeCaptureConfiguration(CaptureConfigurationPtr);
+                    CaptureConfigurationPtr = IntPtr.Zero;
+                    disposedValue = true;
+                }
+            }
+
+            ~CaptureConfiguration()
+            {
+                // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+                Dispose(disposing: false);
+            }
+
+            public void Dispose()
+            {
+                // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+                Dispose(disposing: true);
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        public static Monitor[] GetMonitors()
+        {
+            var unmanagedArray = IntPtr.Zero;
+            var length = NativeFunctions.GetMonitors(ref unmanagedArray);
+            var size = Marshal.SizeOf(typeof(Monitor));
+            var mangagedArray = new Monitor[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                mangagedArray[i] = Marshal.PtrToStructure<Monitor>(unmanagedArray);
+                unmanagedArray = IntPtr.Add(unmanagedArray, size);
+            }
+            return mangagedArray;
+        }
+        public static bool isMonitorInsideBounds(Monitor[] monitors, Monitor monitor)
+        {
+            return NativeFunctions.isMonitorInsideBounds(monitors, monitors.Length, monitor);
+        }
+
+        public static class NativeFunctions
+        {
+            [DllImport("screen_capture_lite_shared")]
+            public static extern int GetMonitors(ref IntPtr monitors);
+            [DllImport("screen_capture_lite_shared")]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool isMonitorInsideBounds(Monitor[] monitors, int monitorsize, Monitor monitor);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern IntPtr CreateCaptureConfiguration(MonitorCallback monitorCallback);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern void FreeCaptureConfiguration(IntPtr ptr);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern void onNewFrame(IntPtr ptr, ScreenCaptureCallback monitorCallback);
+            [DllImport("screen_capture_lite_shared")]
+            //this function will free the input pointer calling FreeCaptureConfiguration internally since its no longer needed. This makes it easier to reason about the c# code.
+            public static extern IntPtr start_capturing(IntPtr ptr);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern void FreeIScreenCaptureManagerWrapper(IntPtr ptr);
         }
     }
 }

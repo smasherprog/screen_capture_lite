@@ -89,11 +89,12 @@ namespace SL
             };
             public class ScreenCaptureManager : IDisposable
             {
-                private CaptureData<MonitorCallback, ScreenCaptureCallback> ScreenCaptureData;
+
+                private CaptureData<NativeFunctions.MonitorCallback, ScreenCaptureCallback> ScreenCaptureData;
                 private bool disposedValue;
                 private IntPtr ScreenCapturePtr = IntPtr.Zero;
 
-                public ScreenCaptureManager(IntPtr p, CaptureData<MonitorCallback, ScreenCaptureCallback> d)
+                public ScreenCaptureManager(IntPtr p, CaptureData<NativeFunctions.MonitorCallback, ScreenCaptureCallback> d)
                 {
                     ScreenCapturePtr = p;
                     ScreenCaptureData = d;
@@ -133,18 +134,30 @@ namespace SL
                 }
             }
 
-            private CaptureData<MonitorCallback, ScreenCaptureCallback> Impl_;
+            private CaptureData<NativeFunctions.MonitorCallback, ScreenCaptureCallback> Impl_;
             private bool disposedValue;
             private IntPtr CaptureConfigurationPtr = IntPtr.Zero;
             public static CaptureConfiguration CreateCaptureConfiguration(MonitorCallback monitorstocapture)
             {
+                NativeFunctions.MonitorCallback newcb = (IntPtr monitorbuffer, int monitorbuffersize) =>
+                {
+                    var m = monitorstocapture();
+                    var monitorstocopy = m.Length > monitorbuffersize ? monitorbuffersize : m.Length;
+                    for (var i = 0; i < monitorstocopy; i++)
+                    {
+                        Marshal.StructureToPtr(m[i], monitorbuffer, false);
+                        var size = Marshal.SizeOf(typeof(Monitor));
+                        IntPtr.Add(monitorbuffer, size);
+                    }
+                    return monitorstocopy;
+                };
                 return new CaptureConfiguration
                 {
-                    Impl_ = new CaptureData<MonitorCallback, ScreenCaptureCallback>
+                    Impl_ = new CaptureData<NativeFunctions.MonitorCallback, ScreenCaptureCallback>
                     {
-                        getThingsToWatch = monitorstocapture
+                        getThingsToWatch = newcb
                     },
-                    CaptureConfigurationPtr = NativeFunctions.CreateCaptureConfiguration(monitorstocapture)
+                    CaptureConfigurationPtr = NativeFunctions.CreateCaptureConfiguration(newcb)
                 };
             }
 
@@ -218,6 +231,8 @@ namespace SL
 
         public static class NativeFunctions
         {
+            public delegate int MonitorCallback(IntPtr monitorbuffer, int monitorbuffersize);
+
             [DllImport("screen_capture_lite_shared")]
             public static extern int GetMonitors(ref IntPtr monitors);
             [DllImport("screen_capture_lite_shared")]

@@ -214,6 +214,7 @@ namespace Screen_Capture {
     // to be captured
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
     namespace C_API {
+        typedef int (*MonitorCallback)(Monitor *monitorbuffer, int monitorbuffersize);
      
         SC_LITE_C_EXTERN ICaptureConfigurationScreenCaptureCallbackWrapper *CreateCaptureConfiguration(MonitorCallback monitorstocapture);
         SC_LITE_C_EXTERN void FreeCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);

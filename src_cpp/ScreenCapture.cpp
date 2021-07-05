@@ -29,7 +29,7 @@ namespace Screen_Capture {
             return static_cast<int>(local_monitors.size());
         }
 
-        int GetWindows(Window **windows, int *size)
+        int GetWindows(Window **windows)
         {
             static auto local_windows = Screen_Capture::GetWindows();
             *windows = local_windows.data();
@@ -234,7 +234,16 @@ namespace Screen_Capture {
 
         ICaptureConfigurationScreenCaptureCallbackWrapper *CreateCaptureConfiguration(MonitorCallback monitorstocapture)
         {
-            return new ICaptureConfigurationScreenCaptureCallbackWrapper{Screen_Capture::CreateCaptureConfiguration(monitorstocapture)};
+            auto p = new ICaptureConfigurationScreenCaptureCallbackWrapper(); 
+            p->ptr = Screen_Capture::CreateCaptureConfiguration([=]() {
+                std::array<Monitor, 16> monitorbuffer;
+                auto sizeused = monitorstocapture(monitorbuffer.data(), 16);
+                std::vector<Monitor> monitors; 
+                monitors.resize(sizeused);
+                memcpy(monitors.data(), monitorbuffer.data(), sizeused * sizeof(Monitor));
+                return monitors;
+            });
+            return p;
         }
         void FreeCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr) { delete ptr; }
     }; // namespace C_API

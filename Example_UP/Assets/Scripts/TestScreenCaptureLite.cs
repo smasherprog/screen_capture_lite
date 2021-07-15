@@ -159,15 +159,12 @@ public class TestScreenCaptureLite : MonoBehaviour {
 
         frameChangeDelegate = new ImageRefWindowRefCallbackType(OnFrameChanged);
         newFrameDelegate = new ImageRefWindowRefCallbackType(OnNewFrame);
+        // newFrameDelegate = null;
         mouseChangedDelegate = new ImagePtrMousePointRefCallbackType(OnMouseChanged);
+        mouseChangedDelegate = null;
 
         Debug.Log($"- a -");
-        C_ICaptureConfiguration(
-            windows[windowIdToCapture], 
-            frameChangeDelegate,
-            newFrameDelegate,
-            mouseChangedDelegate
-        );
+        C_ICaptureConfiguration( windows[windowIdToCapture], frameChangeDelegate, newFrameDelegate, mouseChangedDelegate );
         Debug.Log($"- b -");
     }
 
@@ -299,6 +296,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
                 newFrameTex = new Texture2D(onNewFrameWidth, onNewFrameHeight, TextureFormat.RGBA32, false);
             }
             try {
+                Debug.Log($"Update.newFrameTex: {onNewFrameWidth} {onNewFrameHeight} {onNewFrameSize}");
                 newFrameTex.LoadRawTextureData(onNewFrameBytes);
                 onNewFrameBytes = null;
                 newFrameTex.Apply();

@@ -57,12 +57,17 @@ namespace Screen_Capture {
 
     SC_LITE_EXTERN void C_GetWindows (Window** window_out) {
         std::vector<Window> cpp_windows = SL::Screen_Capture::GetWindows();
-        return &cpp_windows.data();
         // if (index < cpp_windows.size()) {
         //     Window w = cpp_windows[index];
         //     memcpy(window_out, &w, sizeof *window_out);
         // }
     }
+
+    // SC_LITE_EXTERN Window * C_GetWindows () {
+    //     Window * array;
+    //     std::vector<Window> cpp_windows = SL::Screen_Capture::GetWindows();
+    //     return &cpp_windows.data();
+    // }
 
     SC_LITE_EXTERN int C_GetMonitors_Count () {
         std::vector<Monitor> cpp_monitors = SL::Screen_Capture::GetMonitors();

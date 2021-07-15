@@ -22,18 +22,19 @@
 
 void C_ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char *dst, size_t dst_size) {
     assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
-    auto imgsrc = StartSrc(img);
+    auto is = StartSrc(img); // 0
+    auto iw = Width(img);
+    auto ih = Height(img);
+    auto imgsrc = is;
     auto imgdist = dst;
-    for (auto h = 0; h < Height(img); h++) {
-        auto startimgsrc = imgsrc;
-        for (auto w = 0; w < Width(img); w++) {
+    for (auto h = ih-1; h >= 0 ; h--) {
+        for (auto w = 0; w < iw; w++) {
+            imgsrc = (SL::Screen_Capture::ImageBGRA*)(is + h * iw + w);
             *imgdist++ = imgsrc->R;
             *imgdist++ = imgsrc->G;
             *imgdist++ = imgsrc->B;
             *imgdist++ = 255; // alpha 255 = visible
-            imgsrc++;
         }
-        imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
     }
 }
 

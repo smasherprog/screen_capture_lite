@@ -22,18 +22,21 @@
 
 void C_ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char *dst, size_t dst_size) {
     assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
-    auto is = StartSrc(img); // 0
-    auto iw = Width(img);
-    auto ih = Height(img);
-    auto imgsrc = is;
+    auto imgStart = StartSrc(img); // 0
+    // auto row = img.BytesToNextRow;
+    auto imgWidth = Width(img);
+    auto imgHeight = Height(img);
+
+    auto imgsrc = imgStart;
     auto imgdist = dst;
-    for (auto h = ih-1; h >= 0 ; h--) {
-        for (auto w = 0; w < iw; w++) {
-            imgsrc = (SL::Screen_Capture::ImageBGRA*)(is + h * iw + w);
+    for (auto h = imgHeight-1; h >= 0 ; h--) {
+        imgsrc = (SL::Screen_Capture::ImageBGRA*)(imgStart + h*img.BytesToNextRow/4);
+        for (auto w = 0; w < imgWidth; w++) {
             *imgdist++ = imgsrc->R;
             *imgdist++ = imgsrc->G;
             *imgdist++ = imgsrc->B;
             *imgdist++ = 255; // alpha 255 = visible
+            imgsrc++;
         }
     }
 }
@@ -42,45 +45,20 @@ extern "C" {
 namespace SL {
 namespace Screen_Capture {
 
-    SC_LITE_EXTERN int C_GetWindows_Count () {
-        std::vector<Window> cpp_windows = SL::Screen_Capture::GetWindows();
-        return cpp_windows.size();
+    // https://bravenewmethod.com/2017/10/30/unity-c-native-plugin-examples/
+
+    std::vector<Window> cpp_windows_out;  // required, or the memory is released right after running this function
+    SC_LITE_EXTERN Window* C_GetWindows (int &size) {
+        cpp_windows_out = SL::Screen_Capture::GetWindows();
+        size = cpp_windows_out.size();
+        return cpp_windows_out.data();
     }
 
-    SC_LITE_EXTERN void C_GetWindows_Index_Out (int index, Window* window_out) {
-        std::vector<Window> cpp_windows = SL::Screen_Capture::GetWindows();
-        if (index < cpp_windows.size()) {
-            Window w = cpp_windows[index];
-            memcpy(window_out, &w, sizeof *window_out);
-        }
-    }
-
-    SC_LITE_EXTERN void C_GetWindows (Window** window_out) {
-        std::vector<Window> cpp_windows = SL::Screen_Capture::GetWindows();
-        // if (index < cpp_windows.size()) {
-        //     Window w = cpp_windows[index];
-        //     memcpy(window_out, &w, sizeof *window_out);
-        // }
-    }
-
-    // SC_LITE_EXTERN Window * C_GetWindows () {
-    //     Window * array;
-    //     std::vector<Window> cpp_windows = SL::Screen_Capture::GetWindows();
-    //     return &cpp_windows.data();
-    // }
-
-    SC_LITE_EXTERN int C_GetMonitors_Count () {
-        std::vector<Monitor> cpp_monitors = SL::Screen_Capture::GetMonitors();
-        return cpp_monitors.size();
-    }
-
-    SC_LITE_EXTERN void C_GetMonitors_Index_Out (int index, Monitor* monitor_out) {
-        std::vector<Monitor> cpp_monitors = SL::Screen_Capture::GetMonitors();
-        if (index < cpp_monitors.size()) {
-            // monitor_out = cpp_monitors[index];
-            Monitor m = cpp_monitors[index];
-            memcpy(monitor_out, &m, sizeof *monitor_out);
-        }
+    std::vector<Monitor> cpp_monitor_out;  // required, or the memory is released right after running this function
+    SC_LITE_EXTERN Monitor* C_GetMonitors (int &size) {
+        cpp_monitor_out = SL::Screen_Capture::GetMonitors();
+        size = cpp_monitor_out.size();
+        return cpp_monitor_out.data();
     }
 
     // https://forum.unity.com/threads/returning-a-byte-array-to-c-from-objc.93503/
@@ -106,71 +84,69 @@ namespace Screen_Capture {
             ImageRefWindowRefCallbackType frameChangedCallback, 
             ImageRefWindowRefCallbackType newFrameCallback, 
             ImagePtrMousePointRefCallbackType mouseChangedCallback) {
+        
         frameChangedCallbackInstance = frameChangedCallback;
         newFrameCallbackInstance = newFrameCallback;
         mouseChangedCallbackInstance = mouseChangedCallback;
+        
         std::vector<Window> windowsToCapture;
         windowsToCapture.push_back(windowToCapture);
         frameGrabberInstance =  SL::Screen_Capture::CreateCaptureConfiguration([windowsToCapture]() {
             //add your own custom filtering here if you want to capture only some monitors
             return windowsToCapture;
         });
-        frameGrabberInstance->onFrameChanged([&](const SL::Screen_Capture::Image& image,const SL::Screen_Capture::Window& window) {
-            if (frameChangedCallbackInstance != NULL) {
-                // Testing Callback Types
-                int w = image.Bounds.right - image.Bounds.left;
-                int h = image.Bounds.bottom - image.Bounds.top;
-                pixels = w * h;
-                size = pixels * sizeof(SL::Screen_Capture::ImageBGRA);
-                auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                // ::fprintf(stdout, "C_ICaptureConfiguration.onFrameChanged w:%i h:%i s:%zu  Data: %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx\n\n", w, h, size, imgbuffer[0], imgbuffer[1], imgbuffer[2], imgbuffer[3], imgbuffer[4], imgbuffer[5], imgbuffer[6], imgbuffer[7]);
-                // ::fflush(stdout);
-                C_ExtractAndConvertToRGBA(image, imgbuffer.get(), size);
-                frameChangedCallbackInstance(w, h, size, imgbuffer.get());
-            }
-        });
-        // frameGrabberInstance->onNewFrame([&](const SL::Screen_Capture::Image& image,const SL::Screen_Capture::Window& window ) {
-        //     if (newFrameCallbackInstance != NULL) {
-        //         // Testing Callback Types
-        //         int w = image.Bounds.right - image.Bounds.left;
-        //         int h = image.Bounds.bottom - image.Bounds.top;
-        //         pixels = w * h;
-        //         size = pixels * sizeof(SL::Screen_Capture::ImageBGRA);
-        //         ::fprintf(stdout, "C_ICaptureConfiguration.onNewFrame %i %i %zu\n", w, h, size); fflush(stdout);
-        //         auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        //         C_ExtractAndConvertToRGBA(image, imgbuffer.get(), size);
 
-        //         // const unsigned  char *retbuffer= (const unsigned  char *)(imgbuffer);
-        //         // newFrameCallback(imagek, window);
-
-        //         // unsigned char** dataPtr = NULL;
-        //         // *dataPtr = (unsigned char*)imgbuffer.get();
-        //         // newFrameCallbackInstance(w*h, dataPtr);
-
-        //         newFrameCallbackInstance(w, h, size, imgbuffer.get());
-        //     }
-        // });
-        // frameGrabberInstance->onMouseChanged([&](const SL::Screen_Capture::Image* image, const SL::Screen_Capture::MousePoint &mousepoint) {
-        //     if (mouseChangedCallbackInstance != NULL) {
-        //         // Testing Callback Types
-        //         int w = image->Bounds.right - image->Bounds.left;
-        //         int h = image->Bounds.bottom - image->Bounds.top;
-        //         pixels = w * h;
-        //         size = pixels * sizeof(SL::Screen_Capture::ImageBGRA);
-        //         ::fprintf(stdout, "C_ICaptureConfiguration.onMouseChanged %i %i %zu\n", w, h, size); fflush(stdout);
-        //         auto imgbuffer(std::make_unique<unsigned char[]>(size));
-        //         C_ExtractAndConvertToRGBA(*image, imgbuffer.get(), size);
-
-        //         // const unsigned  char *retbuffer= (const unsigned  char *)(imgbuffer);
-        //         // mouseChangedCallback(image, mousepoint);
-
-        //         // unsigned char** dataPtr = NULL;
-        //         // *dataPtr = (unsigned char*)imgbuffer.get();
-        //         // mouseChangedCallbackInstance(w*h, dataPtr);
-
-        //         mouseChangedCallbackInstance(w, h, size, imgbuffer.get());
-        //     }
-        // });
+        if (frameChangedCallbackInstance) {
+            frameGrabberInstance->onFrameChanged([&](const SL::Screen_Capture::Image& image,const SL::Screen_Capture::Window& window) {
+                if (frameChangedCallbackInstance != NULL) {
+                    // Testing Callback Types
+                    int w = image.Bounds.right - image.Bounds.left;
+                    int h = image.Bounds.bottom - image.Bounds.top;
+                    pixels = w * h;
+                    size = pixels * sizeof(SL::Screen_Capture::ImageBGRA);
+                    auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                    // ::fprintf(stdout, "C_ICaptureConfiguration.onFrameChanged w:%i h:%i s:%zu  Data: %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx\n\n", w, h, size, imgbuffer[0], imgbuffer[1], imgbuffer[2], imgbuffer[3], imgbuffer[4], imgbuffer[5], imgbuffer[6], imgbuffer[7]);
+                    // ::fflush(stdout);
+                    C_ExtractAndConvertToRGBA(image, imgbuffer.get(), size);
+                    frameChangedCallbackInstance(w, h, size, imgbuffer.get());
+                }
+            });
+        }
+        if (newFrameCallbackInstance) {
+            frameGrabberInstance->onNewFrame([&](const SL::Screen_Capture::Image& image,const SL::Screen_Capture::Window& window) {
+                if (newFrameCallbackInstance != NULL) {
+                    // Testing Callback Types
+                    int w = image.Bounds.right - image.Bounds.left;
+                    int h = image.Bounds.bottom - image.Bounds.top;
+                    pixels = w * h;
+                    size = pixels * sizeof(SL::Screen_Capture::ImageBGRA);
+                    auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                    // ::fprintf(stdout, "C_ICaptureConfiguration.onFrameChanged w:%i h:%i s:%zu  Data: %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx\n\n", w, h, size, imgbuffer[0], imgbuffer[1], imgbuffer[2], imgbuffer[3], imgbuffer[4], imgbuffer[5], imgbuffer[6], imgbuffer[7]);
+                    // ::fflush(stdout);
+                    C_ExtractAndConvertToRGBA(image, imgbuffer.get(), size);
+                    newFrameCallbackInstance(w, h, size, imgbuffer.get());
+                }
+            });
+        }
+        if (mouseChangedCallbackInstance) {
+            frameGrabberInstance->onMouseChanged([&](const SL::Screen_Capture::Image* image,const SL::Screen_Capture::MousePoint& mousepoint) {
+                if (mouseChangedCallbackInstance != NULL) {
+                    // currently only callback when mousepos and image is received
+                    if (image) {
+                        // Testing Callback Types
+                        int w = image->Bounds.right - image->Bounds.left;
+                        int h = image->Bounds.bottom - image->Bounds.top;
+                        pixels = w * h;
+                        size = pixels * sizeof(SL::Screen_Capture::ImageBGRA);
+                        auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                        // ::fprintf(stdout, "C_ICaptureConfiguration.onFrameChanged w:%i h:%i s:%zu  Data: %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx\n\n", w, h, size, imgbuffer[0], imgbuffer[1], imgbuffer[2], imgbuffer[3], imgbuffer[4], imgbuffer[5], imgbuffer[6], imgbuffer[7]);
+                        // ::fflush(stdout);
+                        C_ExtractAndConvertToRGBA(*image, imgbuffer.get(), size);
+                        mouseChangedCallbackInstance(w, h, size, imgbuffer.get());
+                    }
+                }
+            });
+        }
         frameGrabberInstance->start_capturing();
         // return framgrabber;
     }

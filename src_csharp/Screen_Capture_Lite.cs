@@ -171,6 +171,7 @@ namespace SL
             public CaptureConfiguration onFrameChanged(ScreenCaptureCallback cb)
             {
                 Impl_.OnFrameChanged = cb;
+                NativeFunctions.onFrameChanged(CaptureConfigurationPtr, cb);
                 return this;
             }
 
@@ -244,6 +245,8 @@ namespace SL
             public static extern void FreeCaptureConfiguration(IntPtr ptr);
             [DllImport("screen_capture_lite_shared")]
             public static extern void onNewFrame(IntPtr ptr, ScreenCaptureCallback monitorCallback);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern void onFrameChanged(IntPtr ptr, ScreenCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared")]
             //this function will free the input pointer calling FreeCaptureConfiguration internally since its no longer needed. This makes it easier to reason about the c# code.
             public static extern IntPtr start_capturing(IntPtr ptr);

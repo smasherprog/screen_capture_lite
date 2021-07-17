@@ -183,8 +183,11 @@ namespace Screen_Capture {
     namespace C_API {
         void onNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb)
         {
-            // this works.. looks strange though
             ptr->ptr = ptr->ptr->onNewFrame(cb);
+        } 
+        void onFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb)
+        {
+            ptr->ptr = ptr->ptr->onFrameChanged(cb);
         }
         IScreenCaptureManagerWrapper *start_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr)
         {

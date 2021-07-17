@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Threading;
 
 namespace screen_capture_lite_example_csharp
 {
@@ -15,8 +16,11 @@ namespace screen_capture_lite_example_csharp
             Console.WriteLine($"BytesToNextRow = {p.BytesToNextRow} isContiguous = {p.isContiguous} Bounds.bottom = {p.Bounds.bottom} Bounds.left = {p.Bounds.left} Bounds.right = {p.Bounds.right} Bounds.top = {p.Bounds.top}");
         }
         static int onNewFramecounter = 0;
+        static DateTime onNewFramestart = DateTime.Now;
         public static SL.Screen_Capture.CaptureConfiguration.ScreenCaptureManager createframegrabber()
         {
+            onNewFramecounter = 0;
+            onNewFramestart = DateTime.Now;
             return SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfiguration(() =>
             {
                 var mons = SL.Screen_Capture.GetMonitors();
@@ -28,7 +32,22 @@ namespace screen_capture_lite_example_csharp
                 return mons;
             }).onNewFrame((ref SL.Screen_Capture.Image img, ref SL.Screen_Capture.Monitor monitor) =>
             {
-                var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
+                //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
+                //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                //WriteLine(ref img);
+                //WriteLine(ref monitor); 
+                if ((DateTime.Now - onNewFramestart).TotalMilliseconds > 1000)
+                {
+                    Console.WriteLine("onNewFrame fps" + onNewFramecounter);
+                    onNewFramestart = DateTime.Now;
+                    onNewFramecounter = 0;
+                }
+                Interlocked.Increment(ref onNewFramecounter);
+
+            }).onFrameChanged((ref SL.Screen_Capture.Image img, ref SL.Screen_Capture.Monitor monitor) =>
+            {
+                
+                //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
                 //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
                 //WriteLine(ref img);
                 //WriteLine(ref monitor); 

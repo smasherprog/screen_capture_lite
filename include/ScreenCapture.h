@@ -1,12 +1,4 @@
 #pragma once
-#include <assert.h>
-#include <chrono>
-#include <cstring>
-#include <functional>
-#include <memory>
-#include <string>
-#include <thread>
-#include <vector>
 
 #if defined(WINDOWS) || defined(WIN32)
 #if defined(SC_LITE_DLL)
@@ -25,6 +17,15 @@
 #define SC_LITE_EXTERN
 #endif
 #endif
+
+#include <assert.h>
+#include <chrono>
+#include <cstring>
+#include <functional>
+#include <memory>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace SL {
 namespace Screen_Capture {
@@ -209,6 +210,7 @@ namespace Screen_Capture {
     namespace C_API {
         typedef int (*C_API_ScreenCaptureCallback)(const Image &img, const Monitor &monitor); 
         SC_LITE_C_EXTERN void onNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
+        SC_LITE_C_EXTERN void onFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
         SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *start_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
         SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr);
     }; // namespace C_API

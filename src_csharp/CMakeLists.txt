@@ -30,10 +30,7 @@ else()
 install (FILES ${CMAKE_BINARY_DIR}/${OUTPUT}
 	DESTINATION bin
 )
-install (FILES 
-	${CMAKE_CURRENT_LIST_DIR}/Screen_Capture_Lite.cs 
-	DESTINATION include
-)
+
 endif()
 
 

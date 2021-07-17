@@ -26,7 +26,7 @@ else()
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
     add_dependencies(${PROJECT_NAME} screen_capture_lite_shared)
 
-install (TARGETS ${PROJECT_NAME}
+install (TARGETS ${OUTPUT}
 	RUNTIME DESTINATION bin
 )
 install (FILES 

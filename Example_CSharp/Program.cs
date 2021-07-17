@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Drawing;
 
 namespace screen_capture_lite_example_csharp
 {
@@ -13,6 +14,7 @@ namespace screen_capture_lite_example_csharp
         {
             Console.WriteLine($"BytesToNextRow = {p.BytesToNextRow} isContiguous = {p.isContiguous} Bounds.bottom = {p.Bounds.bottom} Bounds.left = {p.Bounds.left} Bounds.right = {p.Bounds.right} Bounds.top = {p.Bounds.top}");
         }
+        static int onNewFramecounter = 0;
         public static SL.Screen_Capture.CaptureConfiguration.ScreenCaptureManager createframegrabber()
         {
             return SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfiguration(() =>
@@ -26,7 +28,10 @@ namespace screen_capture_lite_example_csharp
                 return mons;
             }).onNewFrame((ref SL.Screen_Capture.Image img, ref SL.Screen_Capture.Monitor monitor) =>
             {
-                WriteLine(ref img);
+                var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
+                //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                //WriteLine(ref img);
+                //WriteLine(ref monitor); 
             }).start_capturing();
         }
 

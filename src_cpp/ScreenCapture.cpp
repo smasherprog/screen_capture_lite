@@ -181,7 +181,7 @@ namespace Screen_Capture {
         }
     };
     namespace C_API {
-        void onNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, ScreenCaptureCallback cb)
+        void onNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb)
         {
             // this works.. looks strange though
             ptr->ptr = ptr->ptr->onNewFrame(cb);
@@ -231,14 +231,13 @@ namespace Screen_Capture {
     };
 
     namespace C_API {
-
-        ICaptureConfigurationScreenCaptureCallbackWrapper *CreateCaptureConfiguration(MonitorCallback monitorstocapture)
+        ICaptureConfigurationScreenCaptureCallbackWrapper *CreateCaptureConfiguration(C_API_MonitorCallback monitorstocapture)
         {
-            auto p = new ICaptureConfigurationScreenCaptureCallbackWrapper(); 
+            auto p = new ICaptureConfigurationScreenCaptureCallbackWrapper();
             p->ptr = Screen_Capture::CreateCaptureConfiguration([=]() {
                 std::array<Monitor, 16> monitorbuffer;
                 auto sizeused = monitorstocapture(monitorbuffer.data(), 16);
-                std::vector<Monitor> monitors; 
+                std::vector<Monitor> monitors;
                 monitors.resize(sizeused);
                 memcpy(monitors.data(), monitorbuffer.data(), sizeused * sizeof(Monitor));
                 return monitors;

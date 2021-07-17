@@ -147,7 +147,7 @@ namespace SL
                     {
                         Marshal.StructureToPtr(m[i], monitorbuffer, false);
                         var size = Marshal.SizeOf(typeof(Monitor));
-                        IntPtr.Add(monitorbuffer, size);
+                        monitorbuffer = IntPtr.Add(monitorbuffer, size);
                     }
                     return monitorstocopy;
                 };

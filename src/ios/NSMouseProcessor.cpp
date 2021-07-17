@@ -54,7 +54,7 @@ namespace Screen_Capture {
             imgrect.left = imgrect.top = 0;
             imgrect.right = width;
             imgrect.bottom = height;
-            auto wholeimgfirst = CreateImage(imgrect, 0, reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
+            auto wholeimgfirst = CreateImage(imgrect, width*4, reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
 
             auto lastx = static_cast<int>(loc.x);
             auto lasty = static_cast<int>(loc.y);

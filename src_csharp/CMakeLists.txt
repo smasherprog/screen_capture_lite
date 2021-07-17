@@ -26,10 +26,8 @@ else()
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
     add_dependencies(${PROJECT_NAME} screen_capture_lite_shared)
 
-install (TARGETS screen_capture_lite_csharp
+install (TARGETS ${OUTPUT}
 	RUNTIME DESTINATION bin
-	ARCHIVE DESTINATION lib
-	LIBRARY DESTINATION lib
 )
 install (FILES 
 	${CMAKE_CURRENT_LIST_DIR}/Screen_Capture_Lite.cs 

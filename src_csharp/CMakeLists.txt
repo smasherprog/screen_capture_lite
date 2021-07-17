@@ -23,10 +23,11 @@ else()
         COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} ${CMAKE_BINARY_DIR}/src_csharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
         COMMENT "Building DOTNET assembly ${NAME}.dll"
       )
+
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
     add_dependencies(${PROJECT_NAME} screen_capture_lite_shared)
 
-install (TARGETS ${CMAKE_BINARY_DIR}/${OUTPUT}
+install (TARGETS ${CMAKE_BINARY_DIR}/${PROJECT_NAME}
 	RUNTIME DESTINATION bin
 )
 install (FILES 

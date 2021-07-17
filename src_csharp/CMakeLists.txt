@@ -26,7 +26,7 @@ else()
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
     add_dependencies(${PROJECT_NAME} screen_capture_lite_shared)
 
-install (TARGETS ${OUTPUT}
+install (TARGETS ${CMAKE_BINARY_DIR}/${OUTPUT}
 	RUNTIME DESTINATION bin
 )
 install (FILES 

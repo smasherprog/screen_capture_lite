@@ -100,20 +100,30 @@ namespace SL
                     ScreenCaptureData = d;
                 }
 
-                void start()
+                public void pause()
                 {
+                    NativeFunctions.pause(ScreenCapturePtr);
+                }
 
+                public void resume()
+                {
+                    NativeFunctions.resume(ScreenCapturePtr);
+                }
+
+                public bool isPaused()
+                {
+                    return NativeFunctions.isPaused(ScreenCapturePtr);
+                }
+
+                public void setFrameChangeInterval(TimeSpan timeSpan)
+                {
+                    NativeFunctions.setFrameChangeInterval(ScreenCapturePtr, (int)timeSpan.TotalMilliseconds);
                 }
 
                 protected virtual void Dispose(bool disposing)
                 {
                     if (!disposedValue)
                     {
-                        if (disposing)
-                        {
-                            // TODO: dispose managed state (managed objects)
-                        }
-
                         NativeFunctions.FreeIScreenCaptureManagerWrapper(ScreenCapturePtr);
                         ScreenCapturePtr = IntPtr.Zero;
                         disposedValue = true;
@@ -222,13 +232,15 @@ namespace SL
             {
                 monitorsizeguess = sizeneeded;
                 GetMonitorsAllocationSize = Math.Max(sizeneeded, GetMonitorsAllocationSize);
-                Marshal.FreeHGlobal(unmanagedArray); 
+                Marshal.FreeHGlobal(unmanagedArray);
                 unmanagedArray = Marshal.AllocHGlobal(monitorsizeguess * size);
                 sizeneeded = NativeFunctions.GetMonitors(unmanagedArray, monitorsizeguess);
             }
+
+            monitorsizeguess = Math.Min(sizeneeded, monitorsizeguess);
             var copyunmanagedArray = unmanagedArray;
-            var mangagedArray = new Monitor[sizeneeded]; 
-            for (int i = 0; i < sizeneeded; i++)
+            var mangagedArray = new Monitor[monitorsizeguess];
+            for (int i = 0; i < monitorsizeguess; i++)
             {
                 mangagedArray[i] = Marshal.PtrToStructure<Monitor>(unmanagedArray);
                 unmanagedArray = IntPtr.Add(unmanagedArray, size);
@@ -254,6 +266,15 @@ namespace SL
             public static extern IntPtr CreateCaptureConfiguration(MonitorCallback monitorCallback);
             [DllImport("screen_capture_lite_shared")]
             public static extern void FreeCaptureConfiguration(IntPtr ptr);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern void pause(IntPtr ptr);
+            [DllImport("screen_capture_lite_shared")]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool isPaused(IntPtr ptr);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern bool resume(IntPtr ptr);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern void setFrameChangeInterval(IntPtr ptr, int milliseconds);
             [DllImport("screen_capture_lite_shared")]
             public static extern void onNewFrame(IntPtr ptr, ScreenCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared")]

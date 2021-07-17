@@ -215,6 +215,11 @@ namespace Screen_Capture {
         SC_LITE_C_EXTERN void onFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
         SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *start_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
         SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr);
+
+        SC_LITE_C_EXTERN void setFrameChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds);
+        SC_LITE_C_EXTERN void pause(IScreenCaptureManagerWrapper *ptr);
+        SC_LITE_C_EXTERN bool isPaused(IScreenCaptureManagerWrapper *ptr);
+        SC_LITE_C_EXTERN void resume(IScreenCaptureManagerWrapper *ptr);
     }; // namespace C_API
 
     // the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want

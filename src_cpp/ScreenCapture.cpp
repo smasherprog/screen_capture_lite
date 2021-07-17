@@ -196,6 +196,14 @@ namespace Screen_Capture {
             FreeCaptureConfiguration(ptr);
             return p;
         }
+        void setFrameChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds)
+        {
+            ptr->ptr->setFrameChangeInterval(std::chrono::milliseconds(milliseconds));
+        }
+        void pause(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->pause(); }
+        bool isPaused(IScreenCaptureManagerWrapper *ptr) { return ptr->ptr->isPaused(); }
+        void resume(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->resume(); }
+
         void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr) { delete ptr; }
 
     }; // namespace C_API
@@ -249,6 +257,8 @@ namespace Screen_Capture {
                     maxmonitorsize = std::max(sizeneeded, maxmonitorsize);
                     monitors.resize(monitorsizeguess);
                     sizeneeded = monitorstocapture(monitors.data(), monitorsizeguess);
+                    monitorsizeguess = std::min(monitorsizeguess, sizeneeded);
+                    monitors.resize(monitorsizeguess);
                     return monitors;
                 }
                 monitors.resize(sizeneeded);

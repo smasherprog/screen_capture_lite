@@ -78,9 +78,27 @@ namespace screen_capture_lite_example_csharp
             }
 
             Console.WriteLine("Running display capturing for 10 seconds");
-            using (var grabber = createframegrabber())
+            using (var framgrabber = createframegrabber())
             {
-                System.Threading.Thread.Sleep(10 * 1000);
+                System.Threading.Thread.Sleep(10 * 1000); 
+            }
+
+            Console.WriteLine("Running display capturing for 1 seconds");
+            using (var framgrabber = createframegrabber())
+            {
+                System.Threading.Thread.Sleep(1 * 1000);
+                Console.WriteLine("Pausing for 10 seconds.");
+                framgrabber.pause();
+                var counti = 0;
+                while (counti++ < 10)
+                {
+                    Debug.Assert(framgrabber.isPaused());
+                    Console.Write(" . ");
+                    System.Threading.Thread.Sleep(1 * 1000);
+                }
+                Console.WriteLine("Resuming  . . . for 5 seconds");
+                framgrabber.resume();
+                System.Threading.Thread.Sleep(5 * 1000);
             }
         }
     }

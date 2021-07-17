@@ -1,6 +1,6 @@
 project(screen_capture_lite_example_csharp)
     
-set(OUTPUT ${PROJECT_NAME}.exe)
+set(OUTPUT ${PROJECT_NAME}.dll)
 set(CSPROJ ${PROJECT_NAME}.csproj)
 
 execute_process(COMMAND dotnet --version

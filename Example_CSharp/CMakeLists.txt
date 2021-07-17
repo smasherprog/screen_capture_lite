@@ -1,6 +1,6 @@
 project(screen_capture_lite_example_csharp)
     
-set(OUTPUT ${PROJECT_NAME}.dll)
+set(OUTPUT ${PROJECT_NAME}.exe)
 set(CSPROJ ${PROJECT_NAME}.csproj)
 
 execute_process(COMMAND dotnet --version
@@ -21,10 +21,23 @@ else()
       ${CMAKE_CURRENT_LIST_DIR}/Program.cs
       ${CMAKE_BINARY_DIR}/Example_CSharp
     COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} ${CMAKE_BINARY_DIR}/Example_CSharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
-    COMMENT "Building DOTNET assembly ${NAME}.dll"
+    COMMENT "Building DOTNET Example ${OUTPUT}"
   )
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
     add_dependencies(${PROJECT_NAME} screen_capture_lite_csharp)
+
+install (FILES ${CMAKE_BINARY_DIR}/${OUTPUT}
+	DESTINATION bin
+)
+install (FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pdb
+	DESTINATION bin
+    OPTIONAL
+)
+ 
+install (TARGETS screen_capture_lite_shared
+	RUNTIME DESTINATION Examples 
+) 
+
 endif()
 
 

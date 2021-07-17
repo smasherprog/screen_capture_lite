@@ -21,7 +21,7 @@ else()
           ${CMAKE_CURRENT_LIST_DIR}/Screen_Capture_Lite.cs
           ${CMAKE_BINARY_DIR}/src_csharp
         COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} ${CMAKE_BINARY_DIR}/src_csharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
-        COMMENT "Building DOTNET assembly ${NAME}.dll"
+        COMMENT "Building DOTNET assembly ${OUTPUT}"
       )
 
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
@@ -30,7 +30,10 @@ else()
 install (FILES ${CMAKE_BINARY_DIR}/${OUTPUT}
 	DESTINATION bin
 )
-
+install (FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pdb
+	DESTINATION bin
+    OPTIONAL
+)
 endif()
 
 

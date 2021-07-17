@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <atomic>
 #include <cstring>
-#include <fstream>
 #include <iostream>
 #include <memory>
 #include <span>
@@ -22,17 +21,19 @@ namespace Screen_Capture {
           public:
             std::shared_ptr<IScreenCaptureManager> ptr;
         };
-        int GetMonitors(Monitor **monitors)
+        int GetMonitors(Monitor *monitors, int monitors_size)
         {
-            static auto local_monitors = Screen_Capture::GetMonitors();
-            *monitors = local_monitors.data();
+            auto local_monitors = Screen_Capture::GetMonitors();
+            auto maxelements = std::clamp(static_cast<int>(local_monitors.size()), 0, monitors_size);
+            memcpy(monitors, local_monitors.data(), maxelements * sizeof(Monitor));
             return static_cast<int>(local_monitors.size());
         }
 
-        int GetWindows(Window **windows)
+        int GetWindows(Window *windows, int monitors_size)
         {
-            static auto local_windows = Screen_Capture::GetWindows();
-            *windows = local_windows.data();
+            auto local_windows = Screen_Capture::GetWindows();
+            auto maxelements = std::clamp(static_cast<int>(local_windows.size()), 0, monitors_size);
+            memcpy(windows, local_windows.data(), maxelements * sizeof(Window));
             return static_cast<int>(local_windows.size());
         }
 
@@ -184,7 +185,7 @@ namespace Screen_Capture {
         void onNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb)
         {
             ptr->ptr = ptr->ptr->onNewFrame(cb);
-        } 
+        }
         void onFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb)
         {
             ptr->ptr = ptr->ptr->onFrameChanged(cb);
@@ -237,12 +238,20 @@ namespace Screen_Capture {
         ICaptureConfigurationScreenCaptureCallbackWrapper *CreateCaptureConfiguration(C_API_MonitorCallback monitorstocapture)
         {
             auto p = new ICaptureConfigurationScreenCaptureCallbackWrapper();
+            static auto maxmonitorsize = 16;
             p->ptr = Screen_Capture::CreateCaptureConfiguration([=]() {
-                std::array<Monitor, 16> monitorbuffer;
-                auto sizeused = monitorstocapture(monitorbuffer.data(), 16);
                 std::vector<Monitor> monitors;
-                monitors.resize(sizeused);
-                memcpy(monitors.data(), monitorbuffer.data(), sizeused * sizeof(Monitor));
+                auto monitorsizeguess = maxmonitorsize;
+                monitors.resize(monitorsizeguess);
+                auto sizeneeded = monitorstocapture(monitors.data(), monitorsizeguess);
+                if (monitorsizeguess < sizeneeded) {
+                    monitorsizeguess = sizeneeded;
+                    maxmonitorsize = std::max(sizeneeded, maxmonitorsize);
+                    monitors.resize(monitorsizeguess);
+                    sizeneeded = monitorstocapture(monitors.data(), monitorsizeguess);
+                    return monitors;
+                }
+                monitors.resize(sizeneeded);
                 return monitors;
             });
             return p;

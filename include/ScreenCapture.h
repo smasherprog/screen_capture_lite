@@ -157,8 +157,10 @@ namespace Screen_Capture {
     // will return all windows
     SC_LITE_EXTERN std::vector<Window> GetWindows();
     namespace C_API {
-        SC_LITE_C_EXTERN int GetWindows(Window **windows);
-        SC_LITE_C_EXTERN int GetMonitors(Monitor **monitors);
+        //GetWindows and GetMonitors expect a pre allocated buffer with the size as the second input parameter. 
+        //The output of these functions is the actual total number of elements that the library had to return. So, applications should use this value in determininng how to preallocate data.
+        SC_LITE_C_EXTERN int GetWindows(Window *windows, int windows_size);
+        SC_LITE_C_EXTERN int GetMonitors(Monitor *monitors, int monitors_size);
         SC_LITE_C_EXTERN bool isMonitorInsideBounds(const Monitor *monitors, const int monitorsize, const Monitor *monitor);
     }; // namespace C_API
     SC_LITE_EXTERN bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);

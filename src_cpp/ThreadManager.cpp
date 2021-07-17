@@ -22,10 +22,7 @@ void SL::Screen_Capture::ThreadManager::Init(const std::shared_ptr<Thread_Data>&
     if (data->ScreenCaptureData.getThingsToWatch) {
         auto monitors = data->ScreenCaptureData.getThingsToWatch();
         auto mons = GetMonitors();
-        std::ofstream outfile;
-        outfile.open("test.txt", std::ios_base::app);
         for (auto &m : monitors) {
-            outfile << m << std::endl;
             assert(isMonitorInsideBounds(mons, m));
         }
 

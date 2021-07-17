@@ -149,7 +149,7 @@ namespace SL
                         var size = Marshal.SizeOf(typeof(Monitor));
                         monitorbuffer = IntPtr.Add(monitorbuffer, size);
                     }
-                    return monitorstocopy;
+                    return m.Length;
                 };
                 return new CaptureConfiguration
                 {
@@ -211,18 +211,29 @@ namespace SL
             }
         }
 
+        private static int GetMonitorsAllocationSize = 16;
         public static Monitor[] GetMonitors()
         {
-            var unmanagedArray = IntPtr.Zero;
-            var length = NativeFunctions.GetMonitors(ref unmanagedArray);
+            var monitorsizeguess = GetMonitorsAllocationSize;
             var size = Marshal.SizeOf(typeof(Monitor));
-            var mangagedArray = new Monitor[length];
-
-            for (int i = 0; i < length; i++)
+            var unmanagedArray = Marshal.AllocHGlobal(monitorsizeguess * size);
+            var sizeneeded = NativeFunctions.GetMonitors(unmanagedArray, monitorsizeguess);
+            if (monitorsizeguess < sizeneeded)
+            {
+                monitorsizeguess = sizeneeded;
+                GetMonitorsAllocationSize = Math.Max(sizeneeded, GetMonitorsAllocationSize);
+                Marshal.FreeHGlobal(unmanagedArray); 
+                unmanagedArray = Marshal.AllocHGlobal(monitorsizeguess * size);
+                sizeneeded = NativeFunctions.GetMonitors(unmanagedArray, monitorsizeguess);
+            }
+            var copyunmanagedArray = unmanagedArray;
+            var mangagedArray = new Monitor[sizeneeded]; 
+            for (int i = 0; i < sizeneeded; i++)
             {
                 mangagedArray[i] = Marshal.PtrToStructure<Monitor>(unmanagedArray);
                 unmanagedArray = IntPtr.Add(unmanagedArray, size);
             }
+            Marshal.FreeHGlobal(copyunmanagedArray);
             return mangagedArray;
         }
         public static bool isMonitorInsideBounds(Monitor[] monitors, Monitor monitor)
@@ -235,7 +246,7 @@ namespace SL
             public delegate int MonitorCallback(IntPtr monitorbuffer, int monitorbuffersize);
 
             [DllImport("screen_capture_lite_shared")]
-            public static extern int GetMonitors(ref IntPtr monitors);
+            public static extern int GetMonitors(IntPtr monitors, int monitors_size);
             [DllImport("screen_capture_lite_shared")]
             [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool isMonitorInsideBounds(Monitor[] monitors, int monitorsize, Monitor monitor);

@@ -19,7 +19,7 @@ build_script:
   - if %platform%==x86 set generator=Win32
   - if %platform%==x64 set generator=x64
   - echo Visual Studio 16 2019 -A %generator% %configuration%
-  - cmake . -G"Visual Studio 16 2019" -A %generator% -DCMAKE_BUILD_TYPE=%configuration%
+  - cmake .. -G"Visual Studio 16 2019" -A %generator% -DCMAKE_BUILD_TYPE=%configuration% -DCMAKE_INSTALL_PREFIX=./output
   - cmake --build . --target INSTALL
   - 7z a vc140_%configuration%_%PLATFORM%.zip -i!%APPVEYOR_BUILD_FOLDER%\build\output\*
   - appveyor PushArtifact vc140_%configuration%_%PLATFORM%.zip

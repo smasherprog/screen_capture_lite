@@ -55,9 +55,8 @@ add_executable(${PROJECT_NAME}_shared
 	Screen_Capture_Example.cpp
 )
 
-install (TARGETS ${PROJECT_NAME}_static ${PROJECT_NAME}_shared
+install (TARGETS ${PROJECT_NAME}_static ${PROJECT_NAME}_shared screen_capture_lite_shared
 	RUNTIME DESTINATION Examples
-	RUNTIME_DEPENDENCIES screen_capture_lite_shared
 ) 
   
 target_link_libraries(${PROJECT_NAME}_shared screen_capture_lite_shared ${${PROJECT_NAME}_PLATFORM_LIBS}) 

@@ -252,7 +252,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 422840bd1ff324fc19c262987e7e7958, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  windowIdToCapture: 21
+  windowIdToCapture: 19
   frameChangedTex: {fileID: 0}
   newFrameTex: {fileID: 0}
   mouseChangedTex: {fileID: 0}

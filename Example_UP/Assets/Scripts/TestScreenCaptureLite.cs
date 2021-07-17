@@ -112,11 +112,24 @@ public class TestScreenCaptureLite : MonoBehaviour {
     public static extern void C_Capture_Stop ();
 
     [DllImport("libscreen_capture_lite")]
-    public static extern void C_SetFrameChangeInterval (int ms);
-
+    public static extern void C_Capture_Pause ();
 
     [DllImport("libscreen_capture_lite")]
-    public static extern void C_SetMouseChangeInterval (int ms);
+    public static extern void C_Capture_Resume ();
+
+    [DllImport("libscreen_capture_lite")]
+    public static extern bool C_Capture_IsPaused ();
+
+    [DllImport("libscreen_capture_lite")]
+    public static extern bool C_Capture_ExpectedErrorEvent ();
+
+    [DllImport("libscreen_capture_lite")]
+    public static extern void C_Capture_SetFrameChangeInterval (int ms);
+
+    [DllImport("libscreen_capture_lite")]
+    public static extern void C_Capture_SetMouseChangeInterval (int ms);
+
+
 #endregion Screen Capture Light API
 
 
@@ -168,12 +181,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
     }
 
     private static T GetNativeType<T>(IntPtr ptr) {
-        T result;
-        int size = Marshal.SizeOf (typeof(T));
-
-        // 32-bit system
-        result = (T)Marshal.PtrToStructure (ptr, typeof(T));
-        return result;
+        return (T)Marshal.PtrToStructure (ptr, typeof(T));
     }
 
     int onFrameChangedWidth;
@@ -206,6 +214,10 @@ public class TestScreenCaptureLite : MonoBehaviour {
         onFrameChangedWindow = GetNativeType<Window> (windowPtr);
         Debug.Log($"OnFrameChanged w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length}");
 
+        if ((w != onFrameChangedWindow.Size.x) || (h != onFrameChangedWindow.Size.y)) {
+            Debug.Log($"OnFrameChanged: img:{w}/{h} win:{onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y} differ");
+        }
+
         if ((w * h * 4) != s) {
             Debug.LogError($"OnFrameChanged w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length} : Invalid size of Data for given Size");
             onFrameChangedBytes = null;
@@ -220,6 +232,10 @@ public class TestScreenCaptureLite : MonoBehaviour {
         onNewFrameBytes = GetNativeArray<byte> (array, s);
         onNewFrameWindow = GetNativeType<Window> (windowPtr);
         Debug.Log($"OnNewFrame: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length}");
+
+        if ((w != onNewFrameWindow.Size.x) || (h != onNewFrameWindow.Size.y)) {
+            Debug.Log($"OnNewFrame: img:{w}/{h} win:{onNewFrameWindow.Size.x}/{onNewFrameWindow.Size.y} differ");
+        }
 
         if ((w * h * 4) != s) {
             Debug.LogError($"OnNewFrame: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length} : Invalid size of Data for given Size");
@@ -299,6 +315,10 @@ public class TestScreenCaptureLite : MonoBehaviour {
                 Debug.LogError($"{e.ToString()}");
             }
         }
+
+        if (C_Capture_ExpectedErrorEvent()) {
+            Debug.LogWarning("Capturing Encountered Expected Error (like window resize)");
+        }
     }
 #endregion Screen Capture Light Unity API
 
@@ -341,7 +361,8 @@ public class TestScreenCaptureLite : MonoBehaviour {
             Debug.Log($"- OffsetX:{monitor.OffsetX} OffsetY:{monitor.OffsetY} OriginalOffsetX:{monitor.OriginalOffsetX} OriginalOffsetY:{monitor.OriginalOffsetY}");
         }
 
-        frameChangeDelegate = new ImageRefWindowRefCallbackType(OnFrameChanged);
+        // frameChangeDelegate = new ImageRefWindowRefCallbackType(OnFrameChanged);
+        frameChangeDelegate = null;
         newFrameDelegate = new ImageRefWindowRefCallbackType(OnNewFrame);
         // newFrameDelegate = null;
         // TODO: ignore mouse for now, seems to work, but i dont get any useful image content
@@ -354,8 +375,8 @@ public class TestScreenCaptureLite : MonoBehaviour {
 
         topText.text = $"grabbing window: {windows[windowIdToCapture].Name} {windows[windowIdToCapture].Position.x} {windows[windowIdToCapture].Position.y}";
 
-        C_SetMouseChangeInterval(1000);
-        C_SetFrameChangeInterval(100);
+        C_Capture_SetMouseChangeInterval(1000);
+        C_Capture_SetFrameChangeInterval(1000);
     }
 
     void OnApplicationQuit() {

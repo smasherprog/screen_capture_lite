@@ -189,18 +189,43 @@ namespace Screen_Capture {
         }
     }
 
-    SC_LITE_EXTERN void C_SetFrameChangeInterval (int ms) {
+    SC_LITE_EXTERN void C_Capture_SetFrameChangeInterval (int ms) {
         if (frameGrabber != NULL) {
             frameGrabber->setFrameChangeInterval(std::chrono::milliseconds(ms));
         }
     }
 
-    SC_LITE_EXTERN void C_SetMouseChangeInterval (int ms) {
+    SC_LITE_EXTERN void C_Capture_SetMouseChangeInterval (int ms) {
         if (frameGrabber != NULL) {
             frameGrabber->setMouseChangeInterval(std::chrono::milliseconds(ms));
         }
     }
 
+    SC_LITE_EXTERN void C_Capture_Pause () {
+        if (frameGrabber != NULL) {
+            frameGrabber->pause();
+        }
+    }
+
+    SC_LITE_EXTERN void C_Capture_Resume () {
+        if (frameGrabber != NULL) {
+            frameGrabber->resume();
+        }
+    }
+
+    SC_LITE_EXTERN bool C_Capture_IsPaused () {
+        if (frameGrabber != NULL) {
+            return frameGrabber->isPaused();
+        }
+        return false;
+    }
+
+    SC_LITE_EXTERN bool C_Capture_ExpectedErrorEvent () {
+        if (frameGrabber != NULL) {
+            return frameGrabber->expectedErrorEvent();
+        }
+        return false;
+    }
 
 } // namespace Screen_Capture
 } // namespace SL

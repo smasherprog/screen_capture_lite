@@ -18,16 +18,12 @@ endif()
 add_subdirectory(src_cpp) 
 add_subdirectory(src_csharp) 
 
-install (TARGETS screen_capture_lite_static  
+install (TARGETS screen_capture_lite_static screen_capture_lite_shared
 	RUNTIME DESTINATION bin
 	ARCHIVE DESTINATION lib
 	LIBRARY DESTINATION lib
 )
-install (TARGETS screen_capture_lite_shared  
-	RUNTIME DESTINATION bin
-	ARCHIVE DESTINATION lib
-	LIBRARY DESTINATION lib
-)
+ 
 install (FILES 
 	include/ScreenCapture.h 
 	DESTINATION include

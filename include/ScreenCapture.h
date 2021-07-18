@@ -175,6 +175,7 @@ namespace Screen_Capture {
         virtual void resume() = 0;
         // has aborted capturing
         virtual bool expectedErrorEvent() const = 0;
+        virtual void abort() = 0;
     };
 
     template <typename CAPTURECALLBACK> class ICaptureConfiguration {

@@ -108,6 +108,7 @@ namespace Screen_Capture {
         std::vector<Window> windowsToCapture;
         windowsToCapture.push_back(windowToCapture);
         
+        // static std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> frameGrabberConfiguration;
         frameGrabberConfiguration =  SL::Screen_Capture::CreateCaptureConfiguration([windowsToCapture]() {
             //add your own custom filtering here if you want to capture only some monitors
             return windowsToCapture;
@@ -176,17 +177,25 @@ namespace Screen_Capture {
     }
 
     SC_LITE_EXTERN void C_Capture_Start () {
-        if (frameGrabberConfiguration != NULL) {
-            frameGrabber = frameGrabberConfiguration->start_capturing();
-        }
+        // having trouble deleting the thread & the config
+    //     if (frameGrabberConfiguration != NULL) {
+    //         frameGrabber = frameGrabberConfiguration->start_capturing();
+    //     }
     }
 
     SC_LITE_EXTERN void C_Capture_Stop () {
-        if (frameGrabberConfiguration != NULL) {
-            frameGrabberConfiguration.reset();
-            // TODO: how to free framegrabber?
-            frameGrabber = NULL;
-        }
+        // if (frameGrabberConfiguration != NULL) {
+        //     frameGrabberConfiguration.reset();
+        //     frameGrabberConfiguration = NULL;
+        // }
+        frameGrabber = nullptr;
+        frameGrabberConfiguration = nullptr;
+        // if (frameGrabber != nullptr) {
+        //     frameGrabber->abort();
+        //     // TODO: how to free framegrabber?
+        //     frameGrabber = nullptr;
+        //     // frameGrabberConfiguration = NULL;
+        // }
     }
 
     SC_LITE_EXTERN void C_Capture_SetFrameChangeInterval (int ms) {
@@ -226,6 +235,7 @@ namespace Screen_Capture {
         }
         return false;
     }
+
 
 } // namespace Screen_Capture
 } // namespace SL

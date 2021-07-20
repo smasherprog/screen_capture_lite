@@ -184,24 +184,29 @@ public class TestScreenCaptureLite : MonoBehaviour {
         return (T)Marshal.PtrToStructure (ptr, typeof(T));
     }
 
+    bool onFrameChanged = false;
     int onFrameChangedWidth;
     int onFrameChangedHeight;
     int onFrameChangedSize;
     // if there is data in the onFrameChangedBytes, the texture should be updated with it
-    byte[] onFrameChangedBytes;
+    byte[] onFrameChangedBytes = new byte[0];
     Window onFrameChangedWindow;
     
+    bool onNewFrame = false;
     int onNewFrameWidth;
     int onNewFrameHeight;
     int onNewFrameSize;
-    byte[] onNewFrameBytes;
+    byte[] onNewFrameBytes = new byte[0];
     Window onNewFrameWindow;
     
+    bool onMouseChanged = false;
     int onMouseChangedWidth;
     int onMouseChangedHeight;
     int onMouseChangedSize;
-    byte[] onMouseChangedBytes;
+    byte[] onMouseChangedBytes = new byte[0];
     MousePoint onMouseChangedMousePoint;
+
+    List<string> debugMessages = new List<string>();
 
     // unity doesnt allow writing the texture here
     [MonoPInvokeCallback (typeof (ImageRefWindowRefCallbackType))]
@@ -210,16 +215,22 @@ public class TestScreenCaptureLite : MonoBehaviour {
         onFrameChangedWidth = w;
         onFrameChangedHeight = h;
         onFrameChangedSize = s;
-        onFrameChangedBytes = GetNativeArray<byte> (array, s);
+        if (onFrameChangedBytes.Length != s) {
+            onFrameChangedBytes = new byte[s];
+        }
+        Marshal.Copy(array, onFrameChangedBytes, 0, onFrameChangedBytes.Length);
+        onFrameChanged = true;
+        // onFrameChangedBytes = GetNativeArray<byte> (array, s);
         onFrameChangedWindow = GetNativeType<Window> (windowPtr);
-        Debug.Log($"OnFrameChanged w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length}");
+
+        debugMessages.Add($"OnFrameChanged w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length}");
 
         if ((w != onFrameChangedWindow.Size.x) || (h != onFrameChangedWindow.Size.y)) {
-            Debug.Log($"OnFrameChanged: img:{w}/{h} win:{onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y} differ");
+            debugMessages.Add($"OnFrameChanged: img:{w}/{h} win:{onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y} differ");
         }
 
         if ((w * h * 4) != s) {
-            Debug.LogError($"OnFrameChanged w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length} : Invalid size of Data for given Size");
+            debugMessages.Add($"OnFrameChanged w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length} : Invalid size of Data for given Size");
             onFrameChangedBytes = null;
         }
     }
@@ -229,16 +240,21 @@ public class TestScreenCaptureLite : MonoBehaviour {
         onNewFrameWidth = w;
         onNewFrameHeight = h;
         onNewFrameSize = s;
-        onNewFrameBytes = GetNativeArray<byte> (array, s);
+        if (onNewFrameBytes.Length != s) {
+            onNewFrameBytes = new byte[s];
+        }
+        Marshal.Copy(array, onNewFrameBytes, 0, onNewFrameBytes.Length);
+        // onNewFrameBytes = GetNativeArray<byte> (array, s);
         onNewFrameWindow = GetNativeType<Window> (windowPtr);
-        Debug.Log($"OnNewFrame: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length}");
+        onNewFrame = true;
+        debugMessages.Add($"OnNewFrame: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length}");
 
         if ((w != onNewFrameWindow.Size.x) || (h != onNewFrameWindow.Size.y)) {
-            Debug.Log($"OnNewFrame: img:{w}/{h} win:{onNewFrameWindow.Size.x}/{onNewFrameWindow.Size.y} differ");
+            debugMessages.Add($"OnNewFrame: img:{w}/{h} win:{onNewFrameWindow.Size.x}/{onNewFrameWindow.Size.y} differ");
         }
 
         if ((w * h * 4) != s) {
-            Debug.LogError($"OnNewFrame: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length} : Invalid size of Data for given Size");
+            debugMessages.Add($"OnNewFrame: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length} : Invalid size of Data for given Size");
             onNewFrameBytes = null;
         }
     }
@@ -248,18 +264,30 @@ public class TestScreenCaptureLite : MonoBehaviour {
         onMouseChangedWidth = w;
         onMouseChangedHeight = h;
         onMouseChangedSize = s;
-        onMouseChangedBytes = GetNativeArray<byte> (array, s);
+        // onMouseChangedBytes = GetNativeArray<byte> (array, s);
+        if (onMouseChangedBytes.Length != s) {
+            onMouseChangedBytes = new byte[s];
+        }
+        Marshal.Copy(array, onMouseChangedBytes, 0, onMouseChangedBytes.Length);
+        onMouseChanged = true;
         onMouseChangedMousePoint = GetNativeType<MousePoint> (mposPtr);
 
         if ((w * h * 4) != s) {
-            Debug.LogError($"OnMouseChanged: w:{w} h:{h} *:{(w*h)} s:{s} l:{onMouseChangedBytes.Length} : Invalid size of Data for given Size");
+            debugMessages.Add($"OnMouseChanged: w:{w} h:{h} *:{(w*h)} s:{s} l:{onMouseChangedBytes.Length} : Invalid size of Data for given Size");
             onMouseChangedBytes = null;
         }
     }
 
     // convert the texture data to textures to use in unity
     public void UpdateTextures () {
-        if (onFrameChangedBytes != null) {
+        if (debugMessages.Count > 0) {
+            for (int i=0; i<debugMessages.Count; i++ ){
+                Debug.Log(debugMessages);
+            }
+            debugMessages.Clear();
+        }
+        if (onFrameChanged) {
+            onFrameChanged = false;
             if ((frameChangedTex == null) || (frameChangedTex.width != onFrameChangedWidth) || (frameChangedTex.height != onFrameChangedHeight)) {
                 Debug.Log($"Update.frameChangedTex: new Texture {onFrameChangedWindow.Size.x} {onFrameChangedWindow.Size.y} {onFrameChangedWidth} {onFrameChangedHeight}");
                 frameChangedTex = new Texture2D(onFrameChangedWidth, onFrameChangedHeight, TextureFormat.RGBA32, false);
@@ -270,7 +298,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
                 Debug.Log($"Update.frameChange: {onFrameChangedWindow.Position.x} {onFrameChangedWindow.Position.y}");
                 text1.text = $"pos: {onFrameChangedWindow.Position.x}/{onFrameChangedWindow.Position.y} size: {onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y}";
                 frameChangedTex.LoadRawTextureData(onFrameChangedBytes);
-                onFrameChangedBytes = null;
+                // onFrameChangedBytes = null;
                 frameChangedTex.Apply();
             }
             catch (Exception e) {
@@ -278,7 +306,8 @@ public class TestScreenCaptureLite : MonoBehaviour {
                 Debug.LogError($"{e.ToString()}");
             }
         }
-        if (onNewFrameBytes != null) {
+        if (onNewFrame) {
+            onNewFrame = false;
             if ((newFrameTex == null) || (newFrameTex.width != onNewFrameWidth) || (newFrameTex.height != onNewFrameHeight)) {
                 Debug.Log($"Update.newFrameTex: new Texture {onNewFrameWindow.Size.x} {onNewFrameWindow.Size.y} {onNewFrameWidth} {onNewFrameHeight}");
                 newFrameTex = new Texture2D(onNewFrameWidth, onNewFrameHeight, TextureFormat.RGBA32, false);
@@ -286,10 +315,10 @@ public class TestScreenCaptureLite : MonoBehaviour {
             }
             try {
                 // Debug.Log($"Update.newFrameTex: {onNewFrameWidth} {onNewFrameHeight} {onNewFrameSize}");
-                Debug.Log($"Update.newFrame: {onNewFrameWindow.Position.x} {onNewFrameWindow.Position.y}");
+                // Debug.Log($"Update.newFrame: {onNewFrameWindow.Position.x} {onNewFrameWindow.Position.y}");
                 text2.text = $"pos: {onNewFrameWindow.Position.x}/{onNewFrameWindow.Position.y} size: {onNewFrameWindow.Size.x}/{onNewFrameWindow.Size.y}";
                 newFrameTex.LoadRawTextureData(onNewFrameBytes);
-                onNewFrameBytes = null;
+                // onNewFrameBytes = null;
                 newFrameTex.Apply();
             }
             catch (Exception e) {
@@ -297,17 +326,18 @@ public class TestScreenCaptureLite : MonoBehaviour {
                 Debug.LogError($"{e.ToString()}");
             }
         }
-        if (onMouseChangedBytes != null) {
+        if (onMouseChanged) {
+            onMouseChanged = false;
             if ((mouseChangedTex == null) || (mouseChangedTex.width != onMouseChangedWidth) || (mouseChangedTex.height != onMouseChangedHeight)) {
                 Debug.Log($"Update.mouseChanged: new Texture {onMouseChangedWidth} {onMouseChangedHeight}");
                 mouseChangedTex = new Texture2D(onMouseChangedWidth, onMouseChangedHeight, TextureFormat.RGBA32, false);
                 rawImage3.texture = mouseChangedTex;
             }
             try {
-                Debug.Log($"Update.onMouseChanged: {onMouseChangedWidth} {onMouseChangedHeight} {onMouseChangedSize}");
+                // Debug.Log($"Update.onMouseChanged: {onMouseChangedWidth} {onMouseChangedHeight} {onMouseChangedSize}");
                 text3.text = $"pos: {onMouseChangedMousePoint.Position.x}/{onMouseChangedMousePoint.Position.y} hotspot: {onMouseChangedMousePoint.HotSpot.x}/{onMouseChangedMousePoint.HotSpot.y}";
                 mouseChangedTex.LoadRawTextureData(onMouseChangedBytes);
-                onMouseChangedBytes = null;
+                // onMouseChangedBytes = null;
                 mouseChangedTex.Apply();
             }
             catch (Exception e) {
@@ -366,8 +396,8 @@ public class TestScreenCaptureLite : MonoBehaviour {
         newFrameDelegate = new ImageRefWindowRefCallbackType(OnNewFrame);
         // newFrameDelegate = null;
         // TODO: ignore mouse for now, seems to work, but i dont get any useful image content
-        // mouseChangedDelegate = null;
-        mouseChangedDelegate = new ImagePtrMousePointRefCallbackType(OnMouseChanged);
+        // mouseChangedDelegate = new ImagePtrMousePointRefCallbackType(OnMouseChanged);
+        mouseChangedDelegate = null;
 
         Debug.Log($"- a -");
         C_ICaptureConfiguration( windows[windowIdToCapture], frameChangeDelegate, newFrameDelegate, mouseChangedDelegate );
@@ -376,7 +406,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
         topText.text = $"grabbing window: {windows[windowIdToCapture].Name} {windows[windowIdToCapture].Position.x} {windows[windowIdToCapture].Position.y}";
 
         C_Capture_SetMouseChangeInterval(1000);
-        C_Capture_SetFrameChangeInterval(1000);
+        C_Capture_SetFrameChangeInterval(0);
     }
 
     void OnApplicationQuit() {

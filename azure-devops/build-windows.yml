@@ -3,13 +3,15 @@ parameters:
     - name: targetPlatform
     - name: image
     - name: isMain
+
+variables:
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
     
 jobs:
   - job: ${{ parameters.name }}
     pool:
       vmImage: ${{ parameters.image }} 
-    steps: 
-      - script: echo $(isMain)
+    steps:  
       - task: CMake@1
         inputs:
           cmakeArgs: '.. -G"Visual Studio 16 2019" -A ${{ parameters.targetPlatform }} -DCMAKE_INSTALL_PREFIX=./output'
@@ -17,7 +19,7 @@ jobs:
         inputs:
           cmakeArgs: '--build . --target INSTALL'
       - task: ArchiveFiles@2
-        condition: and(succeeded(), eq('${{ parameters.isMain }}', true))   
+        condition: and(succeeded(), eq(variables.isMain, true))      
         inputs:
           rootFolderOrFile: '$(Build.SourcesDirectory)/build/output/'
           includeRootFolder: true
@@ -25,7 +27,7 @@ jobs:
           archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
           replaceExistingArchive: true
       - task: GitHubRelease@1
-        condition: and(succeeded(), eq('${{ parameters.isMain }}', true))   
+        condition: and(succeeded(), eq(variables.isMain, true))       
         inputs:
           gitHubConnection: 'smasherprog' 
           repositoryName: '$(Build.Repository.Name)'

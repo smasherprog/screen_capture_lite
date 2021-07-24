@@ -3,11 +3,15 @@ trigger:
 pr:
   - master
 
+variables:
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+
 jobs:
   - job: createrelease
     pool: 
       vmImage: windows-latest
-    steps:    
+    steps:
+    condition: and(succeeded(), eq(variables.isMain, true))    
       - task: GitHubRelease@1
         inputs:
           gitHubConnection: 'smasherprog'

@@ -18,8 +18,8 @@ jobs:
           repositoryName: '$(Build.Repository.Name)'
           action: 'create'
           target: '$(Build.SourceVersion)' 
-          tagSource: 'gitTag' 
-          tagPattern: '17.1.$(Build.BuildId)'
+          tagSource: 'userSpecifiedTag' 
+          tag: '17.1.$(Build.BuildId)'
           releaseNotesFilePath: 'releasenotes.txt' 
           isPreRelease: true
           addChangeLog: false

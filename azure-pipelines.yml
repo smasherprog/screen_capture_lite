@@ -28,10 +28,10 @@ jobs:
       name: 'Windows_VS2019_x86'
       targetPlatform: Win32
       image: 'windows-latest'
-      isMain: '${{ variables.isMain }}'
+      isMain: ${{ variables.isMain }}
   - template: azure-devops/build-windows.yml
     parameters:
       name: 'Windows_VS2019_x64'
       targetPlatform: x64
       image: 'windows-latest' 
-      isMain: '${{ variables.isMain }}'
+      isMain: ${{ variables.isMain }}

@@ -3,10 +3,7 @@ parameters:
     - name: targetPlatform
     - name: image
     - name: isMain
-
-variables:
-  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
-    
+ 
 jobs:
   - job: ${{ parameters.name }}
     pool:

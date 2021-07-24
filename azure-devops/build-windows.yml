@@ -32,4 +32,5 @@ jobs:
           tagSource: 'userSpecifiedTag'  
           tag: '17.1.$(Build.BuildId)'
           addChangeLog: false
+          isPreRelease: true
           assets: '$(Build.ArtifactStagingDirectory)/Windows_${{ parameters.targetPlatform }}_$(Build.BuildId).zip'

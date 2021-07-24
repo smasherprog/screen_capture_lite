@@ -1,9 +1,9 @@
 parameters:
-    name: 'Windows_VS2019_x86'
-    targetPlatform: 'x86'
-    image: 'windows-latest'
-  
-  jobs:
+    - name: name
+    - name: targetPlatform
+    - name: image
+
+jobs:
   - job: ${{ parameters.name }}
     pool:
       vmImage: ${{ parameters.image }} 

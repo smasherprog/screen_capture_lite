@@ -1,8 +1,7 @@
 parameters:
     - name: name
     - name: targetPlatform
-    - name: image
-    - name: isMain
+    - name: image 
  
 jobs:
   - job: ${{ parameters.name }}
@@ -16,7 +15,7 @@ jobs:
         inputs:
           cmakeArgs: '--build . --target INSTALL'
       - task: ArchiveFiles@2
-        condition: and(succeeded(), eq('${{ parameters.isMain }}', true))      
+        condition: and(succeeded(), eq(variables.isMain, true))      
         inputs:
           rootFolderOrFile: '$(Build.SourcesDirectory)/build/output/'
           includeRootFolder: true
@@ -24,7 +23,7 @@ jobs:
           archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
           replaceExistingArchive: true
       - task: GitHubRelease@1
-        condition: and(succeeded(), eq('${{ parameters.isMain }}', true))       
+        condition: and(succeeded(), eq(variables.isMain, true))       
         inputs:
           gitHubConnection: 'smasherprog' 
           repositoryName: '$(Build.Repository.Name)'

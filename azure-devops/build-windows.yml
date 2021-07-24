@@ -16,6 +16,6 @@ jobs:
           cmakeArgs: '--build . --target INSTALL'
       - task: PublishBuildArtifacts@1
         inputs:
-          PathtoPublish: '$(Build.SourcesDirectory)/build'
+          PathtoPublish: '$(Build.SourcesDirectory)/build/output'
           ArtifactName: 'drop'
           publishLocation: 'Container'

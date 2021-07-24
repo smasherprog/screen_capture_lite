@@ -38,8 +38,8 @@ jobs:
       vmImage: 'macOS-latest'
     steps:
       - task: CMake@1
-      inputs:
-        cmakeArgs: '.. -DCMAKE_INSTALL_PREFIX=./output'
+        inputs:
+          cmakeArgs: '.. -DCMAKE_INSTALL_PREFIX=./output'
       - task: CMake@1
         inputs:
           cmakeArgs: '--build . --target INSTALL'

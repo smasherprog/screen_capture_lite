@@ -11,8 +11,8 @@ jobs:
     pool: 
       vmImage: windows-latest
     steps:
-    condition: and(succeeded(), eq(variables.isMain, true))    
-      - task: GitHubRelease@1
+      - task: GitHubRelease@1 
+        condition: and(succeeded(), eq(variables.isMain, true))    
         inputs:
           gitHubConnection: 'smasherprog'
           repositoryName: '$(Build.Repository.Name)'

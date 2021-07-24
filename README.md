@@ -1,9 +1,8 @@
 <img src="Logotype primary.png" width="60%" height="60%" />
 
 <p>Above Logo created by https://github.com/mansya</p>
-<p>Master is where development happens and should NOT be considered stable. Use tags for stable releases.</p>
-<p>Linux/Mac <img src="https://travis-ci.org/smasherprog/screen_capture_lite.svg?branch=master" /></p>
-<p>Windows <img src="https://smasherprog.visualstudio.com/Smasherprog_projects/_apis/build/status/smasherprog.screen_capture_lite?branchName=master"/><p>
+<p>Master is where development happens and should NOT be considered stable. Use tags for stable releases.</p> 
+<p>Window/Linux/Mac <img src="https://smasherprog.visualstudio.com/Smasherprog_projects/_apis/build/status/smasherprog.screen_capture_lite?branchName=master"/><p>
 <p>Cross-platform screen and window capturing library<p>
 <h2>No External Dependencies except:</h2>
 <p>linux: sudo apt-get install libxtst-dev libxinerama-dev libx11-dev libxfixes-dev</p>

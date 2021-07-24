@@ -4,7 +4,7 @@ pr:
   - master
 
 variables:
-  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
 
 jobs:
   - job: createrelease

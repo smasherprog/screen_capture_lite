@@ -16,7 +16,7 @@ jobs:
         inputs:
           cmakeArgs: '--build . --target INSTALL'
       - task: ArchiveFiles@2
-        condition: and(succeeded(), eq(variables.isMain, true))      
+        condition: and(succeeded(), eq('${{ parameters.isMain }}', true))      
         inputs:
           rootFolderOrFile: '$(Build.SourcesDirectory)/build/output/'
           includeRootFolder: true
@@ -24,7 +24,7 @@ jobs:
           archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
           replaceExistingArchive: true
       - task: GitHubRelease@1
-        condition: and(succeeded(), eq(variables.isMain, true))       
+        condition: and(succeeded(), eq('${{ parameters.isMain }}', true))       
         inputs:
           gitHubConnection: 'smasherprog' 
           repositoryName: '$(Build.Repository.Name)'
@@ -33,4 +33,4 @@ jobs:
           tagSource: 'userSpecifiedTag'  
           tag: '17.1.$(Build.BuildId)'
           addChangeLog: false
-          assets: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+          assets: '$(Build.ArtifactStagingDirectory)/Windows_${{ parameters.targetPlatform }}_$(Build.BuildId).zip'

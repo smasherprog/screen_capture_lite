@@ -14,8 +14,14 @@ jobs:
       - task: CMake@1
         inputs:
           cmakeArgs: '--build . --target INSTALL'
-      - task: PublishBuildArtifacts@1
+      - task: GitHubRelease@1
         inputs:
-          PathtoPublish: '$(Build.SourcesDirectory)/build/output'
-          ArtifactName: 'drop'
-          publishLocation: 'Container'
+          gitHubConnection: 'smasherprog'
+          repositoryName: 'smasherprog/screen_capture_lite'
+          action: 'create'
+          target: '$(Build.SourceVersion)' 
+          assets: '$(Build.SourcesDirectory)/build/output/*'
+          tagSource: 'gitTag'
+          releaseNotesFilePath: 'releasenotes.txt'
+          changeLogCompareToRelease: 'lastFullRelease'
+          changeLogType: 'commitBased'

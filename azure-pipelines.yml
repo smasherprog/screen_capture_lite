@@ -39,7 +39,7 @@ jobs:
     steps:
       - task: CMake@1
         inputs:
-          cmakeArgs: 
+          cmakeArgs: '.'
       - script: make
   - job: ubuntu_build
     pool:
@@ -47,5 +47,5 @@ jobs:
       steps:
         - task: CMake@1
           inputs:
-            cmakeArgs: 
+            cmakeArgs: '.'
         - script: make

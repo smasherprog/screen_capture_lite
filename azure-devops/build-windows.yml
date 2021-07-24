@@ -23,7 +23,7 @@ jobs:
           replaceExistingArchive: true
       - task: GitHubRelease@1
         inputs:
-          gitHubConnection: 'smasherprog'
+          gitHubConnection: 'smasherprog' 
           repositoryName: '$(Build.Repository.Name)'
           action: 'edit'
           target: '$(Build.SourceVersion)'

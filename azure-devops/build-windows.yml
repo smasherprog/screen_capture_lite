@@ -1,0 +1,13 @@
+parameters:
+    name: 'Windows_VS2019_x86'
+    targetPlatform: 'x86'
+    image: 'windows-latest'
+  
+  jobs:
+  - job: ${{ parameters.name }}
+    pool:
+      vmImage: ${{ parameters.image }} 
+    steps: 
+      - task: run-cmake@0
+        inputs:
+          cmakeArgs: '.. -G"Visual Studio 16 2019" -A ${{ parameters.targetPlatform }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./output'

@@ -10,12 +10,12 @@ jobs:
     steps: 
       - task: CMake@1
         inputs:
-          cmakeArgs: '.. -G"Visual Studio 16 2019" -A ${{ parameters.targetPlatform }}'
+          cmakeArgs: '.. -G"Visual Studio 16 2019" -A ${{ parameters.targetPlatform }} -DCMAKE_INSTALL_PREFIX=./output''
       - task: CMake@1
         inputs:
           cmakeArgs: '--build . --target INSTALL'
       - task: PublishBuildArtifacts@1
         inputs:
-          PathtoPublish: '$(Build.SourcesDirectory)\build'
+          PathtoPublish: '$(Build.SourcesDirectory)/build'
           ArtifactName: 'drop'
           publishLocation: 'Container'

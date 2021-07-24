@@ -41,9 +41,9 @@ jobs:
         inputs:
           cmakeArgs: 
       - script: make
-   - job: ubuntu_build
-      pool:
-        vmImage: 'ubuntu-latest'
+  - job: ubuntu_build
+    pool:
+      vmImage: 'ubuntu-latest'
       steps:
         - task: CMake@1
           inputs:

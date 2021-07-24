@@ -60,6 +60,7 @@ dlldata.c
 *.scc
 *.db
 *.opendb
+*.dll
 
 # Chutzpah Test files
 _Chutzpah*

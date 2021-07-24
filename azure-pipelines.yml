@@ -37,15 +37,9 @@ jobs:
     pool:
       vmImage: 'macOS-latest'
     steps:
-      - task: CMake@1
-        inputs:
-          cmakeArgs: '..'
-      - script: cd .. && make
+      - script: cmake . && make;
   - job: ubuntu_build
     pool:
       vmImage: 'ubuntu-latest'
       steps:
-        - task: CMake@1
-          inputs:
-            cmakeArgs: '..'
-        - script: cd .. && make
+        - script: cmake . && make;

@@ -33,3 +33,13 @@ jobs:
       name: 'Windows_VS2019_x64'
       targetPlatform: x64
       image: 'windows-latest'  
+  - job: macbuild
+    pool:
+      vmImage: 'macOS-latest'
+    steps:
+      - task: CMake@1
+      inputs:
+        cmakeArgs: '.. -DCMAKE_INSTALL_PREFIX=./output'
+      - task: CMake@1
+        inputs:
+          cmakeArgs: '--build . --target INSTALL'

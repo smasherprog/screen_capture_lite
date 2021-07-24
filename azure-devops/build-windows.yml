@@ -20,7 +20,7 @@ jobs:
           rootFolderOrFile: '$(Build.SourcesDirectory)/build/output/'
           includeRootFolder: true
           archiveType: 'zip'
-          archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/Windows_${{ parameters.targetPlatform }}_$(Build.BuildId).zip'
           replaceExistingArchive: true
       - task: GitHubRelease@1
         condition: and(succeeded(), eq(variables.isMain, true))       

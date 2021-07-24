@@ -40,7 +40,7 @@ jobs:
       - task: CMake@1
         inputs:
           cmakeArgs: '..'
-      - script: make
+      - script: cd .. && make
   - job: ubuntu_build
     pool:
       vmImage: 'ubuntu-latest'
@@ -48,4 +48,4 @@ jobs:
         - task: CMake@1
           inputs:
             cmakeArgs: '..'
-        - script: make
+        - script: cd .. && make

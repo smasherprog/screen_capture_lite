@@ -20,18 +20,18 @@ jobs:
           target: '$(Build.SourceVersion)' 
           tagSource: 'gitTag' 
           tagPattern: '17.1.$(Build.BuildId)'
-          releaseNotesFilePath: 'releasenotes.txt'
-          changeLogCompareToRelease: 'lastFullRelease'
-          changeLogType: 'commitBased' 
+          releaseNotesFilePath: 'releasenotes.txt' 
+          isPreRelease: true
+          addChangeLog: false
   - template: azure-devops/build-windows.yml
     parameters:
       name: 'Windows_VS2019_x86'
       targetPlatform: Win32
       image: 'windows-latest'
-      isMain: $(isMain)
+      isMain: ${{ variables.isMain }}
   - template: azure-devops/build-windows.yml
     parameters:
       name: 'Windows_VS2019_x64'
       targetPlatform: x64
       image: 'windows-latest' 
-      isMain: $(isMain)
+      isMain: ${{ variables.isMain }}

@@ -27,5 +27,6 @@ jobs:
           repositoryName: '$(Build.Repository.Name)'
           action: 'edit'
           target: '$(Build.SourceVersion)'
+          tagPattern: '17.1.$(Build.BuildId)'
           addChangeLog: false
           assets: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'

@@ -6,7 +6,7 @@ pr:
 jobs:
   - job: createrelease
     pool: 
-      vmImage: Windows_VS2019_x86
+      vmImage: windows-latest
     steps:    
       - task: GitHubRelease@1
         inputs:

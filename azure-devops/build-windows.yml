@@ -14,14 +14,17 @@ jobs:
       - task: CMake@1
         inputs:
           cmakeArgs: '--build . --target INSTALL'
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(Build.SourcesDirectory)/build/output/'
+          includeRootFolder: true
+          archiveType: 'zip'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+          replaceExistingArchive: true
       - task: GitHubRelease@1
         inputs:
-          gitHubConnection: 'smasherprog'
-          repositoryName: 'smasherprog/screen_capture_lite'
-          action: 'create'
-          target: '$(Build.SourceVersion)' 
-          assets: '$(Build.SourcesDirectory)/build/output/*'
-          tagSource: 'gitTag'
-          releaseNotesFilePath: 'releasenotes.txt'
-          changeLogCompareToRelease: 'lastFullRelease'
-          changeLogType: 'commitBased'
+          repositoryName: '$(Build.Repository.Name)'
+          action: 'edit'
+          target: '$(Build.SourceVersion)'
+          addChangeLog: false
+          assets: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'

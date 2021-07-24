@@ -4,6 +4,20 @@ pr:
   - master
 
 jobs:
+  - job: createrelease
+    pool: 
+      vmImage: Windows_VS2019_x86
+  steps:    
+    - task: GitHubRelease@1
+    inputs:
+      gitHubConnection: 'smasherprog'
+      repositoryName: 'smasherprog/screen_capture_lite'
+      action: 'create'
+      target: '$(Build.SourceVersion)' 
+      tagSource: 'gitTag'
+      releaseNotesFilePath: 'releasenotes.txt'
+      changeLogCompareToRelease: 'lastFullRelease'
+      changeLogType: 'commitBased' 
   - template: azure-devops/build-windows.yml
     parameters:
       name: 'Windows_VS2019_x86'

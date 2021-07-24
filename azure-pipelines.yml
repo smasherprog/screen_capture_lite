@@ -41,7 +41,7 @@ jobs:
   - job: ubuntu_build
     pool:
       vmImage: 'ubuntu-latest'
-      steps:
-        - script: | 
-            sudo apt install -y libx11-dev libxfixes-dev libxtst-dev libxinerama-dev
-            cmake . && make;
+    steps:
+      - script: | 
+          sudo apt install -y libx11-dev libxfixes-dev libxtst-dev libxinerama-dev
+          cmake . && make;

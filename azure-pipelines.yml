@@ -13,5 +13,4 @@ jobs:
     parameters:
       name: 'Windows_VS2019_x64'
       targetPlatform: x64
-      image: 'windows-latest'
-  - template: azure-devops/build-windows.yml
+      image: 'windows-latest' 

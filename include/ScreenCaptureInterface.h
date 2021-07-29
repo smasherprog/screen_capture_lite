@@ -96,17 +96,24 @@ namespace Screen_Capture {
     static ImagePtrMousePointRefCallbackType mouseChangedCallbackInstance;
 
     SC_LITE_EXTERN void C_ICaptureConfiguration (
-            Window windowToCapture, 
+            Window windowToCaptureInput, 
             ImageRefWindowRefCallbackType frameChangedCallback, 
             ImageRefWindowRefCallbackType newFrameCallback, 
             ImagePtrMousePointRefCallbackType mouseChangedCallback) {
+
+        // dont assume the external variable is using the internal window variable pointers
+        // so generate a new list using the windowToCaptureInput handles
+        std::vector<Window> internalWindowPointers = SL::Screen_Capture::GetWindows();
+        std::vector<Window> windowsToCapture;
+        for (int i=0; i<internalWindowPointers.size(); i++) {
+            if (internalWindowPointers[i].Handle == windowToCaptureInput.Handle) {
+                windowsToCapture.push_back(internalWindowPointers[i]);
+            }
+        }
         
         frameChangedCallbackInstance = frameChangedCallback;
         newFrameCallbackInstance = newFrameCallback;
         mouseChangedCallbackInstance = mouseChangedCallback;
-        
-        std::vector<Window> windowsToCapture;
-        windowsToCapture.push_back(windowToCapture);
         
         // static std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> frameGrabberConfiguration;
         frameGrabberConfiguration =  SL::Screen_Capture::CreateCaptureConfiguration([windowsToCapture]() {
@@ -125,9 +132,9 @@ namespace Screen_Capture {
                     // write image data into this buffer
                     auto imgbuffer(std::make_unique<unsigned char[]>(size));
                     Window win = window;
-                    ::fprintf(stdout, "C_ICaptureConfiguration.onFrameChanged w:%zu h:%zu imgW:%i imgH:%i bgraSize:%zu dstSize:%zu \n\n", w, h, SL::Screen_Capture::Width(image), SL::Screen_Capture::Height(image), sizeof(SL::Screen_Capture::ImageBGRA), size);
+                    // ::fprintf(stdout, "C_ICaptureConfiguration.onFrameChanged w:%zu h:%zu imgW:%i imgH:%i bgraSize:%zu dstSize:%zu \n\n", w, h, SL::Screen_Capture::Width(image), SL::Screen_Capture::Height(image), sizeof(SL::Screen_Capture::ImageBGRA), size);
                     // ::fprintf(stdout, "C_ICaptureConfiguration.onFrameChanged Data: %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx\n\n", imgbuffer[0], imgbuffer[1], imgbuffer[2], imgbuffer[3], imgbuffer[4], imgbuffer[5], imgbuffer[6], imgbuffer[7]);
-                    ::fflush(stdout);
+                    // ::fflush(stdout);
                     C_RGBtoRGBA(image, imgbuffer.get(), size);
                     frameChangedCallbackInstance(w, h, size, imgbuffer.get(), &win);
                 }
@@ -144,8 +151,8 @@ namespace Screen_Capture {
                     size_t size = pixels * sizeof(SL::Screen_Capture::ImageBGRA);
                     auto imgbuffer(std::make_unique<unsigned char[]>(size));
                     Window win = window;
-                    ::fprintf(stdout, "C_ICaptureConfiguration.onNewFrame w:%zu h:%zu imgW:%i imgH:%i bgraSize:%zu dstSize:%zu \n\n", w, h, SL::Screen_Capture::Width(image), SL::Screen_Capture::Height(image), sizeof(SL::Screen_Capture::ImageBGRA), size);
-                    ::fflush(stdout);
+                    // ::fprintf(stdout, "C_ICaptureConfiguration.onNewFrame w:%zu h:%zu imgW:%i imgH:%i bgraSize:%zu dstSize:%zu \n\n", w, h, SL::Screen_Capture::Width(image), SL::Screen_Capture::Height(image), sizeof(SL::Screen_Capture::ImageBGRA), size);
+                    // ::fflush(stdout);
                     C_RGBtoRGBA(image, imgbuffer.get(), size);
                     newFrameCallbackInstance(w, h, size, imgbuffer.get(), &win);
                 }
@@ -164,8 +171,8 @@ namespace Screen_Capture {
                         size_t size = pixels * sizeof(SL::Screen_Capture::ImageBGRA);
                         auto imgbuffer(std::make_unique<unsigned char[]>(size));
                         MousePoint mPoint = mousepoint;
-                        ::fprintf(stdout, "C_ICaptureConfiguration.onMouseChanged w:%zu h:%zu imgW:%i imgH:%i bgraSize:%zu dstSize:%zu \n\n", w, h, SL::Screen_Capture::Width(*imagePtr), SL::Screen_Capture::Height(*imagePtr), sizeof(SL::Screen_Capture::ImageBGRA), size);
-                        ::fflush(stdout);
+                        // ::fprintf(stdout, "C_ICaptureConfiguration.onMouseChanged w:%zu h:%zu imgW:%i imgH:%i bgraSize:%zu dstSize:%zu \n\n", w, h, SL::Screen_Capture::Width(*imagePtr), SL::Screen_Capture::Height(*imagePtr), sizeof(SL::Screen_Capture::ImageBGRA), size);
+                        // ::fflush(stdout);
                         C_RGBAtoRGBA(*imagePtr, imgbuffer.get(), size);
                         mouseChangedCallbackInstance(w, h, size, imgbuffer.get(), &mPoint);
                     }
@@ -177,7 +184,7 @@ namespace Screen_Capture {
     }
 
     SC_LITE_EXTERN void C_Capture_Start () {
-        // having trouble deleting the thread & the config
+    // having trouble deleting the thread & the config
     //     if (frameGrabberConfiguration != NULL) {
     //         frameGrabber = frameGrabberConfiguration->start_capturing();
     //     }

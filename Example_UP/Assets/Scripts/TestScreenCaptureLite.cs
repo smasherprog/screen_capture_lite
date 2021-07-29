@@ -1,4 +1,5 @@
 using System;
+// using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -155,9 +156,9 @@ public class TestScreenCaptureLite : MonoBehaviour {
     ImageRefWindowRefCallbackType newFameCallback;
     ImagePtrMousePointRefCallbackType mouseChangedCallback;
 
-    ImageRefWindowRefCallbackType frameChangeDelegate;
-    ImageRefWindowRefCallbackType newFrameDelegate;
-    ImagePtrMousePointRefCallbackType mouseChangedDelegate;
+    ImageRefWindowRefCallbackType frameChangeDelegate = null;
+    ImageRefWindowRefCallbackType newFrameDelegate = null;
+    ImagePtrMousePointRefCallbackType mouseChangedDelegate = null;
 
     // based on https://answers.unity.com/questions/34606/how-do-i-pass-arrays-from-c-to-c-in-unity-if-at-al.html
     private static T[] GetNativeArray<T>(IntPtr array, int length) {
@@ -184,6 +185,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
         return (T)Marshal.PtrToStructure (ptr, typeof(T));
     }
 
+    public bool getOnFrameChanged = true;
     bool onFrameChanged = false;
     int onFrameChangedWidth;
     int onFrameChangedHeight;
@@ -192,6 +194,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
     byte[] onFrameChangedBytes = new byte[0];
     Window onFrameChangedWindow;
     
+    public bool getNewFrame = false;
     bool onNewFrame = false;
     int onNewFrameWidth;
     int onNewFrameHeight;
@@ -199,6 +202,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
     byte[] onNewFrameBytes = new byte[0];
     Window onNewFrameWindow;
     
+    public bool getMouseChanged = false;
     bool onMouseChanged = false;
     int onMouseChangedWidth;
     int onMouseChangedHeight;
@@ -207,6 +211,27 @@ public class TestScreenCaptureLite : MonoBehaviour {
     MousePoint onMouseChangedMousePoint;
 
     List<string> debugMessages = new List<string>();
+
+    int frameChangedCounter;
+    int newFrameCounter;
+    int mouseChangedCounter;
+    System.Diagnostics.Stopwatch frameChangedStopwatch;
+    System.Diagnostics.Stopwatch newFrameStopwatch;
+    System.Diagnostics.Stopwatch mouseChangedStopwatch;
+
+    void FpsCounter (string log, ref int counter, ref System.Diagnostics.Stopwatch lastTimer) {
+        counter ++;
+        if (lastTimer == null) {
+            lastTimer = new System.Diagnostics.Stopwatch();
+            lastTimer.Start();
+        }
+        if (lastTimer.Elapsed.Seconds > 0) {
+            float fps = counter / (float)lastTimer.Elapsed.TotalSeconds;
+            debugMessages.Add($"{log} fps {fps}");
+            lastTimer.Restart();
+            counter = 0;
+        }
+    }
 
     // unity doesnt allow writing the texture here
     [MonoPInvokeCallback (typeof (ImageRefWindowRefCallbackType))]
@@ -223,14 +248,16 @@ public class TestScreenCaptureLite : MonoBehaviour {
         // onFrameChangedBytes = GetNativeArray<byte> (array, s);
         onFrameChangedWindow = GetNativeType<Window> (windowPtr);
 
-        debugMessages.Add($"OnFrameChanged w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length}");
+        FpsCounter("frameChanged", ref frameChangedCounter, ref frameChangedStopwatch);
+
+        // debugMessages.Add($"OnFrameChanged {frameChangedCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length}");
 
         if ((w != onFrameChangedWindow.Size.x) || (h != onFrameChangedWindow.Size.y)) {
-            debugMessages.Add($"OnFrameChanged: img:{w}/{h} win:{onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y} differ");
+            debugMessages.Add($"OnFrameChanged {frameChangedCounter}: img:{w}/{h} win:{onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y} differ");
         }
 
         if ((w * h * 4) != s) {
-            debugMessages.Add($"OnFrameChanged w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length} : Invalid size of Data for given Size");
+            debugMessages.Add($"OnFrameChanged {frameChangedCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length} : Invalid size of Data for given Size");
             onFrameChangedBytes = null;
         }
     }
@@ -247,14 +274,17 @@ public class TestScreenCaptureLite : MonoBehaviour {
         // onNewFrameBytes = GetNativeArray<byte> (array, s);
         onNewFrameWindow = GetNativeType<Window> (windowPtr);
         onNewFrame = true;
-        debugMessages.Add($"OnNewFrame: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length}");
+
+        FpsCounter("newFrame", ref newFrameCounter, ref newFrameStopwatch);
+
+        // debugMessages.Add($"OnNewFrame {newFrameCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length}");
 
         if ((w != onNewFrameWindow.Size.x) || (h != onNewFrameWindow.Size.y)) {
-            debugMessages.Add($"OnNewFrame: img:{w}/{h} win:{onNewFrameWindow.Size.x}/{onNewFrameWindow.Size.y} differ");
+            debugMessages.Add($"OnNewFrame {newFrameCounter}: img:{w}/{h} win:{onNewFrameWindow.Size.x}/{onNewFrameWindow.Size.y} differ");
         }
 
         if ((w * h * 4) != s) {
-            debugMessages.Add($"OnNewFrame: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length} : Invalid size of Data for given Size");
+            debugMessages.Add($"OnNewFrame {newFrameCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length} : Invalid size of Data for given Size");
             onNewFrameBytes = null;
         }
     }
@@ -272,8 +302,10 @@ public class TestScreenCaptureLite : MonoBehaviour {
         onMouseChanged = true;
         onMouseChangedMousePoint = GetNativeType<MousePoint> (mposPtr);
 
+        // FpsCounter("mouseChanged", ref mouseChangedCounter, ref mouseChangedStopwatch);
+
         if ((w * h * 4) != s) {
-            debugMessages.Add($"OnMouseChanged: w:{w} h:{h} *:{(w*h)} s:{s} l:{onMouseChangedBytes.Length} : Invalid size of Data for given Size");
+            debugMessages.Add($"OnMouseChanged {mouseChangedCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onMouseChangedBytes.Length} : Invalid size of Data for given Size");
             onMouseChangedBytes = null;
         }
     }
@@ -282,7 +314,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
     public void UpdateTextures () {
         if (debugMessages.Count > 0) {
             for (int i=0; i<debugMessages.Count; i++ ){
-                Debug.Log(debugMessages);
+                Debug.Log(debugMessages[i]);
             }
             debugMessages.Clear();
         }
@@ -295,7 +327,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
             }
             try {
                 // Debug.Log($"Update.frameChangedTex: {onFrameChangedWidth} {onFrameChangedHeight} {onFrameChangedSize}");
-                Debug.Log($"Update.frameChange: {onFrameChangedWindow.Position.x} {onFrameChangedWindow.Position.y}");
+                // Debug.Log($"Update.frameChange: {onFrameChangedWindow.Position.x} {onFrameChangedWindow.Position.y}");
                 text1.text = $"pos: {onFrameChangedWindow.Position.x}/{onFrameChangedWindow.Position.y} size: {onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y}";
                 frameChangedTex.LoadRawTextureData(onFrameChangedBytes);
                 // onFrameChangedBytes = null;
@@ -391,13 +423,15 @@ public class TestScreenCaptureLite : MonoBehaviour {
             Debug.Log($"- OffsetX:{monitor.OffsetX} OffsetY:{monitor.OffsetY} OriginalOffsetX:{monitor.OriginalOffsetX} OriginalOffsetY:{monitor.OriginalOffsetY}");
         }
 
-        // frameChangeDelegate = new ImageRefWindowRefCallbackType(OnFrameChanged);
-        frameChangeDelegate = null;
-        newFrameDelegate = new ImageRefWindowRefCallbackType(OnNewFrame);
-        // newFrameDelegate = null;
-        // TODO: ignore mouse for now, seems to work, but i dont get any useful image content
-        // mouseChangedDelegate = new ImagePtrMousePointRefCallbackType(OnMouseChanged);
-        mouseChangedDelegate = null;
+        if (getOnFrameChanged) {
+            frameChangeDelegate = new ImageRefWindowRefCallbackType(OnFrameChanged);
+        }
+        if (getNewFrame) {
+            newFrameDelegate = new ImageRefWindowRefCallbackType(OnNewFrame);
+        }
+        if (getMouseChanged) {
+            mouseChangedDelegate = new ImagePtrMousePointRefCallbackType(OnMouseChanged);
+        }
 
         Debug.Log($"- a -");
         C_ICaptureConfiguration( windows[windowIdToCapture], frameChangeDelegate, newFrameDelegate, mouseChangedDelegate );
@@ -405,8 +439,8 @@ public class TestScreenCaptureLite : MonoBehaviour {
 
         topText.text = $"grabbing window: {windows[windowIdToCapture].Name} {windows[windowIdToCapture].Position.x} {windows[windowIdToCapture].Position.y}";
 
-        C_Capture_SetMouseChangeInterval(1000);
-        C_Capture_SetFrameChangeInterval(0);
+        C_Capture_SetMouseChangeInterval(1000/24);
+        C_Capture_SetFrameChangeInterval(1000/24);
     }
 
     void OnApplicationQuit() {

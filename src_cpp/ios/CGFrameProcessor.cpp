@@ -20,22 +20,18 @@ namespace Screen_Capture {
 
         auto imageRef = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, static_cast<uint32_t>(window.Handle),
                                                 kCGWindowImageBoundsIgnoreFraming);
-        if (!imageRef) {
-            // std::cout << "CGFrameProcessor.ProcessFrame: !imageRef" << std::endl;
+        if (!imageRef)
             return DUPL_RETURN_ERROR_EXPECTED; // this happens when the monitors change.
+
+        auto width = CGImageGetWidth(imageRef);
+        auto height = CGImageGetHeight(imageRef);
+
+        if (width != window.Size.x || height != window.Size.y) {
+            CGImageRelease(imageRef);
+            return DUPL_RETURN_ERROR_EXPECTED; // this happens when the window sizes change.
         }
-
-        // auto width = CGImageGetWidth(imageRef);
-        // auto height = CGImageGetHeight(imageRef);
-        // if (width != window.Size.x || height != window.Size.y) {
-        //     // std::cout << "CGFrameProcessor.ProcessFrame: size" << std::endl;
-        //     CGImageRelease(imageRef);
-        //     return DUPL_RETURN_ERROR_EXPECTED; // this happens when the window sizes change.
-        // }
-
         auto prov = CGImageGetDataProvider(imageRef);
         if (!prov) {
-            // std::cout << "CGFrameProcessor.ProcessFrame: !prov" << std::endl;
             CGImageRelease(imageRef);
             return DUPL_RETURN_ERROR_EXPECTED;
         }

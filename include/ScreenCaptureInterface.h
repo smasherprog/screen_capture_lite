@@ -103,22 +103,47 @@ namespace Screen_Capture {
 
         // dont assume the external variable is using the internal window variable pointers
         // so generate a new list using the windowToCaptureInput handles
-        std::vector<Window> internalWindowPointers = SL::Screen_Capture::GetWindows();
-        std::vector<Window> windowsToCapture;
-        for (int i=0; i<internalWindowPointers.size(); i++) {
-            if (internalWindowPointers[i].Handle == windowToCaptureInput.Handle) {
-                windowsToCapture.push_back(internalWindowPointers[i]);
-            }
-        }
+        // std::vector<Window> internalWindowPointers = SL::Screen_Capture::GetWindows();
+        // std::vector<Window> windowsToCapture;
+        // for (int i=0; i<internalWindowPointers.size(); i++) {
+        //     if (internalWindowPointers[i].Handle == windowToCaptureInput.Handle) {
+        //         windowsToCapture.push_back(internalWindowPointers[i]);
+        //     }
+        // }
         
         frameChangedCallbackInstance = frameChangedCallback;
         newFrameCallbackInstance = newFrameCallback;
         mouseChangedCallbackInstance = mouseChangedCallback;
         
         // static std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> frameGrabberConfiguration;
-        frameGrabberConfiguration =  SL::Screen_Capture::CreateCaptureConfiguration([windowsToCapture]() {
-            //add your own custom filtering here if you want to capture only some monitors
-            return windowsToCapture;
+        frameGrabberConfiguration =  SL::Screen_Capture::CreateCaptureConfiguration([windowToCaptureInput]() {
+            auto windows = SL::Screen_Capture::GetWindows();
+            decltype(windows) filtereditems;
+            for (auto &a : windows) {
+                if (windowToCaptureInput.Handle == a.Handle) {
+                    filtereditems.push_back(a);
+                }
+            }
+            return filtereditems;
+
+            // old Code
+            // return windowsToCapture;
+
+            // Example Code
+            // auto windows = SL::Screen_Capture::GetWindows();
+            // std::string srchterm = "blizzard";
+            // // convert to lower case for easier comparisons
+            // std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
+            // decltype(windows) filtereditems;
+            // for (auto &a : windows) {
+            //     std::string name = a.Name;
+            //     std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
+            //     if (name.find(srchterm) != std::string::npos) {
+            //         filtereditems.push_back(a);
+            //         std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
+            //     }
+            // }
+            // return filtereditems;            //add your own custom filtering here if you want to capture only some monitors
         });
 
         if (frameChangedCallbackInstance) {

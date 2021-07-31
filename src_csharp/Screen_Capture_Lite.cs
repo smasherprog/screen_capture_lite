@@ -102,7 +102,7 @@ namespace SL
 
                 public void pause()
                 {
-                    NativeFunctions.pause(ScreenCapturePtr);
+                    NativeFunctions.pausecapturing(ScreenCapturePtr);
                 }
 
                 public void resume()
@@ -267,7 +267,7 @@ namespace SL
             [DllImport("screen_capture_lite_shared")]
             public static extern void FreeCaptureConfiguration(IntPtr ptr);
             [DllImport("screen_capture_lite_shared")]
-            public static extern void pause(IntPtr ptr);
+            public static extern void pausecapturing(IntPtr ptr);
             [DllImport("screen_capture_lite_shared")]
             [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool isPaused(IntPtr ptr);

@@ -200,7 +200,7 @@ namespace Screen_Capture {
         {
             ptr->ptr->setFrameChangeInterval(std::chrono::milliseconds(milliseconds));
         }
-        void pause(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->pause(); }
+        void pausecapturing(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->pause(); }
         bool isPaused(IScreenCaptureManagerWrapper *ptr) { return ptr->ptr->isPaused(); }
         void resume(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->resume(); }
 

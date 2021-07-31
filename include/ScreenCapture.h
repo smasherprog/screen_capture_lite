@@ -217,7 +217,7 @@ namespace Screen_Capture {
         SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr);
 
         SC_LITE_C_EXTERN void setFrameChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds);
-        SC_LITE_C_EXTERN void pause(IScreenCaptureManagerWrapper *ptr);
+        SC_LITE_C_EXTERN void pausecapturing(IScreenCaptureManagerWrapper *ptr);
         SC_LITE_C_EXTERN bool isPaused(IScreenCaptureManagerWrapper *ptr);
         SC_LITE_C_EXTERN void resume(IScreenCaptureManagerWrapper *ptr);
     }; // namespace C_API

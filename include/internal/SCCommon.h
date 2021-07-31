@@ -32,7 +32,7 @@ namespace Screen_Capture {
     const ImageRect &Rect(const Image &img);
 
     template <typename F, typename M, typename W> struct CaptureData {
-        std::atomic<std::shared_ptr<Timer>> FrameTimer;
+        std::shared_ptr<Timer> FrameTimer;
         F OnNewFrame;
         F OnFrameChanged;
         std::shared_ptr<Timer> MouseTimer;

@@ -38,7 +38,7 @@ namespace Screen_Capture {
         }
 
     }; // namespace C_API
-    bool isMonitorInsideBounds(auto monitors, const Monitor &monitor)
+    template <class MONITORTPE> bool isMonitorInsideBounds(MONITORTPE monitors, const Monitor &monitor)
     {
         auto totalwidth = 0;
         for (auto &m : monitors) {

@@ -67,32 +67,27 @@ namespace Screen_Capture {
             mousepoint.Position = Point{x, y};
             mousepoint.HotSpot = Point{static_cast<int>(img->xhot), static_cast<int>(img->yhot)};
 
-            if (Data->ScreenCaptureData.OnMouseChanged) {
-
-                auto wholeimg = CreateImage(imgrect, ret.right * sizeof(ImageBGRA), reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
-
-                // if the mouse image is different, send the new image and swap the data
-
-                if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), datalen) != 0) {
-                    if (Data->ScreenCaptureData.OnMouseChanged) {
-                        Data->ScreenCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
-                    }
-                    if (Data->WindowCaptureData.OnMouseChanged) {
-                        Data->WindowCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
-                    }
-                    std::swap(ImageBuffer, OldImageBuffer);
+            auto wholeimg = CreateImage(imgrect, ret.right * sizeof(ImageBGRA), reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
+            // if the mouse image is different, send the new image and swap the data
+            if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), datalen) != 0) {
+                if (Data->ScreenCaptureData.OnMouseChanged) {
+                    Data->ScreenCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
                 }
-                else if (Last_x != x || Last_y != y) {
-                    if (Data->ScreenCaptureData.OnMouseChanged) {
-                        Data->ScreenCaptureData.OnMouseChanged(nullptr, mousepoint);
-                    }
-                    if (Data->WindowCaptureData.OnMouseChanged) {
-                        Data->WindowCaptureData.OnMouseChanged(nullptr, mousepoint);
-                    }
+                if (Data->WindowCaptureData.OnMouseChanged) {
+                    Data->WindowCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
                 }
-                Last_x = x;
-                Last_y = y;
+                std::swap(ImageBuffer, OldImageBuffer);
             }
+            else if (Last_x != x || Last_y != y) {
+                if (Data->ScreenCaptureData.OnMouseChanged) {
+                    Data->ScreenCaptureData.OnMouseChanged(nullptr, mousepoint);
+                }
+                if (Data->WindowCaptureData.OnMouseChanged) {
+                    Data->WindowCaptureData.OnMouseChanged(nullptr, mousepoint);
+                }
+            }
+            Last_x = x;
+            Last_y = y;
         }
         return Ret;
     }

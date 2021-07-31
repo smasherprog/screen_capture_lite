@@ -44,4 +44,4 @@ jobs:
     steps:
       - script: | 
           sudo apt install -y libx11-dev libxfixes-dev libxtst-dev libxinerama-dev
-          cmake . && make;
+          CXX=clang++ CC=clang cmake . && make;

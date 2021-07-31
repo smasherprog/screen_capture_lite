@@ -1,0 +1,47 @@
+trigger:
+  - master
+pr:
+  - master
+
+variables:
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+
+jobs:
+  - job: createrelease
+    pool: 
+      vmImage: windows-latest
+    steps:
+      - task: GitHubRelease@1 
+        condition: and(succeeded(), eq(variables.isMain, true))    
+        inputs:
+          gitHubConnection: 'smasherprog'
+          repositoryName: '$(Build.Repository.Name)'
+          action: 'create'
+          target: '$(Build.SourceVersion)' 
+          tagSource: 'userSpecifiedTag' 
+          tag: '17.1.$(Build.BuildId)'
+          releaseNotesFilePath: 'releasenotes.txt' 
+          isPreRelease: true
+          addChangeLog: false
+  - template: azure-devops/build-windows.yml
+    parameters:
+      name: 'Windows_VS2019_x86'
+      targetPlatform: Win32
+      image: 'windows-latest' 
+  - template: azure-devops/build-windows.yml
+    parameters:
+      name: 'Windows_VS2019_x64'
+      targetPlatform: x64
+      image: 'windows-latest'  
+  - job: mac_build
+    pool:
+      vmImage: 'macOS-latest'
+    steps:
+      - script: cmake . && make;
+  - job: ubuntu_build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - script: | 
+          sudo apt install -y libx11-dev libxfixes-dev libxtst-dev libxinerama-dev
+          cmake . && make;

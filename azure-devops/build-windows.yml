@@ -1,0 +1,36 @@
+parameters:
+    - name: name
+    - name: targetPlatform
+    - name: image 
+ 
+jobs:
+  - job: ${{ parameters.name }}
+    pool:
+      vmImage: ${{ parameters.image }} 
+    steps:  
+      - task: CMake@1
+        inputs:
+          cmakeArgs: '.. -G"Visual Studio 16 2019" -A ${{ parameters.targetPlatform }} -DCMAKE_INSTALL_PREFIX=./output'
+      - task: CMake@1
+        inputs:
+          cmakeArgs: '--build . --target INSTALL'
+      - task: ArchiveFiles@2
+        condition: and(succeeded(), eq(variables.isMain, true))      
+        inputs:
+          rootFolderOrFile: '$(Build.SourcesDirectory)/build/output/'
+          includeRootFolder: true
+          archiveType: 'zip'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/Windows_${{ parameters.targetPlatform }}_$(Build.BuildId).zip'
+          replaceExistingArchive: true
+      - task: GitHubRelease@1
+        condition: and(succeeded(), eq(variables.isMain, true))       
+        inputs:
+          gitHubConnection: 'smasherprog' 
+          repositoryName: '$(Build.Repository.Name)'
+          action: 'edit'
+          target: '$(Build.SourceVersion)'
+          tagSource: 'userSpecifiedTag'  
+          tag: '17.1.$(Build.BuildId)'
+          addChangeLog: false
+          isPreRelease: true
+          assets: '$(Build.ArtifactStagingDirectory)/Windows_${{ parameters.targetPlatform }}_$(Build.BuildId).zip'

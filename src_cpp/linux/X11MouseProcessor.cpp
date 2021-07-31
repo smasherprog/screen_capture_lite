@@ -67,9 +67,9 @@ namespace Screen_Capture {
             mousepoint.Position = Point{x, y};
             mousepoint.HotSpot = Point{static_cast<int>(img->xhot), static_cast<int>(img->yhot)};
 
-            auto wholeimg = CreateImage(imgrect, ret.right * sizeof(ImageBGRA), reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
+            auto wholeimg = CreateImage(imgrect, imgrect.right * sizeof(ImageBGRA), reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
             // if the mouse image is different, send the new image and swap the data
-            if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), datalen) != 0) {
+            if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), newsize) != 0) {
                 if (Data->ScreenCaptureData.OnMouseChanged) {
                     Data->ScreenCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
                 }

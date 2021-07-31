@@ -35,7 +35,7 @@ elseif(APPLE)
         ios/ThreadRunner.cpp
     )
     set(SCREEN_CAPTURE_PLATFORM_INC
-       include/ios 
+       ../include/ios 
     )
 else()
   set(SCREEN_CAPTURE_PLATFORM_SRC 

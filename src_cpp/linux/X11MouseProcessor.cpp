@@ -71,10 +71,10 @@ namespace Screen_Capture {
             // if the mouse image is different, send the new image and swap the data
             if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), newsize) != 0) {
                 if (Data->ScreenCaptureData.OnMouseChanged) {
-                    Data->ScreenCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
+                    Data->ScreenCaptureData.OnMouseChanged(&wholeimg, mousepoint);
                 }
                 if (Data->WindowCaptureData.OnMouseChanged) {
-                    Data->WindowCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
+                    Data->WindowCaptureData.OnMouseChanged(&wholeimg, mousepoint);
                 }
                 std::swap(ImageBuffer, OldImageBuffer);
             }

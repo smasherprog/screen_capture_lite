@@ -33,7 +33,7 @@ namespace Screen_Capture {
             auto height = CGImageGetHeight(imageRef.Image);
 
             auto prov = CGImageGetDataProvider(imageRef.Image);
-
+            auto bytesperrow = CGImageGetBytesPerRow(imageRef.Image);
             auto rawdatas = CGDataProviderCopyData(prov);
             auto buf = CFDataGetBytePtr(rawdatas);
             auto datalen = CFDataGetLength(rawdatas);
@@ -54,7 +54,7 @@ namespace Screen_Capture {
             imgrect.left = imgrect.top = 0;
             imgrect.right = width;
             imgrect.bottom = height;
-            auto wholeimgfirst = CreateImage(imgrect, 0, reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
+            auto wholeimgfirst = CreateImage(imgrect, bytesperrow, reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
 
             auto lastx = static_cast<int>(loc.x);
             auto lasty = static_cast<int>(loc.y);

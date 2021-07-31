@@ -17,7 +17,7 @@ namespace Screen_Capture {
     };
     struct Image {
         ImageRect Bounds;
-        int BytesToNextRow = 0;
+        int RowStrideInBytes = 0;
         bool isContiguous = false;
         // alpha is always unused and might contain garbage
         const ImageBGRA *Data = nullptr;

@@ -196,12 +196,13 @@ namespace Screen_Capture {
         return ret;
     }
 
-    Image CreateImage(const ImageRect &imgrect, int rowpadding, const ImageBGRA *data)
+    Image CreateImage(const ImageRect &imgrect, int rowStrideInBytes, const ImageBGRA *data)
     {
         Image ret;
         ret.Bounds = imgrect;
         ret.Data = data;
-        ret.BytesToNextRow = rowpadding;
+        ret.RowStrideInBytes = rowStrideInBytes;
+        ret.isContiguous = rowStrideInBytes == sizeof(ImageBGRA) * Width(imgrect);
         return ret;
     }
     int Index(const Monitor &mointor) { return mointor.Index; }
@@ -237,7 +238,7 @@ namespace Screen_Capture {
     const ImageBGRA *GotoNextRow(const Image &img, const ImageBGRA *current)
     {
         auto c = reinterpret_cast<const unsigned char *>(current);
-        return reinterpret_cast<const ImageBGRA *>(c + img.BytesToNextRow);
+        return reinterpret_cast<const ImageBGRA *>(c + img.RowStrideInBytes);
     }
     bool isDataContiguous(const Image &img) { return img.isContiguous; }
     // number of bytes per row, NOT including the Rowpadding

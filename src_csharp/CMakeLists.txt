@@ -21,7 +21,7 @@ else()
           ${CMAKE_CURRENT_LIST_DIR}/Screen_Capture_Lite.cs
           ${CMAKE_BINARY_DIR}/src_csharp
         COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} ${CMAKE_BINARY_DIR}/src_csharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
-        COMMENT "Building DOTNET assembly ${OUTPUT}"
+        COMMENT "Building DOTNET assembly ${CMAKE_BINARY_DIR}/${OUTPUT}"
       )
 
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})

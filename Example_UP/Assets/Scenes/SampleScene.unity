@@ -252,9 +252,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 422840bd1ff324fc19c262987e7e7958, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  windowIdToCapture: 19
-  frameChangedTex: {fileID: 0}
-  newFrameTex: {fileID: 0}
+  getOnFrameChanged: 1
+  getNewFrame: 0
+  getMouseChanged: 0
+  captureWindowIds: 130000001400000015000000
+  frameChangedTex: []
+  newFrameTex: []
   mouseChangedTex: {fileID: 0}
   rawImage1: {fileID: 893808387}
   rawImage2: {fileID: 1190724865}

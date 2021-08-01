@@ -1,15 +1,10 @@
 using System;
-// using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Runtime.InteropServices;
 using AOT;
 using UnityEngine.UI;
-
-// internal class MonoPInvokeCallbackAttribute : Attribute {
-//     public MonoPInvokeCallbackAttribute() { }
-// }
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -20,10 +15,14 @@ public class TestScreenCaptureLiteInspector : Editor {
         
         TestScreenCaptureLite t = (TestScreenCaptureLite)target;
         if (GUILayout.Button("Save frameChangedTex")) {
-            t.SaveTex(t.frameChangedTex, "frameChangedTex");
+            for (int i=0; i<t.frameChangedTex.Length; i++) {
+                t.SaveTex(t.frameChangedTex[i], $"frameChangedTex_{i}_");
+            }
         }
         if (GUILayout.Button("Save newFrameTex")) {
-            t.SaveTex(t.newFrameTex, "newFrameTex");
+            for (int i=0; i<t.newFrameTex.Length; i++) {
+                t.SaveTex(t.newFrameTex[i], $"newFrameTex_{i}_");
+            }
         }
         if (GUILayout.Button("Save mouseChangedTex")) {
             t.SaveTex(t.mouseChangedTex, "mouseChangedTex");
@@ -53,7 +52,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
     public struct Window {
         // not sure wether this type is correct, but uint is _not_ working correctly
         // https://stackoverflow.com/questions/32906774/what-is-equal-to-the-c-size-t-in-c-sharp/32907246
-        public UIntPtr Handle;
+        public UIntPtr Handle; // size_t in c++
         public Point Position;
         public Point Size;
         // https://www.mono-project.com/docs/advanced/pinvoke/
@@ -72,8 +71,8 @@ public class TestScreenCaptureLite : MonoBehaviour {
         public char A;
     }
 
-    [StructLayout(LayoutKind.Sequential)]  
-    public struct Monitor {  
+    [StructLayout(LayoutKind.Sequential)] //, Size=180 , Pack = 8 CharSet.Ansi or CharSet.Unicode or CharSet.Auto
+    public struct Monitor {
         public int Id;
         public int Index;
         public int Adapter;
@@ -81,17 +80,40 @@ public class TestScreenCaptureLite : MonoBehaviour {
         public int Width;
         public int OriginalHeight;
         public int OriginalWidth;
-        // Offsets are the number of pixels that a monitor can be from the origin. For example, users can shuffle their
-        // monitors around so this affects their offset.
+        // Offsint are the number of pixels that a monitor can be from the origin. For example, users can shuffle their
+        // moniints around so this affects their offset.
         public int OffsetX;
         public int OffsetY;
         public int OriginalOffsetX;
         public int OriginalOffsetY;
         // https://www.mono-project.com/docs/advanced/pinvoke/
         [MarshalAs (UnmanagedType.ByValTStr, SizeConst=128)]
+        // [MarshalAs (UnmanagedType.LPTStr, SizeConst=128)]
         public string Name;
         public float Scaling;
     }
+
+    // [StructLayout(LayoutKind.Explicit, Size=176 )] //, Size=180  CharSet.Ansi or CharSet.Unicode or CharSet.Auto
+    // public struct Monitor {
+    //     [FieldOffset(0)] public int Id;
+    //     [FieldOffset(4)] public int Index;
+    //     [FieldOffset(8)] public int Adapter;
+    //     [FieldOffset(12)] public int Height;
+    //     [FieldOffset(16)] public int Width;
+    //     [FieldOffset(20)] public int OriginalHeight;
+    //     [FieldOffset(24)] public int OriginalWidth;
+    //     // Offsint are the number of pixels that a monitor can be from the origin. For example, users can shuffle their
+    //     // moniints around so this affects their offset.
+    //     [FieldOffset(28)] public int OffsetX;
+    //     [FieldOffset(32)] public int OffsetY;
+    //     [FieldOffset(36)] public int OriginalOffsetX;
+    //     [FieldOffset(40)] public int OriginalOffsetY;
+    //     // https://www.mono-project.com/docs/advanced/pinvoke/
+    //     [MarshalAs (UnmanagedType.ByValTStr, SizeConst=128)]
+    //     // [MarshalAs (UnmanagedType.LPTStr, SizeConst=128)]
+    //     [FieldOffset(44)] public string Name;
+    //     [FieldOffset(172)] public float Scaling;
+    // }
 
     [DllImport("libscreen_capture_lite")]
     private static extern IntPtr C_GetWindows(ref int size);
@@ -99,12 +121,15 @@ public class TestScreenCaptureLite : MonoBehaviour {
     [DllImport("libscreen_capture_lite")]
     private static extern IntPtr C_GetMonitors(ref int size);
 
-    [DllImport("libscreen_capture_lite")]
+    // https://stackoverflow.com/questions/43848841/pass-large-arrays-of-structs-from-c-sharp-unity-script-to-c-dll-using-gchandle
+    [DllImport("libscreen_capture_lite", CallingConvention = CallingConvention.Cdecl)]
     public static extern void C_ICaptureConfiguration (
-            Window windowToCapture, 
+            [In] IntPtr windowToCapture,
+            int numberOfWindows,
             ImageRefWindowRefCallbackType frameChangedCallback, 
             ImageRefWindowRefCallbackType newFrameCallback, 
-            ImagePtrMousePointRefCallbackType mouseChangedCallback);
+            ImagePtrMousePointRefCallbackType mouseChangedCallback
+        );
 
     [DllImport("libscreen_capture_lite")]
     public static extern void C_Capture_Start ();
@@ -164,6 +189,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
     private static T[] GetNativeArray<T>(IntPtr array, int length) {
         T[] result = new T[length];
         int size = Marshal.SizeOf (typeof(T));
+        Debug.Log($"detected size {size}");
 
         if (IntPtr.Size == 4) {
             // 32-bit system
@@ -171,7 +197,8 @@ public class TestScreenCaptureLite : MonoBehaviour {
                 result [i] = (T)Marshal.PtrToStructure (array, typeof(T));
                 array = new IntPtr (array.ToInt32 () + size);
             }
-        } else {
+        } 
+        else {
             // probably 64-bit system
             for (int i = 0; i < result.Length; i++) {
                 result [i] = (T)Marshal.PtrToStructure (array, typeof(T));
@@ -185,198 +212,120 @@ public class TestScreenCaptureLite : MonoBehaviour {
         return (T)Marshal.PtrToStructure (ptr, typeof(T));
     }
 
+    // do we activate the callbacks
     public bool getOnFrameChanged = true;
-    bool onFrameChanged = false;
-    int onFrameChangedWidth;
-    int onFrameChangedHeight;
-    int onFrameChangedSize;
-    // if there is data in the onFrameChangedBytes, the texture should be updated with it
-    byte[] onFrameChangedBytes = new byte[0];
-    Window onFrameChangedWindow;
-    
     public bool getNewFrame = false;
-    bool onNewFrame = false;
-    int onNewFrameWidth;
-    int onNewFrameHeight;
-    int onNewFrameSize;
-    byte[] onNewFrameBytes = new byte[0];
-    Window onNewFrameWindow;
-    
     public bool getMouseChanged = false;
+
+    List<WindowCallbackParams> onFrameChangedParams = new List<WindowCallbackParams>();
+    List<WindowCallbackParams> onNewFrameParams = new List<WindowCallbackParams>();
+    
     bool onMouseChanged = false;
     int onMouseChangedWidth;
     int onMouseChangedHeight;
     int onMouseChangedSize;
     byte[] onMouseChangedBytes = new byte[0];
-    MousePoint onMouseChangedMousePoint;
-
-    List<string> debugMessages = new List<string>();
-
-    int frameChangedCounter;
-    int newFrameCounter;
-    int mouseChangedCounter;
-    System.Diagnostics.Stopwatch frameChangedStopwatch;
-    System.Diagnostics.Stopwatch newFrameStopwatch;
-    System.Diagnostics.Stopwatch mouseChangedStopwatch;
-
-    void FpsCounter (string log, ref int counter, ref System.Diagnostics.Stopwatch lastTimer) {
-        counter ++;
-        if (lastTimer == null) {
-            lastTimer = new System.Diagnostics.Stopwatch();
-            lastTimer.Start();
-        }
-        if (lastTimer.Elapsed.Seconds > 0) {
-            float fps = counter / (float)lastTimer.Elapsed.TotalSeconds;
-            debugMessages.Add($"{log} fps {fps}");
-            lastTimer.Restart();
-            counter = 0;
-        }
-    }
+    MousePoint[] onMouseChangedMousePoints;
 
     // unity doesnt allow writing the texture here
     [MonoPInvokeCallback (typeof (ImageRefWindowRefCallbackType))]
     void OnFrameChanged (int w, int h, int s, IntPtr array, IntPtr windowPtr) {
-        // Debug.Log($"OnFrameChanged w:{w} h:{h} s:{s}   Data: {onFrameChangedBytes[0]:x} {onFrameChangedBytes[1]:x} {onFrameChangedBytes[2]:x} {onFrameChangedBytes[3]:x} {onFrameChangedBytes[4]:x} {onFrameChangedBytes[5]:x} {onFrameChangedBytes[6]:x} {onFrameChangedBytes[7]:x}");
-        onFrameChangedWidth = w;
-        onFrameChangedHeight = h;
-        onFrameChangedSize = s;
-        if (onFrameChangedBytes.Length != s) {
-            onFrameChangedBytes = new byte[s];
-        }
-        Marshal.Copy(array, onFrameChangedBytes, 0, onFrameChangedBytes.Length);
-        onFrameChanged = true;
-        // onFrameChangedBytes = GetNativeArray<byte> (array, s);
-        onFrameChangedWindow = GetNativeType<Window> (windowPtr);
+        Window win = GetNativeType<Window> (windowPtr);
 
-        FpsCounter("frameChanged", ref frameChangedCounter, ref frameChangedStopwatch);
+        // Debug.Log($"OnFrameChanged {win.Handle} w:{w} h:{h} s:{s}");
 
-        // debugMessages.Add($"OnFrameChanged {frameChangedCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length}");
-
-        if ((w != onFrameChangedWindow.Size.x) || (h != onFrameChangedWindow.Size.y)) {
-            debugMessages.Add($"OnFrameChanged {frameChangedCounter}: img:{w}/{h} win:{onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y} differ");
+        int index = onFrameChangedParams.FindIndex(a => a.window.Handle == win.Handle);
+        if (index == -1) {
+            // Debug.Log($"OnFrameChanged {index} {win.Handle} Create w:{w} h:{h} s:{s}");
+            WindowCallbackParams windowCallbackParams = new WindowCallbackParams() {width=w, height=h, window=win};
+            onFrameChangedParams.Add(windowCallbackParams);
+            index = onFrameChangedParams.FindIndex(a => a.window.Handle == win.Handle);
         }
 
-        if ((w * h * 4) != s) {
-            debugMessages.Add($"OnFrameChanged {frameChangedCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onFrameChangedBytes.Length} : Invalid size of Data for given Size");
-            onFrameChangedBytes = null;
+        if (index != -1) {
+            // Debug.Log($"OnFrameChanged Update w:{w} h:{h} s:{s}");
+            onFrameChangedParams[index].Changed (w, h, s, array, win);
         }
     }
 
     [MonoPInvokeCallback (typeof (ImageRefWindowRefCallbackType))]
     void OnNewFrame (int w, int h, int s, IntPtr array, IntPtr windowPtr) {
-        onNewFrameWidth = w;
-        onNewFrameHeight = h;
-        onNewFrameSize = s;
-        if (onNewFrameBytes.Length != s) {
-            onNewFrameBytes = new byte[s];
-        }
-        Marshal.Copy(array, onNewFrameBytes, 0, onNewFrameBytes.Length);
-        // onNewFrameBytes = GetNativeArray<byte> (array, s);
-        onNewFrameWindow = GetNativeType<Window> (windowPtr);
-        onNewFrame = true;
+        Window win = GetNativeType<Window> (windowPtr);
 
-        FpsCounter("newFrame", ref newFrameCounter, ref newFrameStopwatch);
+        // Debug.Log($"OnNewFrame {win.Handle} w:{w} h:{h} s:{s}");
 
-        // debugMessages.Add($"OnNewFrame {newFrameCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length}");
-
-        if ((w != onNewFrameWindow.Size.x) || (h != onNewFrameWindow.Size.y)) {
-            debugMessages.Add($"OnNewFrame {newFrameCounter}: img:{w}/{h} win:{onNewFrameWindow.Size.x}/{onNewFrameWindow.Size.y} differ");
+        int index = onNewFrameParams.FindIndex(a => a.window.Handle == win.Handle);
+        if (index == -1) {
+            // Debug.Log($"OnNewFrame {index} {win.Handle} Create w:{w} h:{h} s:{s}");
+            WindowCallbackParams windowCallbackParams = new WindowCallbackParams() {width=w, height=h, window=win};
+            onNewFrameParams.Add(windowCallbackParams);
+            index = onNewFrameParams.FindIndex(a => a.window.Handle == win.Handle);
         }
 
-        if ((w * h * 4) != s) {
-            debugMessages.Add($"OnNewFrame {newFrameCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onNewFrameBytes.Length} : Invalid size of Data for given Size");
-            onNewFrameBytes = null;
+        if (index != -1) {
+            // Debug.Log($"OnNewFrame Update w:{w} h:{h} s:{s}");
+            onNewFrameParams[index].Changed (w, h, s, array, win);
         }
     }
 
     [MonoPInvokeCallback (typeof (ImagePtrMousePointRefCallbackType))]
     void OnMouseChanged (int w, int h, int s, IntPtr array, IntPtr mposPtr) {
-        onMouseChangedWidth = w;
-        onMouseChangedHeight = h;
-        onMouseChangedSize = s;
-        // onMouseChangedBytes = GetNativeArray<byte> (array, s);
-        if (onMouseChangedBytes.Length != s) {
-            onMouseChangedBytes = new byte[s];
-        }
-        Marshal.Copy(array, onMouseChangedBytes, 0, onMouseChangedBytes.Length);
-        onMouseChanged = true;
-        onMouseChangedMousePoint = GetNativeType<MousePoint> (mposPtr);
+        // onMouseChangedWidth = w;
+        // onMouseChangedHeight = h;
+        // onMouseChangedSize = s;
+        // if (onMouseChangedBytes.Length != s) {
+        //     onMouseChangedBytes = new byte[s];
+        // }
+        // onMouseChanged = true;
+        // MousePoint onMouseChangedMousePoint = GetNativeType<MousePoint> (mposPtr);
 
-        // FpsCounter("mouseChanged", ref mouseChangedCounter, ref mouseChangedStopwatch);
+        // Marshal.Copy(array, onMouseChangedBytes, 0, onMouseChangedBytes.Length);
 
-        if ((w * h * 4) != s) {
-            debugMessages.Add($"OnMouseChanged {mouseChangedCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onMouseChangedBytes.Length} : Invalid size of Data for given Size");
-            onMouseChangedBytes = null;
-        }
+        // // FpsCounter("mouseChanged", ref mouseChangedCounter, ref mouseChangedStopwatch);
+
+        // if ((w * h * 4) != s) {
+        //     debugMessages.Add($"OnMouseChanged {mouseChangedCounter}: w:{w} h:{h} *:{(w*h)} s:{s} l:{onMouseChangedBytes.Length} : Invalid size of Data for given Size");
+        //     onMouseChangedBytes = null;
+        // }
     }
 
     // convert the texture data to textures to use in unity
     public void UpdateTextures () {
-        if (debugMessages.Count > 0) {
-            for (int i=0; i<debugMessages.Count; i++ ){
-                Debug.Log(debugMessages[i]);
-            }
-            debugMessages.Clear();
+        for (int i=0; i<onFrameChangedParams.Count; i++) {
+            // Debug.Log($"UpdateTextures onFrameChangedParams {i}");
+            WindowCallbackParams parms = onFrameChangedParams[i];
+            parms.UpdateTexture();
+            rawImage1.texture = parms.texture;
+            text1.text = $"onFrameChangedParams pos: {parms.window.Position.x}/{parms.window.Position.y} size: {parms.window.Size.x}/{parms.window.Size.y}";
         }
-        if (onFrameChanged) {
-            onFrameChanged = false;
-            if ((frameChangedTex == null) || (frameChangedTex.width != onFrameChangedWidth) || (frameChangedTex.height != onFrameChangedHeight)) {
-                Debug.Log($"Update.frameChangedTex: new Texture {onFrameChangedWindow.Size.x} {onFrameChangedWindow.Size.y} {onFrameChangedWidth} {onFrameChangedHeight}");
-                frameChangedTex = new Texture2D(onFrameChangedWidth, onFrameChangedHeight, TextureFormat.RGBA32, false);
-                rawImage1.texture = frameChangedTex;
-            }
-            try {
-                // Debug.Log($"Update.frameChangedTex: {onFrameChangedWidth} {onFrameChangedHeight} {onFrameChangedSize}");
-                // Debug.Log($"Update.frameChange: {onFrameChangedWindow.Position.x} {onFrameChangedWindow.Position.y}");
-                text1.text = $"pos: {onFrameChangedWindow.Position.x}/{onFrameChangedWindow.Position.y} size: {onFrameChangedWindow.Size.x}/{onFrameChangedWindow.Size.y}";
-                frameChangedTex.LoadRawTextureData(onFrameChangedBytes);
-                // onFrameChangedBytes = null;
-                frameChangedTex.Apply();
-            }
-            catch (Exception e) {
-                Debug.LogError($"Update.frameChanged.Exception: bytes:{onFrameChangedBytes.Length} w:{onFrameChangedWidth} h:{onFrameChangedHeight} s:{onFrameChangedSize} *:{(onFrameChangedWidth*onFrameChangedHeight)}");
-                Debug.LogError($"{e.ToString()}");
-            }
+
+        for (int i=0; i<onNewFrameParams.Count; i++) {
+            // Debug.Log($"UpdateTextures onNewFrameParams {i}");
+            WindowCallbackParams parms = onNewFrameParams[i];
+            parms.UpdateTexture();
+            rawImage2.texture = parms.texture;
+            text2.text = $"onNewFrameParams pos: {parms.window.Position.x}/{parms.window.Position.y} size: {parms.window.Size.x}/{parms.window.Size.y}";
         }
-        if (onNewFrame) {
-            onNewFrame = false;
-            if ((newFrameTex == null) || (newFrameTex.width != onNewFrameWidth) || (newFrameTex.height != onNewFrameHeight)) {
-                Debug.Log($"Update.newFrameTex: new Texture {onNewFrameWindow.Size.x} {onNewFrameWindow.Size.y} {onNewFrameWidth} {onNewFrameHeight}");
-                newFrameTex = new Texture2D(onNewFrameWidth, onNewFrameHeight, TextureFormat.RGBA32, false);
-                rawImage2.texture = newFrameTex;
-            }
-            try {
-                // Debug.Log($"Update.newFrameTex: {onNewFrameWidth} {onNewFrameHeight} {onNewFrameSize}");
-                // Debug.Log($"Update.newFrame: {onNewFrameWindow.Position.x} {onNewFrameWindow.Position.y}");
-                text2.text = $"pos: {onNewFrameWindow.Position.x}/{onNewFrameWindow.Position.y} size: {onNewFrameWindow.Size.x}/{onNewFrameWindow.Size.y}";
-                newFrameTex.LoadRawTextureData(onNewFrameBytes);
-                // onNewFrameBytes = null;
-                newFrameTex.Apply();
-            }
-            catch (Exception e) {
-                Debug.LogError($"Update.onNewFrame.Exception: bytes:{onNewFrameBytes.Length} w:{onNewFrameWidth} h:{onNewFrameHeight} s:{onNewFrameSize} *:{(onNewFrameWidth*onNewFrameHeight)}");
-                Debug.LogError($"{e.ToString()}");
-            }
-        }
-        if (onMouseChanged) {
-            onMouseChanged = false;
-            if ((mouseChangedTex == null) || (mouseChangedTex.width != onMouseChangedWidth) || (mouseChangedTex.height != onMouseChangedHeight)) {
-                Debug.Log($"Update.mouseChanged: new Texture {onMouseChangedWidth} {onMouseChangedHeight}");
-                mouseChangedTex = new Texture2D(onMouseChangedWidth, onMouseChangedHeight, TextureFormat.RGBA32, false);
-                rawImage3.texture = mouseChangedTex;
-            }
-            try {
-                // Debug.Log($"Update.onMouseChanged: {onMouseChangedWidth} {onMouseChangedHeight} {onMouseChangedSize}");
-                text3.text = $"pos: {onMouseChangedMousePoint.Position.x}/{onMouseChangedMousePoint.Position.y} hotspot: {onMouseChangedMousePoint.HotSpot.x}/{onMouseChangedMousePoint.HotSpot.y}";
-                mouseChangedTex.LoadRawTextureData(onMouseChangedBytes);
-                // onMouseChangedBytes = null;
-                mouseChangedTex.Apply();
-            }
-            catch (Exception e) {
-                Debug.LogError($"Update.onMouseChanged.Exception: bytes:{onMouseChangedBytes.Length} w:{onMouseChangedWidth} h:{onMouseChangedHeight} s:{onMouseChangedSize} *:{(onMouseChangedWidth*onMouseChangedHeight)}");
-                Debug.LogError($"{e.ToString()}");
-            }
-        }
+
+        // if (onMouseChanged) {
+        //     onMouseChanged = false;
+        //     if ((mouseChangedTex == null) || (mouseChangedTex.width != onMouseChangedWidth) || (mouseChangedTex.height != onMouseChangedHeight)) {
+        //         Debug.Log($"Update.mouseChanged: new Texture {onMouseChangedWidth} {onMouseChangedHeight}");
+        //         mouseChangedTex = new Texture2D(onMouseChangedWidth, onMouseChangedHeight, TextureFormat.RGBA32, false);
+        //         rawImage3.texture = mouseChangedTex;
+        //     }
+        //     try {
+        //         // Debug.Log($"Update.onMouseChanged: {onMouseChangedWidth} {onMouseChangedHeight} {onMouseChangedSize}");
+        //         text3.text = $"pos: {onMouseChangedMousePoint.Position.x}/{onMouseChangedMousePoint.Position.y} hotspot: {onMouseChangedMousePoint.HotSpot.x}/{onMouseChangedMousePoint.HotSpot.y}";
+        //         mouseChangedTex.LoadRawTextureData(onMouseChangedBytes);
+        //         // onMouseChangedBytes = null;
+        //         mouseChangedTex.Apply();
+        //     }
+        //     catch (Exception e) {
+        //         Debug.LogError($"Update.onMouseChanged.Exception: bytes:{onMouseChangedBytes.Length} w:{onMouseChangedWidth} h:{onMouseChangedHeight} s:{onMouseChangedSize} *:{(onMouseChangedWidth*onMouseChangedHeight)}");
+        //         Debug.LogError($"{e.ToString()}");
+        //     }
+        // }
 
         if (C_Capture_ExpectedErrorEvent()) {
             Debug.LogWarning("Capturing Encountered Expected Error (like window resize)");
@@ -386,12 +335,13 @@ public class TestScreenCaptureLite : MonoBehaviour {
 
 
 #region Screen Capture Light Unity Testing
-    public int windowIdToCapture = 0;
+    // public int windowIdToCapture = 0;
+    public List<int> captureWindowIds = new List<int>();
 
     [HideInInspector]
-    public Texture2D frameChangedTex;
+    public Texture2D[] frameChangedTex;
     [HideInInspector]
-    public Texture2D newFrameTex;
+    public Texture2D[] newFrameTex;
     [HideInInspector]
     public Texture2D mouseChangedTex;
 
@@ -405,23 +355,29 @@ public class TestScreenCaptureLite : MonoBehaviour {
     public Text text3;
     
 
+
     void Start() {
         // Texture.allowThreadedTextureCreation = true; // useless, only for unity internals
 
-        Window[] windows = GetWindows();
-        for (int i=0; i<windows.Length; i++) {
-            Window window = windows[i];
-            Debug.Log($"Window: {i} handle:{window.Handle} posX:{window.Position.x} posY:{window.Position.y} sizeX:{window.Size.x} sizeY:{window.Size.y} Name:{window.Name}");
+        Window[] systemWindows = GetWindows();
+        Window[] captureWindows = new Window[captureWindowIds.Count];
+        for (int i=0; i<systemWindows.Length; i++) {
+            Debug.Log($"Window: {i} handle:{systemWindows[i].Handle} posX:{systemWindows[i].Position.x} posY:{systemWindows[i].Position.y} sizeX:{systemWindows[i].Size.x} sizeY:{systemWindows[i].Size.y} Name:{systemWindows[i].Name}");
+            if (captureWindowIds.Contains(i)) {
+                Debug.Log($"Window: CAPTURE {i} handle:{systemWindows[i].Handle} posX:{systemWindows[i].Position.x} posY:{systemWindows[i].Position.y} sizeX:{systemWindows[i].Size.x} sizeY:{systemWindows[i].Size.y} Name:{systemWindows[i].Name}");
+                captureWindows[captureWindowIds.IndexOf(i)] = systemWindows[i];
+            }
         }
 
-        Monitor[] monitors = GetMonitors();
-        for (int i=0; i<monitors.Length; i++) {
-            Monitor monitor = monitors[i];
-            Debug.Log($"Monitors Id:{monitor.Id} Index:{monitor.Index} Adapter:{monitor.Adapter}");
-            Debug.Log($"- Name:'{monitor.Name}'");
-            Debug.Log($"- Height:{monitor.Height} Width:{monitor.Width} OriginalHeight:{monitor.OriginalHeight} OriginalWidth:{monitor.OriginalWidth} Scaling:{monitor.Scaling}");
-            Debug.Log($"- OffsetX:{monitor.OffsetX} OffsetY:{monitor.OffsetY} OriginalOffsetX:{monitor.OriginalOffsetX} OriginalOffsetY:{monitor.OriginalOffsetY}");
-        }
+        // monitors dont work at all yet, values are wrong?
+        // Monitor[] monitors = GetMonitors();
+        // for (int i=0; i<monitors.Length; i++) {
+        //     Monitor monitor = monitors[i];
+        //     Debug.Log($"Monitors Id:{monitor.Id} Index:{monitor.Index} Adapter:{monitor.Adapter}");
+        //     Debug.Log($"- MonitorSize: {monitor.Height}/{monitor.Width} MonitorOriginalSize: {monitor.OriginalHeight}/{monitor.OriginalWidth}");
+        //     Debug.Log($"- Offset: {monitor.OffsetX}/{monitor.OffsetY} MonitorOriginalOffset:{monitor.OriginalOffsetX}/{monitor.OriginalOffsetY}");
+        //     Debug.Log($"- Name:'{monitor.Name}' Scaling:{monitor.Scaling}");
+        // }
 
         if (getOnFrameChanged) {
             frameChangeDelegate = new ImageRefWindowRefCallbackType(OnFrameChanged);
@@ -433,11 +389,19 @@ public class TestScreenCaptureLite : MonoBehaviour {
             mouseChangedDelegate = new ImagePtrMousePointRefCallbackType(OnMouseChanged);
         }
 
+        GCHandle pinnedArray = GCHandle.Alloc(captureWindows, GCHandleType.Pinned);
+        IntPtr ptr = pinnedArray.AddrOfPinnedObject();
+
         Debug.Log($"- a -");
-        C_ICaptureConfiguration( windows[windowIdToCapture], frameChangeDelegate, newFrameDelegate, mouseChangedDelegate );
+        C_ICaptureConfiguration( ptr, captureWindows.Length, frameChangeDelegate, newFrameDelegate, mouseChangedDelegate );
         Debug.Log($"- b -");
 
-        topText.text = $"grabbing window: {windows[windowIdToCapture].Name} {windows[windowIdToCapture].Position.x} {windows[windowIdToCapture].Position.y}";
+        pinnedArray.Free();
+
+        topText.text = "";
+        foreach (Window win in captureWindows) {
+            topText.text += $"grabbing window: {win.Name} {win.Position.x}/{win.Position.y}";
+        }
 
         C_Capture_SetMouseChangeInterval(1000/24);
         C_Capture_SetFrameChangeInterval(1000/24);

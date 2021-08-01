@@ -96,54 +96,43 @@ namespace Screen_Capture {
     static ImagePtrMousePointRefCallbackType mouseChangedCallbackInstance;
 
     SC_LITE_EXTERN void C_ICaptureConfiguration (
-            Window windowToCaptureInput, 
+            Window* windowToCaptureInput,
+            int numWindowInput,
             ImageRefWindowRefCallbackType frameChangedCallback, 
             ImageRefWindowRefCallbackType newFrameCallback, 
-            ImagePtrMousePointRefCallbackType mouseChangedCallback) {
+            ImagePtrMousePointRefCallbackType mouseChangedCallback
+        ) {
 
-        // dont assume the external variable is using the internal window variable pointers
-        // so generate a new list using the windowToCaptureInput handles
-        // std::vector<Window> internalWindowPointers = SL::Screen_Capture::GetWindows();
-        // std::vector<Window> windowsToCapture;
-        // for (int i=0; i<internalWindowPointers.size(); i++) {
-        //     if (internalWindowPointers[i].Handle == windowToCaptureInput.Handle) {
-        //         windowsToCapture.push_back(internalWindowPointers[i]);
-        //     }
-        // }
-        
         frameChangedCallbackInstance = frameChangedCallback;
         newFrameCallbackInstance = newFrameCallback;
         mouseChangedCallbackInstance = mouseChangedCallback;
-        
-        // static std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> frameGrabberConfiguration;
-        frameGrabberConfiguration =  SL::Screen_Capture::CreateCaptureConfiguration([windowToCaptureInput]() {
+
+        // TODO: the second pointer is not correct!
+        ::fprintf(stdout, "C_ICaptureConfiguration: X num %i \n\n", numWindowInput);
+        Window* windowToCaptureIter = windowToCaptureInput;
+        for (int i = 0; i < numWindowInput; i++) {
+            ::fprintf(stdout, "C_ICaptureConfiguration: X winId %i winCapture %zu \n\n", i, windowToCaptureIter->Handle);
+            windowToCaptureIter++;
+        }
+
+        frameGrabberConfiguration =  SL::Screen_Capture::CreateCaptureConfiguration([windowToCaptureInput, numWindowInput]() {
+            // dont assume the external variable is using the internal window variable pointers
+            // so generate a new list using the windowToCaptureInput handles
             auto windows = SL::Screen_Capture::GetWindows();
             decltype(windows) filtereditems;
             for (auto &a : windows) {
-                if (windowToCaptureInput.Handle == a.Handle) {
-                    filtereditems.push_back(a);
+                ::fprintf(stdout, "C_ICaptureConfiguration: winList %zu \n\n", a.Handle);
+                Window* windowToCaptureIter = windowToCaptureInput;
+                for (int i = 0; i < numWindowInput; i++) {
+                    if (windowToCaptureInput[i].Handle == a.Handle) {
+                        filtereditems.push_back(a);
+                        ::fprintf(stdout, "C_ICaptureConfiguration: equals %zu %zu \n\n", a.Handle, windowToCaptureInput[i].Handle);
+                    }
+                    windowToCaptureIter++;
                 }
             }
+            ::fflush(stdout);
             return filtereditems;
-
-            // old Code
-            // return windowsToCapture;
-
-            // Example Code
-            // auto windows = SL::Screen_Capture::GetWindows();
-            // std::string srchterm = "blizzard";
-            // // convert to lower case for easier comparisons
-            // std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
-            // decltype(windows) filtereditems;
-            // for (auto &a : windows) {
-            //     std::string name = a.Name;
-            //     std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
-            //     if (name.find(srchterm) != std::string::npos) {
-            //         filtereditems.push_back(a);
-            //         std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
-            //     }
-            // }
-            // return filtereditems;            //add your own custom filtering here if you want to capture only some monitors
         });
 
         if (frameChangedCallbackInstance) {
@@ -209,25 +198,11 @@ namespace Screen_Capture {
     }
 
     SC_LITE_EXTERN void C_Capture_Start () {
-    // having trouble deleting the thread & the config
-    //     if (frameGrabberConfiguration != NULL) {
-    //         frameGrabber = frameGrabberConfiguration->start_capturing();
-    //     }
     }
 
     SC_LITE_EXTERN void C_Capture_Stop () {
-        // if (frameGrabberConfiguration != NULL) {
-        //     frameGrabberConfiguration.reset();
-        //     frameGrabberConfiguration = NULL;
-        // }
         frameGrabber = nullptr;
         frameGrabberConfiguration = nullptr;
-        // if (frameGrabber != nullptr) {
-        //     frameGrabber->abort();
-        //     // TODO: how to free framegrabber?
-        //     frameGrabber = nullptr;
-        //     // frameGrabberConfiguration = NULL;
-        // }
     }
 
     SC_LITE_EXTERN void C_Capture_SetFrameChangeInterval (int ms) {

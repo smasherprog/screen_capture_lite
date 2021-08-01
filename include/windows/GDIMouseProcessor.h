@@ -7,15 +7,10 @@
 namespace SL {
     namespace Screen_Capture {
 
-        class GDIMouseProcessor : public BaseFrameProcessor {
-
+        class GDIMouseProcessor : public BaseMouseProcessor { 
             HDCWrapper MonitorDC;
-            HDCWrapper CaptureDC;
-            std::shared_ptr<Thread_Data> Data;
-            std::unique_ptr<unsigned char[]> NewImageBuffer;
-            int Last_x = 0;
-            int Last_y = 0;
-
+            HDCWrapper CaptureDC; 
+   
         public:
 
             const int MaxCursurorSize = 32;

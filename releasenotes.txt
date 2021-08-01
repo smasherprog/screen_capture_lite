@@ -1,1 +1,1 @@
-Setting up build currently
+Cleaned up mouse capture code

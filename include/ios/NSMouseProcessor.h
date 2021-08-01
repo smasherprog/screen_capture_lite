@@ -7,10 +7,7 @@
 namespace SL {
     namespace Screen_Capture {
         
-        class NSMouseProcessor: public BaseFrameProcessor {
-            int Last_x =0;
-            int Last_y =0;
-            std::unique_ptr<unsigned char[]> OldImageBuffer;
+        class NSMouseProcessor : public BaseMouseProcessor {
         public:
             const int MaxCursurorSize=32;
             DUPL_RETURN Init(std::shared_ptr<Thread_Data> data);

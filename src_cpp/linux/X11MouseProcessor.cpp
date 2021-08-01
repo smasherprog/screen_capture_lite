@@ -48,9 +48,9 @@ namespace Screen_Capture {
             imgrect.right = img->width;
             imgrect.bottom = img->height;
             auto newsize = sizeof(ImageBGRA) * imgrect.right * imgrect.bottom;
-            if (static_cast<int>(newsize) > ImageBufferSize || !OldImageBuffer) {
-                ImageBuffer = std::make_unique<unsigned char[]>(sizeof(ImageBGRA) * imgrect.right * imgrect.bottom);
-                OldImageBuffer = std::make_unique<unsigned char[]>(sizeof(ImageBGRA) * imgrect.right * imgrect.bottom);
+            if (static_cast<int>(newsize) > ImageBufferSize || !ImageBuffer || !NewImageBuffer) {
+                NewImageBuffer = std::make_unique<unsigned char[]>(newsize);
+                ImageBuffer = std::make_unique<unsigned char[]>(newsize);
             }
 
             memcpy(ImageBuffer.get(), img->pixels, newsize);
@@ -69,14 +69,14 @@ namespace Screen_Capture {
 
             auto wholeimg = CreateImage(imgrect, imgrect.right * sizeof(ImageBGRA), reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
             // if the mouse image is different, send the new image and swap the data
-            if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), newsize) != 0) {
+            if (memcmp(ImageBuffer.get(), NewImageBuffer.get(), newsize) != 0) {
                 if (Data->ScreenCaptureData.OnMouseChanged) {
                     Data->ScreenCaptureData.OnMouseChanged(&wholeimg, mousepoint);
                 }
                 if (Data->WindowCaptureData.OnMouseChanged) {
                     Data->WindowCaptureData.OnMouseChanged(&wholeimg, mousepoint);
                 }
-                std::swap(ImageBuffer, OldImageBuffer);
+                std::swap(ImageBuffer, NewImageBuffer);
             }
             else if (Last_x != x || Last_y != y) {
                 if (Data->ScreenCaptureData.OnMouseChanged) {

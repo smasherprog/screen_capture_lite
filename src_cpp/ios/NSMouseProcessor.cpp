@@ -37,12 +37,12 @@ namespace Screen_Capture {
             auto rawdatas = CGDataProviderCopyData(prov);
             auto buf = CFDataGetBytePtr(rawdatas);
             auto datalen = CFDataGetLength(rawdatas);
-            if (datalen > ImageBufferSize || !OldImageBuffer) {
+            if (datalen > ImageBufferSize || !ImageBuffer || !NewImageBuffer) {
+                NewImageBuffer = std::make_unique<unsigned char[]>(datalen);
                 ImageBuffer = std::make_unique<unsigned char[]>(datalen);
-                OldImageBuffer = std::make_unique<unsigned char[]>(datalen);
             }
 
-            memcpy(ImageBuffer.get(), buf, datalen);
+            memcpy(NewImageBuffer.get(), buf, datalen);
             CFRelease(rawdatas);
 
             // this is not needed. It is freed when the image is released
@@ -54,7 +54,7 @@ namespace Screen_Capture {
             imgrect.left = imgrect.top = 0;
             imgrect.right = width;
             imgrect.bottom = height;
-            auto wholeimgfirst = CreateImage(imgrect, bytesperrow, reinterpret_cast<const ImageBGRA *>(ImageBuffer.get()));
+            auto wholeimgfirst = CreateImage(imgrect, bytesperrow, reinterpret_cast<const ImageBGRA *>(NewImageBuffer.get()));
 
             auto lastx = static_cast<int>(loc.x);
             auto lasty = static_cast<int>(loc.y);
@@ -65,14 +65,14 @@ namespace Screen_Capture {
 
             // if the mouse image is different, send the new image and swap the data
 
-            if (memcmp(ImageBuffer.get(), OldImageBuffer.get(), datalen) != 0) {
+            if (memcmp(NewImageBuffer.get(), ImageBuffer.get(), datalen) != 0) {
                 if (Data->ScreenCaptureData.OnMouseChanged) {
                     Data->ScreenCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
                 }
                 if (Data->WindowCaptureData.OnMouseChanged) {
                     Data->WindowCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
                 }
-                std::swap(ImageBuffer, OldImageBuffer);
+                std::swap(NewImageBuffer, OldImageBuffer);
             }
             else if (Last_x != lastx || Last_y != lasty) {
                 if (Data->ScreenCaptureData.OnMouseChanged) {

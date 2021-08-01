@@ -64,6 +64,13 @@ namespace Screen_Capture {
         bool FirstRun = true;
     };
 
+    class BaseMouseProcessor : public BaseFrameProcessor {
+      public:
+        std::unique_ptr<unsigned char[]> NewImageBuffer;
+        int Last_x = 0;
+        int Last_y = 0;
+    };
+
     enum DUPL_RETURN { DUPL_RETURN_SUCCESS = 0, DUPL_RETURN_ERROR_EXPECTED = 1, DUPL_RETURN_ERROR_UNEXPECTED = 2 };
     Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string &n, float scale);
     Monitor CreateMonitor(int index, int id, int adapter, int h, int w, int ox, int oy, const std::string &n, float scale); 

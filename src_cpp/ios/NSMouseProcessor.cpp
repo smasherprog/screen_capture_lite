@@ -72,7 +72,7 @@ namespace Screen_Capture {
                 if (Data->WindowCaptureData.OnMouseChanged) {
                     Data->WindowCaptureData.OnMouseChanged(&wholeimgfirst, mousepoint);
                 }
-                std::swap(NewImageBuffer, OldImageBuffer);
+                std::swap(NewImageBuffer, ImageBuffer);
             }
             else if (Last_x != lastx || Last_y != lasty) {
                 if (Data->ScreenCaptureData.OnMouseChanged) {

@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 using AOT;
 using UnityEngine.UI;
+using UnityEngine.Events;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -36,19 +37,19 @@ public class TestScreenCaptureLite : MonoBehaviour {
 
 
 #region Screen Capture Light API
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct Point {
         public int x;
         public int y;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct MousePoint {
         public Point Position;
         public Point HotSpot;
     };
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Size = 4+8+8+128, Pack = 4)]
     public struct Window {
         // not sure wether this type is correct, but uint is _not_ working correctly
         // https://stackoverflow.com/questions/32906774/what-is-equal-to-the-c-size-t-in-c-sharp/32907246
@@ -60,10 +61,10 @@ public class TestScreenCaptureLite : MonoBehaviour {
         public string Name;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct Image {}
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct ImageBGRA {
         public char B;
         public char G;
@@ -71,8 +72,13 @@ public class TestScreenCaptureLite : MonoBehaviour {
         public char A;
     }
 
-    [StructLayout(LayoutKind.Sequential)] //, Size=180 , Pack = 8 CharSet.Ansi or CharSet.Unicode or CharSet.Auto
+    // maybe check: https://www.mono-project.com/docs/advanced/pinvoke/
+    [StructLayout(LayoutKind.Sequential, Size=176, Pack = 4)] //, Size=180 , Pack = 8 CharSet.Ansi or CharSet.Unicode or CharSet.Auto
     public struct Monitor {
+        // https://www.mono-project.com/docs/advanced/pinvoke/
+        [MarshalAs (UnmanagedType.ByValTStr, SizeConst=128)] // works, but not correct output
+        // [MarshalAs (UnmanagedType.LPWStr, SizeConst=128)] // BPTStr crashes
+        public string Name;
         public int Id;
         public int Index;
         public int Adapter;
@@ -86,33 +92,35 @@ public class TestScreenCaptureLite : MonoBehaviour {
         public int OffsetY;
         public int OriginalOffsetX;
         public int OriginalOffsetY;
-        // https://www.mono-project.com/docs/advanced/pinvoke/
-        [MarshalAs (UnmanagedType.ByValTStr, SizeConst=128)]
-        // [MarshalAs (UnmanagedType.LPTStr, SizeConst=128)]
-        public string Name;
+        // // https://www.mono-project.com/docs/advanced/pinvoke/
+        // [MarshalAs (UnmanagedType.ByValTStr, SizeConst=128)] // works, but not correct output
+        // // [MarshalAs (UnmanagedType.LPWStr, SizeConst=128)] // BPTStr crashes
+        // public string Name;
         public float Scaling;
     }
 
-    // [StructLayout(LayoutKind.Explicit, Size=176 )] //, Size=180  CharSet.Ansi or CharSet.Unicode or CharSet.Auto
+
+
+    // [StructLayout(LayoutKind.Explicit, Size=188, Pack = 4 )] //, Size=180  CharSet.Ansi or CharSet.Unicode or CharSet.Auto
     // public struct Monitor {
     //     [FieldOffset(0)] public int Id;
-    //     [FieldOffset(4)] public int Index;
-    //     [FieldOffset(8)] public int Adapter;
-    //     [FieldOffset(12)] public int Height;
-    //     [FieldOffset(16)] public int Width;
-    //     [FieldOffset(20)] public int OriginalHeight;
-    //     [FieldOffset(24)] public int OriginalWidth;
+    //     [FieldOffset(2)] public int Index;
+    //     [FieldOffset(4)] public int Adapter;
+    //     [FieldOffset(6)] public int Height;
+    //     [FieldOffset(8)] public int Width;
+    //     [FieldOffset(10)] public int OriginalHeight;
+    //     [FieldOffset(12)] public int OriginalWidth;
     //     // Offsint are the number of pixels that a monitor can be from the origin. For example, users can shuffle their
     //     // moniints around so this affects their offset.
-    //     [FieldOffset(28)] public int OffsetX;
-    //     [FieldOffset(32)] public int OffsetY;
-    //     [FieldOffset(36)] public int OriginalOffsetX;
-    //     [FieldOffset(40)] public int OriginalOffsetY;
+    //     [FieldOffset(14)] public int OffsetX;
+    //     [FieldOffset(16)] public int OffsetY;
+    //     [FieldOffset(18)] public int OriginalOffsetX;
+    //     [FieldOffset(20)] public int OriginalOffsetY;
     //     // https://www.mono-project.com/docs/advanced/pinvoke/
     //     [MarshalAs (UnmanagedType.ByValTStr, SizeConst=128)]
     //     // [MarshalAs (UnmanagedType.LPTStr, SizeConst=128)]
-    //     [FieldOffset(44)] public string Name;
-    //     [FieldOffset(172)] public float Scaling;
+    //     [FieldOffset(20)] public string Name;
+    //     [FieldOffset(176)] public float Scaling;
     // }
 
     [DllImport("libscreen_capture_lite")]
@@ -240,6 +248,10 @@ public class TestScreenCaptureLite : MonoBehaviour {
             WindowCallbackParams windowCallbackParams = new WindowCallbackParams() {width=w, height=h, window=win};
             onFrameChangedParams.Add(windowCallbackParams);
             index = onFrameChangedParams.FindIndex(a => a.window.Handle == win.Handle);
+
+            Dropdown.OptionData optionData = new Dropdown.OptionData();
+            optionData.text = ((int)win.Handle).ToString();
+            dropdown1.options.Add(optionData);
         }
 
         if (index != -1) {
@@ -291,18 +303,30 @@ public class TestScreenCaptureLite : MonoBehaviour {
 
     // convert the texture data to textures to use in unity
     public void UpdateTextures () {
+        WindowCallbackParams parms;
+
         for (int i=0; i<onFrameChangedParams.Count; i++) {
             // Debug.Log($"UpdateTextures onFrameChangedParams {i}");
-            WindowCallbackParams parms = onFrameChangedParams[i];
+            parms = onFrameChangedParams[i];
             parms.UpdateTexture();
+        }
+
+        if (dropdown1.options.Count > 0) {
+            parms = onFrameChangedParams[dropdown1.value];
             rawImage1.texture = parms.texture;
             text1.text = $"onFrameChangedParams pos: {parms.window.Position.x}/{parms.window.Position.y} size: {parms.window.Size.x}/{parms.window.Size.y}";
         }
 
         for (int i=0; i<onNewFrameParams.Count; i++) {
             // Debug.Log($"UpdateTextures onNewFrameParams {i}");
-            WindowCallbackParams parms = onNewFrameParams[i];
+            parms = onNewFrameParams[i];
             parms.UpdateTexture();
+            rawImage2.texture = parms.texture;
+            text2.text = $"onNewFrameParams pos: {parms.window.Position.x}/{parms.window.Position.y} size: {parms.window.Size.x}/{parms.window.Size.y}";
+        }
+
+        if (dropdown2.options.Count > 0) {
+            parms = onNewFrameParams[dropdown2.value];
             rawImage2.texture = parms.texture;
             text2.text = $"onNewFrameParams pos: {parms.window.Position.x}/{parms.window.Position.y} size: {parms.window.Size.x}/{parms.window.Size.y}";
         }
@@ -354,30 +378,36 @@ public class TestScreenCaptureLite : MonoBehaviour {
     public Text text2;
     public Text text3;
     
+    public Dropdown dropdown1;
+    // Dropdown.OptionData dropdown1OptionData;
+    public Dropdown dropdown2;
+    Dropdown.OptionData dropdown2OptionData;
+    public Dropdown dropdown3;
+    Dropdown.OptionData dropdown3OptionData;
 
 
     void Start() {
-        // Texture.allowThreadedTextureCreation = true; // useless, only for unity internals
-
         Window[] systemWindows = GetWindows();
         Window[] captureWindows = new Window[captureWindowIds.Count];
         for (int i=0; i<systemWindows.Length; i++) {
-            Debug.Log($"Window: {i} handle:{systemWindows[i].Handle} posX:{systemWindows[i].Position.x} posY:{systemWindows[i].Position.y} sizeX:{systemWindows[i].Size.x} sizeY:{systemWindows[i].Size.y} Name:{systemWindows[i].Name}");
+            // Debug.Log($"Window: {i} handle:{systemWindows[i].Handle} posX:{systemWindows[i].Position.x} posY:{systemWindows[i].Position.y} sizeX:{systemWindows[i].Size.x} sizeY:{systemWindows[i].Size.y} Name:'{systemWindows[i].Name}'");
             if (captureWindowIds.Contains(i)) {
-                Debug.Log($"Window: CAPTURE {i} handle:{systemWindows[i].Handle} posX:{systemWindows[i].Position.x} posY:{systemWindows[i].Position.y} sizeX:{systemWindows[i].Size.x} sizeY:{systemWindows[i].Size.y} Name:{systemWindows[i].Name}");
+                Debug.Log($"Window: CAPTURE {i} handle:{systemWindows[i].Handle} posX:{systemWindows[i].Position.x} posY:{systemWindows[i].Position.y} sizeX:{systemWindows[i].Size.x} sizeY:{systemWindows[i].Size.y} Name:'{systemWindows[i].Name}'");
                 captureWindows[captureWindowIds.IndexOf(i)] = systemWindows[i];
             }
         }
 
         // monitors dont work at all yet, values are wrong?
-        // Monitor[] monitors = GetMonitors();
-        // for (int i=0; i<monitors.Length; i++) {
-        //     Monitor monitor = monitors[i];
-        //     Debug.Log($"Monitors Id:{monitor.Id} Index:{monitor.Index} Adapter:{monitor.Adapter}");
-        //     Debug.Log($"- MonitorSize: {monitor.Height}/{monitor.Width} MonitorOriginalSize: {monitor.OriginalHeight}/{monitor.OriginalWidth}");
-        //     Debug.Log($"- Offset: {monitor.OffsetX}/{monitor.OffsetY} MonitorOriginalOffset:{monitor.OriginalOffsetX}/{monitor.OriginalOffsetY}");
-        //     Debug.Log($"- Name:'{monitor.Name}' Scaling:{monitor.Scaling}");
-        // }
+        Monitor[] monitors = GetMonitors();
+        for (int i=0; i<monitors.Length; i++) {
+            Monitor monitor = monitors[i];
+            string log = "";
+            log += $"Monitors {i} Id:{monitor.Id} Index:{monitor.Index} Adapter:{monitor.Adapter}";
+            log += $"- Name:'{monitor.Name}' Scaling:{monitor.Scaling}";
+            // Debug.Log($"- MonitorSize: {monitor.Height}/{monitor.Width} MonitorOriginalSize: {monitor.OriginalHeight}/{monitor.OriginalWidth}");
+            // Debug.Log($"- Offset: {monitor.OffsetX}/{monitor.OffsetY} MonitorOriginalOffset:{monitor.OriginalOffsetX}/{monitor.OriginalOffsetY}");
+            Debug.Log(log);
+        }
 
         if (getOnFrameChanged) {
             frameChangeDelegate = new ImageRefWindowRefCallbackType(OnFrameChanged);
@@ -389,13 +419,18 @@ public class TestScreenCaptureLite : MonoBehaviour {
             mouseChangedDelegate = new ImagePtrMousePointRefCallbackType(OnMouseChanged);
         }
 
+        // IntPtr pnt = Marshal.AllocHGlobal(Marshal.SizeOf(captureWindows));
+        // Marshal.StructureToPtr(captureWindows, pnt, false);
+        // Debug.Log($"- a -");
+        // C_ICaptureConfiguration( pnt, captureWindows.Length, frameChangeDelegate, newFrameDelegate, mouseChangedDelegate );
+        // Debug.Log($"- b -");
+        // Marshal.FreeHGlobal(pnt);
+
         GCHandle pinnedArray = GCHandle.Alloc(captureWindows, GCHandleType.Pinned);
         IntPtr ptr = pinnedArray.AddrOfPinnedObject();
-
         Debug.Log($"- a -");
         C_ICaptureConfiguration( ptr, captureWindows.Length, frameChangeDelegate, newFrameDelegate, mouseChangedDelegate );
         Debug.Log($"- b -");
-
         pinnedArray.Free();
 
         topText.text = "";

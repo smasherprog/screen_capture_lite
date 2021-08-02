@@ -20,6 +20,9 @@
 
 namespace SL {
 namespace Screen_Capture {
+    #pragma pack(push)
+    #pragma pack(4) // or 8
+ 
     struct SC_LITE_EXTERN Point {
         int x;
         int y;
@@ -58,6 +61,7 @@ namespace Screen_Capture {
     struct ImageBGRA {
         unsigned char B, G, R, A;
     };
+    #pragma pack(pop)
 
     // index to self in the GetMonitors() function
     SC_LITE_EXTERN int Index(const Monitor &mointor);

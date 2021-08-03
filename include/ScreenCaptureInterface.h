@@ -91,6 +91,7 @@ namespace Screen_Capture {
     static std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> frameGrabberConfiguration;
     
     // must be static & outside of the function (is cleared othervise?)
+    // likely prevents the creation of multiple capturing instances in parallel
     static ImageRefWindowRefCallbackType frameChangedCallbackInstance;
     static ImageRefWindowRefCallbackType newFrameCallbackInstance;
     static ImagePtrMousePointRefCallbackType mouseChangedCallbackInstance;
@@ -195,9 +196,6 @@ namespace Screen_Capture {
         }
 
         frameGrabber = frameGrabberConfiguration->start_capturing();
-    }
-
-    SC_LITE_EXTERN void C_Capture_Start () {
     }
 
     SC_LITE_EXTERN void C_Capture_Stop () {

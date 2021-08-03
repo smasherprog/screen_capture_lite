@@ -177,7 +177,7 @@ public class TestScreenCaptureLite : MonoBehaviour {
  
     public Monitor[] GetMonitors () {
         int monitorCount = 0;
-        IntPtr monitorsArray = C_GetWindows(ref monitorCount);
+        IntPtr monitorsArray = C_GetMonitors(ref monitorCount);
         Monitor[] monitors = GetNativeArray<Monitor> (monitorsArray, monitorCount);
         return monitors;
     }

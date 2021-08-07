@@ -27,7 +27,7 @@ else()
       ${CMAKE_CURRENT_LIST_DIR}/Program.cs
       ${CMAKE_BINARY_DIR}/Example_CSharp
     COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} /p:Platform=${PLATFORM} ${CMAKE_BINARY_DIR}/Example_CSharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
-    COMMENT "Building DOTNET Example ${CMAKE_BINARY_DIR}/${OUTPUT}"
+    COMMENT "Building ${PROJECT_NAME} dotnet build --configuration ${CMAKE_BUILD_TYPE} /p:Platform=${PLATFORM} ${CMAKE_BINARY_DIR}/Example_CSharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}"
   )
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
     add_dependencies(${PROJECT_NAME} screen_capture_lite_csharp)

@@ -32,6 +32,7 @@ namespace Screen_Capture {
     namespace C_API {
         class IScreenCaptureManagerWrapper;
         class ICaptureConfigurationScreenCaptureCallbackWrapper;
+        class ICaptureConfigurationWindowCaptureCallbackWrapper;
     }; // namespace C_API
     struct SC_LITE_EXTERN Point {
         int x;
@@ -211,24 +212,33 @@ namespace Screen_Capture {
 
     namespace C_API {
         typedef int (*C_API_ScreenCaptureCallback)(const Image &img, const Monitor &monitor); 
-        SC_LITE_C_EXTERN void onNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
-        SC_LITE_C_EXTERN void onFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
-        SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *start_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
-        SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr);
+        SC_LITE_C_EXTERN void MonitoronNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
+        SC_LITE_C_EXTERN void MonitoronFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
+        SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *Monitorstart_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
 
+        SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr); 
         SC_LITE_C_EXTERN void setFrameChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds);
+        SC_LITE_C_EXTERN void setMouseChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds);
         SC_LITE_C_EXTERN void pausecapturing(IScreenCaptureManagerWrapper *ptr);
         SC_LITE_C_EXTERN bool isPaused(IScreenCaptureManagerWrapper *ptr);
         SC_LITE_C_EXTERN void resume(IScreenCaptureManagerWrapper *ptr);
+
+        typedef int (*C_API_WindowCaptureCallback)(const Image &img, const Window &monitor);
+        SC_LITE_C_EXTERN void WindowonNewFrame(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);
+        SC_LITE_C_EXTERN void WindowonFrameChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);
+        SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *Windowstart_capturing(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr);
     }; // namespace C_API
 
     // the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want
     // to be captured
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
     namespace C_API { 
-        typedef int (*C_API_MonitorCallback)(Monitor *monitorbuffer, int monitorbuffersize); 
-        SC_LITE_C_EXTERN ICaptureConfigurationScreenCaptureCallbackWrapper *CreateCaptureConfiguration(C_API_MonitorCallback monitorstocapture);
-        SC_LITE_C_EXTERN void FreeCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
+        typedef int (*C_API_MonitorCallback)(Monitor *buffer, int buffersize); 
+        typedef int (*C_API_WindowCallback)(Window *buffer, int buffersize); 
+        SC_LITE_C_EXTERN ICaptureConfigurationScreenCaptureCallbackWrapper *CreateMonitorCaptureConfiguration(C_API_MonitorCallback monitorstocapture);
+        SC_LITE_C_EXTERN void FreeMonitorCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
+        SC_LITE_C_EXTERN ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfiguration(C_API_WindowCallback monitorstocapture);
+        SC_LITE_C_EXTERN void FreeWindowCaptureConfiguration(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr);
     }; // namespace C_API
     // the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to
     // be captured

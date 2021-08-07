@@ -13,10 +13,10 @@ else()
     set(PLATFORM x64)
     if(NOT DEFINED CMAKE_GENERATOR_PLATFORM)
       set(PLATFORM x64)
-    elseif(NOT ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64"))
+    elseif("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "Win32")
        set(PLATFORM x86) 
     ENDIF()
-    message(STATUS "Found dotnet executable CSHARP bindings will be generated! ${CMAKE_GENERATOR_PLATFORM}")
+    message(STATUS "Found dotnet executable CSHARP bindings will be generated!")
     add_custom_command(OUTPUT ${OUTPUT} 
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_CURRENT_LIST_DIR}
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_BINARY_DIR}/Example_CSharp

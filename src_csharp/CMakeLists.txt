@@ -9,7 +9,12 @@ execute_process(COMMAND dotnet --version
                   ERROR_QUIET)
 if(result) 
     message(WARNING "CMake failed: dotnet executable not found but by this build. You must install dotnet to generate csharp bindings")
-else()
+else() 
+    set(PLATFORM ${CMAKE_GENERATOR_PLATFORM})
+    if(NOT ("${CMAKE_GENERATOR_PLATFORM}" STREQUAL "x64"))
+       set(PLATFORM x86) 
+    ENDIF()
+
     message(STATUS "Found dotnet executable CSHARP bindings will be generated!")
     add_custom_command(OUTPUT ${OUTPUT} 
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_CURRENT_LIST_DIR}
@@ -20,7 +25,7 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy
           ${CMAKE_CURRENT_LIST_DIR}/Screen_Capture_Lite.cs
           ${CMAKE_BINARY_DIR}/src_csharp
-        COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} ${CMAKE_BINARY_DIR}/src_csharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
+        COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} /p:Platform=${PLATFORM} ${CMAKE_BINARY_DIR}/src_csharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
         COMMENT "Building DOTNET assembly ${CMAKE_BINARY_DIR}/${OUTPUT}"
       )
 

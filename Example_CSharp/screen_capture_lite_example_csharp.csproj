@@ -3,7 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-   <EnableDefaultCompileItems>false</EnableDefaultCompileItems> 
+   <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+   <Platforms>x64;x86</Platforms> 
   </PropertyGroup>
 
   <ItemGroup>

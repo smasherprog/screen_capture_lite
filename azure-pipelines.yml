@@ -37,11 +37,11 @@ jobs:
     pool:
       vmImage: 'macOS-latest'
     steps:
-      - script: cmake . && make;
+      - script: cmake -DCMAKE_GENERATOR_PLATFORM=x64 . && make;
   - job: ubuntu_build
     pool:
       vmImage: 'ubuntu-latest'
     steps:
       - script: | 
           sudo apt install -y libx11-dev libxfixes-dev libxtst-dev libxinerama-dev
-          CXX=clang++ CC=clang cmake . && make;
+          CXX=clang++ CC=clang cmake -DCMAKE_GENERATOR_PLATFORM=x64 . && make;

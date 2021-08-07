@@ -10,7 +10,7 @@ jobs:
     steps:  
       - task: CMake@1
         inputs:
-          cmakeArgs: '.. -G"Visual Studio 16 2019" -A ${{ parameters.targetPlatform }} -DCMAKE_INSTALL_PREFIX=./output'
+          cmakeArgs: '.. -G"Visual Studio 16 2019" -DCMAKE_GENERATOR_PLATFORM=${{ parameters.targetPlatform }} -A ${{ parameters.targetPlatform }} -DCMAKE_INSTALL_PREFIX=./output'
       - task: CMake@1
         inputs:
           cmakeArgs: '--build . --target INSTALL'

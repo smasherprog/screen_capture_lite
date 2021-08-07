@@ -302,25 +302,33 @@ namespace SL
         private static int GetMonitorsAllocationSize = 16;
         public static Monitor[] GetMonitors()
         {
-            var monitorsizeguess = GetMonitorsAllocationSize;
-            var size = Marshal.SizeOf(typeof(Monitor));
-            var unmanagedArray = Marshal.AllocHGlobal(monitorsizeguess * size);
-            var sizeneeded = NativeFunctions.GetMonitors(unmanagedArray, monitorsizeguess);
-            if (monitorsizeguess < sizeneeded)
+            return GetThings<Monitor>(ref GetMonitorsAllocationSize, NativeFunctions.GetMonitors); 
+        }
+
+        private static int GetWindowsAllocationSize = 16;
+        public static Window[] GetWindows()
+        {
+            return GetThings<Window>(ref GetWindowsAllocationSize, NativeFunctions.GetWindows);
+        }
+
+        private static T[] GetThings<T>(ref int guesssize, NativeFunctions.MonitorWindowCallback callback)
+        {
+            var size = Marshal.SizeOf(typeof(T));
+            var unmanagedArray = Marshal.AllocHGlobal(guesssize * size);
+            var sizeneeded = callback(unmanagedArray, guesssize);
+            if (guesssize < sizeneeded)
             {
-                monitorsizeguess = sizeneeded;
-                GetMonitorsAllocationSize = Math.Max(sizeneeded, GetMonitorsAllocationSize);
+                guesssize = sizeneeded;
                 Marshal.FreeHGlobal(unmanagedArray);
-                unmanagedArray = Marshal.AllocHGlobal(monitorsizeguess * size);
-                sizeneeded = NativeFunctions.GetMonitors(unmanagedArray, monitorsizeguess);
+                unmanagedArray = Marshal.AllocHGlobal(sizeneeded * size);
+                sizeneeded = callback(unmanagedArray, sizeneeded);
             }
 
-            monitorsizeguess = Math.Min(sizeneeded, monitorsizeguess);
             var copyunmanagedArray = unmanagedArray;
-            var mangagedArray = new Monitor[monitorsizeguess];
-            for (int i = 0; i < monitorsizeguess; i++)
+            var mangagedArray = new T[sizeneeded];
+            for (int i = 0; i < sizeneeded; i++)
             {
-                mangagedArray[i] = Marshal.PtrToStructure<Monitor>(unmanagedArray);
+                mangagedArray[i] = Marshal.PtrToStructure<T>(unmanagedArray);
                 unmanagedArray = IntPtr.Add(unmanagedArray, size);
             }
             Marshal.FreeHGlobal(copyunmanagedArray);
@@ -336,7 +344,9 @@ namespace SL
             public delegate int MonitorWindowCallback(IntPtr buffer, int buffersize);
 
             [DllImport("screen_capture_lite_shared")]
-            public static extern int GetMonitors(IntPtr monitors, int monitors_size);
+            public static extern int GetMonitors(IntPtr buffer, int buffer_size);
+            [DllImport("screen_capture_lite_shared")]
+            public static extern int GetWindows(IntPtr buffer, int buffer_size);
             [DllImport("screen_capture_lite_shared")]
             [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool isMonitorInsideBounds(Monitor[] monitors, int monitorsize, Monitor monitor);

@@ -1,1 +1,2 @@
-Cleaned up mouse capture code
+Windows: Fixed getwindows to only return the list of windows that are reachable via Alt Tab
+Implemented all c# pinvoke except mouse capture: Window and Monitor capturing now fully works!

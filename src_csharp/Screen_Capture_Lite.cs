@@ -3,53 +3,50 @@ using System.Runtime.InteropServices;
 
 namespace SL
 {
-    public static class CaptureConfigurationExtension
-    {
-        public static Screen_Capture.CaptureConfigurationData<Screen_Capture.MonitorType> onNewFrame(this Screen_Capture.CaptureConfigurationData<Screen_Capture.MonitorType> captureConfiguration, Screen_Capture.ScreenCaptureCallback cb)
-        {
-            captureConfiguration.MonitorImpl_.OnNewFrame = cb;
-            Screen_Capture.NativeFunctions.MonitoronNewFrame(captureConfiguration.CaptureConfigurationPtr, cb);
-            return captureConfiguration;
-        }
-
-        public static Screen_Capture.CaptureConfigurationData<Screen_Capture.MonitorType> onFrameChanged(this Screen_Capture.CaptureConfigurationData<Screen_Capture.MonitorType> captureConfiguration, Screen_Capture.ScreenCaptureCallback cb)
-        {
-            captureConfiguration.MonitorImpl_.OnFrameChanged = cb;
-            Screen_Capture.NativeFunctions.MonitoronFrameChanged(captureConfiguration.CaptureConfigurationPtr, cb);
-            return captureConfiguration;
-        }
-
-        public static Screen_Capture.ScreenCaptureManager start_capturing(this Screen_Capture.CaptureConfigurationData<Screen_Capture.MonitorType> captureConfiguration)
-        {
-            var r = new Screen_Capture.ScreenCaptureManager(Screen_Capture.NativeFunctions.Monitorstart_capturing(captureConfiguration.CaptureConfigurationPtr), captureConfiguration.MonitorImpl_);
-            captureConfiguration.CaptureConfigurationPtr = IntPtr.Zero;
-            return r;
-        }
-
-        public static Screen_Capture.CaptureConfigurationData<Screen_Capture.WindowType> onNewFrame(this Screen_Capture.CaptureConfigurationData<Screen_Capture.WindowType> captureConfiguration, Screen_Capture.WindowCaptureCallback cb)
-        {
-            captureConfiguration.WindowImpl_.OnNewFrame = cb;
-            Screen_Capture.NativeFunctions.WindowonNewFrame(captureConfiguration.CaptureConfigurationPtr, cb);
-            return captureConfiguration;
-        }
-
-        public static Screen_Capture.CaptureConfigurationData<Screen_Capture.WindowType> onFrameChanged(this Screen_Capture.CaptureConfigurationData<Screen_Capture.WindowType> captureConfiguration, Screen_Capture.WindowCaptureCallback cb)
-        {
-            captureConfiguration.WindowImpl_.OnFrameChanged = cb;
-            Screen_Capture.NativeFunctions.WindowonFrameChanged(captureConfiguration.CaptureConfigurationPtr, cb);
-            return captureConfiguration;
-        }
-
-        public static Screen_Capture.ScreenCaptureManager start_capturing(this Screen_Capture.CaptureConfigurationData<Screen_Capture.WindowType> captureConfiguration)
-        {
-            var r = new Screen_Capture.ScreenCaptureManager(Screen_Capture.NativeFunctions.Windowstart_capturing(captureConfiguration.CaptureConfigurationPtr), captureConfiguration.WindowImpl_);
-            captureConfiguration.CaptureConfigurationPtr = IntPtr.Zero;
-            return r;
-        }
-    }
-
     public static class Screen_Capture
     {
+        public static CaptureConfigurationData<MonitorType> onNewFrame(this CaptureConfigurationData<MonitorType> captureConfiguration, ScreenCaptureCallback cb)
+        {
+            captureConfiguration.MonitorImpl_.OnNewFrame = cb;
+            NativeFunctions.MonitoronNewFrame(captureConfiguration.CaptureConfigurationPtr, cb);
+            return captureConfiguration;
+        }
+
+        public static CaptureConfigurationData<MonitorType> onFrameChanged(this CaptureConfigurationData<MonitorType> captureConfiguration, ScreenCaptureCallback cb)
+        {
+            captureConfiguration.MonitorImpl_.OnFrameChanged = cb;
+            NativeFunctions.MonitoronFrameChanged(captureConfiguration.CaptureConfigurationPtr, cb);
+            return captureConfiguration;
+        }
+
+        public static ScreenCaptureManager start_capturing(this CaptureConfigurationData<MonitorType> captureConfiguration)
+        {
+            var r = new ScreenCaptureManager(NativeFunctions.Monitorstart_capturing(captureConfiguration.CaptureConfigurationPtr), captureConfiguration.MonitorImpl_);
+            captureConfiguration.CaptureConfigurationPtr = IntPtr.Zero;
+            return r;
+        }
+
+        public static CaptureConfigurationData<WindowType> onNewFrame(this CaptureConfigurationData<WindowType> captureConfiguration, WindowCaptureCallback cb)
+        {
+            captureConfiguration.WindowImpl_.OnNewFrame = cb;
+            NativeFunctions.WindowonNewFrame(captureConfiguration.CaptureConfigurationPtr, cb);
+            return captureConfiguration;
+        }
+
+        public static CaptureConfigurationData<WindowType> onFrameChanged(this CaptureConfigurationData<WindowType> captureConfiguration, WindowCaptureCallback cb)
+        {
+            captureConfiguration.WindowImpl_.OnFrameChanged = cb;
+            NativeFunctions.WindowonFrameChanged(captureConfiguration.CaptureConfigurationPtr, cb);
+            return captureConfiguration;
+        }
+
+        public static ScreenCaptureManager start_capturing(this CaptureConfigurationData<WindowType> captureConfiguration)
+        {
+            var r = new ScreenCaptureManager(NativeFunctions.Windowstart_capturing(captureConfiguration.CaptureConfigurationPtr), captureConfiguration.WindowImpl_);
+            captureConfiguration.CaptureConfigurationPtr = IntPtr.Zero;
+            return r;
+        }
+
         [StructLayout(LayoutKind.Sequential)]
         public struct Point
         {

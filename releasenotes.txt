@@ -1,2 +1,2 @@
-Windows: Fixed getwindows to only return the list of windows that are reachable via Alt Tab
-Implemented all c# pinvoke except mouse capture: Window and Monitor capturing now fully works!
+Windows: Fixed mouse capture to use the true size of the mouse. Previously this was a max of 32x32, but many cursors are larger than this
+Implemented all net functionality. 

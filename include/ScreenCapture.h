@@ -211,9 +211,11 @@ namespace Screen_Capture {
     };
 
     namespace C_API {
-        typedef int (*C_API_ScreenCaptureCallback)(const Image &img, const Monitor &monitor); 
+        typedef int (*C_API_ScreenCaptureCallback)(const Image &img, const Monitor &monitor);
+        typedef int (*C_API_MouseCaptureCallback)(const Image *img, const MousePoint &monitor); 
         SC_LITE_C_EXTERN void MonitoronNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
         SC_LITE_C_EXTERN void MonitoronFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
+        SC_LITE_C_EXTERN void MonitoronMouseChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb);
         SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *Monitorstart_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
 
         SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr); 
@@ -226,6 +228,7 @@ namespace Screen_Capture {
         typedef int (*C_API_WindowCaptureCallback)(const Image &img, const Window &monitor);
         SC_LITE_C_EXTERN void WindowonNewFrame(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);
         SC_LITE_C_EXTERN void WindowonFrameChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);
+        SC_LITE_C_EXTERN void WindowonMouseChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb);
         SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *Windowstart_capturing(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr);
     }; // namespace C_API
 

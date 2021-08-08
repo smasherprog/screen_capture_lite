@@ -12,12 +12,9 @@ namespace SL {
             HDCWrapper CaptureDC; 
    
         public:
-
-            const int MaxCursurorSize = 32;
+             
             DUPL_RETURN Init(std::shared_ptr<Thread_Data> data);
-            DUPL_RETURN ProcessFrame();
-
-      
+            DUPL_RETURN ProcessFrame(); 
         };
     }
 }

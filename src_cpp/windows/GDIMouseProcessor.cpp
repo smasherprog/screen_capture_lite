@@ -38,21 +38,25 @@ namespace Screen_Capture {
             if (GetIconInfoExA(cursorInfo.hCursor, &ii) == FALSE) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
             }
+
+            BITMAP bmpCursor = {0};
+            ::GetObject(ii.hbmColor, sizeof(bmpCursor), &bmpCursor);
+
             HBITMAPWrapper colorbmp, maskbmp;
             colorbmp.Bitmap = ii.hbmColor;
             maskbmp.Bitmap = ii.hbmMask;
             HBITMAPWrapper bitmap;
-            bitmap.Bitmap = CreateCompatibleBitmap(MonitorDC.DC, MaxCursurorSize, MaxCursurorSize);
+            bitmap.Bitmap = CreateCompatibleBitmap(MonitorDC.DC, bmpCursor.bmWidth, bmpCursor.bmHeight); 
 
-            auto originalBmp = SelectObject(CaptureDC.DC, bitmap.Bitmap);
+            auto originalBmp = SelectObject(CaptureDC.DC, bitmap.Bitmap); 
             if (DrawIcon(CaptureDC.DC, 0, 0, cursorInfo.hCursor) == FALSE) {
                 return DUPL_RETURN::DUPL_RETURN_ERROR_EXPECTED;
             }
 
             ImageRect ret;
             ret.left = ret.top = 0;
-            ret.bottom = MaxCursurorSize;
-            ret.right = MaxCursurorSize;
+            ret.bottom = bmpCursor.bmHeight;
+            ret.right = bmpCursor.bmWidth;
 
             BITMAPINFOHEADER bi;
             memset(&bi, 0, sizeof(bi));
@@ -64,6 +68,12 @@ namespace Screen_Capture {
             bi.biBitCount = sizeof(ImageBGRA) * 8; // always 32 bits damnit!!!
             bi.biCompression = BI_RGB;
             bi.biSizeImage = ((ret.right * bi.biBitCount + 31) / (sizeof(ImageBGRA) * 8)) * sizeof(ImageBGRA) * ret.bottom;
+
+            auto newsize = sizeof(ImageBGRA) * ret.right * ret.bottom;
+            if (static_cast<int>(newsize) > ImageBufferSize || !ImageBuffer || !NewImageBuffer) {
+                NewImageBuffer = std::make_unique<unsigned char[]>(newsize);
+                ImageBuffer = std::make_unique<unsigned char[]>(newsize);
+            }
 
             GetDIBits(MonitorDC.DC, bitmap.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);
 

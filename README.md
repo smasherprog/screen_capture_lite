@@ -17,8 +17,9 @@
 <p>The image format is raw BGRA 32 bits per pixel. Alpha is unused for onNewFrame and onFrameChanged except for onMouseChanged where it IS USED! <p>
 <p>The data exists like this if you were to march through with a for loop [A,R,G,B], [A,R,G,B], [A,R,G,B]. For a read on why this is check out the post here <a href="https://stackoverflow.com/questions/8104461/pixelformat-format32bppargb-seems-to-have-wrong-byte-order">post here</a><p>
 
-<h2>Example</h2>
-<p>https://github.com/smasherprog/screen_capture_lite/blob/master/Example/Screen_Capture_Example.cpp</p>
+<h2>Examples</h2>
+c++
+<p>https://github.com/smasherprog/screen_capture_lite/blob/master/Example_CPP/Screen_Capture_Example.cpp</p>
 
 ```c++
 //Setup Screen Capture for all monitors
@@ -65,6 +66,59 @@ windowframgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 
 
 ```
 
+
+c#
+<p>https://github.com/smasherprog/screen_capture_lite/blob/master/Example_CSharp/Program.cs</p>
+
+```c#
+//Setup Screen Capture for all monitors
+var framgrabber = SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfiguration(() =>
+{
+   var mons = SL.Screen_Capture.GetMonitors();
+   Console.WriteLine("Library is requesting the list of monitors to capture!");
+   for (int i = 0; i < mons.Length; ++i)
+   {
+	   WriteLine( mons[i]);
+   }
+   return mons;
+}).onNewFrame(( SL.Screen_Capture.Image img,  SL.Screen_Capture.Monitor monitor) =>
+{
+
+}).onFrameChanged(( SL.Screen_Capture.Image img,  SL.Screen_Capture.Monitor monitor) =>
+{
+
+}).onMouseChanged((SL.Screen_Capture.Image img, SL.Screen_Capture.MousePoint mousePoint) =>
+{ 
+
+}).start_capturing();
+framgrabber.setFrameChangeInterval(100);
+framgrabber.setMouseChangeInterval(100);
+
+
+//Setup Screen Capture for windows that have the title "google" in it
+var framgrabber = SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfiguration(() =>
+{
+	var windows = SL.Screen_Capture.GetWindows();
+	Console.WriteLine("Library is requesting the list of windows to capture!");
+	for (int i = 0; i < windows.Length; ++i)
+	{
+		WriteLine(windows[i]);
+	}
+	return windows.Where(a => a.Name.ToLower().Contains("google")).ToArray();
+}).onNewFrame(( SL.Screen_Capture.Image img,  SL.Screen_Capture.Window monitor) =>
+{ 
+
+}).onFrameChanged(( SL.Screen_Capture.Image img,  SL.Screen_Capture.Window monitor) =>
+{ 
+}).onMouseChanged(( SL.Screen_Capture.Image img,  SL.Screen_Capture.MousePoint mousePoint) =>
+{
+	  
+}).start_capturing();
+
+framgrabber.setFrameChangeInterval(100);
+framgrabber.setMouseChangeInterval(100);
+
+```
 <h3>Library Usage</h3>
 <p>Only define what are are interested in. Do not define a callback for onMouseChanged if you dont want that information. If you do, the library will assume that you want mouse information and monitor that --so DONT!</p>
 <p>Again, DONT DEFINE CALLBACKS FOR EVENTS YOU DONT CARE ABOUT. If you do, the library will do extra work assuming you want the information.</p>

@@ -28,7 +28,7 @@ namespace Screen_Capture {
     template <class T, class F, class... E> bool TryCaptureMouse(const F &data, E... args)
     {
         T frameprocessor;
-        frameprocessor.ImageBufferSize = frameprocessor.MaxCursurorSize * frameprocessor.MaxCursurorSize * sizeof(ImageBGRA);
+        frameprocessor.ImageBufferSize = 32 * 32 * sizeof(ImageBGRA);
         frameprocessor.ImageBuffer = std::make_unique<unsigned char[]>(frameprocessor.ImageBufferSize);
         auto ret = frameprocessor.Init(data);
         if (ret != DUPL_RETURN_SUCCESS) {

@@ -9,15 +9,15 @@ namespace screen_capture_lite_example_csharp
 {
     public class Program
     {
-        private static void WriteLine(ref SL.Screen_Capture.Monitor p)
+        private static void WriteLine( SL.Screen_Capture.Monitor p)
         {
             Console.WriteLine($"Id = {p.Id} Index = {p.Index} Height = {p.Height} Width = {p.Width} OffsetX = {p.OffsetX} OffsetY= {p.OffsetY} Name= {p.Name}");
         }
-        private static void WriteLine(ref SL.Screen_Capture.Window p)
+        private static void WriteLine( SL.Screen_Capture.Window p)
         {
             Console.WriteLine($"Name = {p.Name} Postion.x = {p.Position.x} Postion.y = {p.Position.y} Size.x = {p.Size.x} Size.y = {p.Size.y}");
         }
-        private static void WriteLine(ref SL.Screen_Capture.Image p)
+        private static void WriteLine( SL.Screen_Capture.Image p)
         {
             Console.WriteLine($"BytesToNextRow = {p.BytesToNextRow} isContiguous = {p.isContiguous} Bounds.bottom = {p.Bounds.bottom} Bounds.left = {p.Bounds.left} Bounds.right = {p.Bounds.right} Bounds.top = {p.Bounds.top}");
         }
@@ -33,15 +33,15 @@ namespace screen_capture_lite_example_csharp
                Console.WriteLine("Library is requesting the list of monitors to capture!");
                for (int i = 0; i < mons.Length; ++i)
                {
-                   WriteLine(ref mons[i]);
+                   WriteLine( mons[i]);
                }
                return mons;
-           }).onNewFrame((ref SL.Screen_Capture.Image img, ref SL.Screen_Capture.Monitor monitor) =>
+           }).onNewFrame(( SL.Screen_Capture.Image img,  SL.Screen_Capture.Monitor monitor) =>
            {
                //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
                //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-               //WriteLine(ref img);
-               //WriteLine(ref monitor); 
+               //WriteLine( img);
+               //WriteLine( monitor); 
                if ((DateTime.Now - onNewFramestart).TotalMilliseconds > 1000)
                {
                    Console.WriteLine("onNewFrame fps" + onNewFramecounter);
@@ -50,12 +50,26 @@ namespace screen_capture_lite_example_csharp
                }
                Interlocked.Increment(ref onNewFramecounter);
 
-           }).onFrameChanged((ref SL.Screen_Capture.Image img, ref SL.Screen_Capture.Monitor monitor) =>
+           }).onFrameChanged(( SL.Screen_Capture.Image img,  SL.Screen_Capture.Monitor monitor) =>
            {
                //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
                //newBitmap.Save($"{onNewFramecounter++}onFrameChanged.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-               //WriteLine(ref img);
-               //WriteLine(ref monitor); 
+               //WriteLine( img);
+               //WriteLine( monitor); 
+           }).onMouseChanged((SL.Screen_Capture.Image img, SL.Screen_Capture.MousePoint mousePoint) =>
+           { 
+               if (img != null)
+               {
+                   var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppArgb, img.Data);
+                   newBitmap.Save($"{onNewFramecounter++}NewMouseImage.jpg", System.Drawing.Imaging.ImageFormat.Png);
+                   WriteLine(img);
+                   Console.WriteLine("New Mouse image");
+               }
+               else
+               { 
+                   Console.WriteLine("Mouse Moved"); 
+               }
+
            }).start_capturing();
             framgrabber.setFrameChangeInterval(100);
             framgrabber.setMouseChangeInterval(100);
@@ -72,15 +86,15 @@ namespace screen_capture_lite_example_csharp
                 Console.WriteLine("Library is requesting the list of windows to capture!");
                 for (int i = 0; i < windows.Length; ++i)
                 {
-                    WriteLine(ref windows[i]);
+                    WriteLine(windows[i]);
                 }
-                return windows.Where(a=> a.Name.ToLower().Contains("google")).ToArray();
-            }).onNewFrame((ref SL.Screen_Capture.Image img, ref SL.Screen_Capture.Window monitor) =>
+                return windows.Where(a => a.Name.ToLower().Contains("google")).ToArray();
+            }).onNewFrame(( SL.Screen_Capture.Image img,  SL.Screen_Capture.Window monitor) =>
             {
                 //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
                 //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                //WriteLine(ref img);
-                //WriteLine(ref monitor); 
+                //WriteLine( img);
+                //WriteLine( monitor); 
                 if ((DateTime.Now - onNewFramestart).TotalMilliseconds > 1000)
                 {
                     Console.WriteLine("onNewFrame fps" + onNewFramecounter);
@@ -89,12 +103,24 @@ namespace screen_capture_lite_example_csharp
                 }
                 Interlocked.Increment(ref onNewFramecounter);
 
-            }).onFrameChanged((ref SL.Screen_Capture.Image img, ref SL.Screen_Capture.Window monitor) =>
+            }).onFrameChanged(( SL.Screen_Capture.Image img,  SL.Screen_Capture.Window monitor) =>
             {
                 //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
                 //newBitmap.Save($"{onNewFramecounter++}onFrameChanged.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                //WriteLine(ref img);
-                //WriteLine(ref monitor); 
+                //WriteLine( img);
+                //WriteLine( monitor); 
+            }).onMouseChanged(( SL.Screen_Capture.Image img,  SL.Screen_Capture.MousePoint mousePoint) =>
+            {
+                 
+                if (img != null)
+                {
+                    Console.WriteLine("onNewFrame fps" + onNewFramecounter);
+                }
+                else
+                {
+                    Console.WriteLine("onNewFrame fps" + onNewFramecounter);
+                }
+
             }).start_capturing();
 
             framgrabber.setFrameChangeInterval(100);
@@ -105,25 +131,16 @@ namespace screen_capture_lite_example_csharp
         public static void Main(string[] args)
         {
             Console.WriteLine("Starting Capture Demo/Test");
-            var goodmonitors = SL.Screen_Capture.GetMonitors();
-            for (int i = 0; i < goodmonitors.Length; ++i)
+            var monitors = SL.Screen_Capture.GetMonitors();
+            foreach(var item in monitors)
             {
-                WriteLine(ref goodmonitors[i]);
-                Debug.Assert(SL.Screen_Capture.isMonitorInsideBounds(goodmonitors, goodmonitors[i]));
+                WriteLine(item); 
             }
 
-            var badmonitors = SL.Screen_Capture.GetMonitors();
-            for (int i = 0; i < badmonitors.Length; ++i)
+            var windows = SL.Screen_Capture.GetWindows();
+            foreach (var item in windows)
             {
-                badmonitors[i].Height += 1;
-                WriteLine(ref badmonitors[i]);
-                Debug.Assert(!SL.Screen_Capture.isMonitorInsideBounds(goodmonitors, badmonitors[i]));
-            }
-            for (int i = 0; i < badmonitors.Length; ++i)
-            {
-                badmonitors[i].Width += 1;
-                WriteLine(ref badmonitors[i]);
-                Debug.Assert(!SL.Screen_Capture.isMonitorInsideBounds(goodmonitors, badmonitors[i]));
+                WriteLine(item);
             }
 
             Console.WriteLine("Running display capturing for 10 seconds");

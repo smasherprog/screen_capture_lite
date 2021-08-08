@@ -194,6 +194,10 @@ namespace Screen_Capture {
         {
             ptr->ptr = ptr->ptr->onFrameChanged(cb);
         }
+        void MonitoronMouseChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb)
+        {
+            ptr->ptr = ptr->ptr->onMouseChanged(cb);
+        } 
         IScreenCaptureManagerWrapper *Monitorstart_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr)
         {
             auto p = new IScreenCaptureManagerWrapper{ptr->ptr->start_capturing()};
@@ -223,6 +227,10 @@ namespace Screen_Capture {
         {
             ptr->ptr = ptr->ptr->onFrameChanged(cb);
         }
+        void WindowonMouseChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb)
+        {
+            ptr->ptr = ptr->ptr->onMouseChanged(cb);
+        } 
         IScreenCaptureManagerWrapper *Windowstart_capturing(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr)
         {
             auto p = new IScreenCaptureManagerWrapper{ptr->ptr->start_capturing()};

@@ -16,7 +16,7 @@ namespace SL {
             std::unique_ptr<unsigned char[]> NewImageBuffer;
 
             std::shared_ptr<Thread_Data> Data;
-        public:
+        public: 
             void Pause() {}
             void Resume() {}
             DUPL_RETURN Init(std::shared_ptr<Thread_Data> data, const Monitor& monitor);

@@ -18,6 +18,12 @@ namespace SL
             NativeFunctions.MonitoronFrameChanged(captureConfiguration.CaptureConfigurationPtr, cb);
             return captureConfiguration;
         }
+        public static CaptureConfigurationData<MonitorType> onMouseChanged(this CaptureConfigurationData<MonitorType> captureConfiguration, MouseCaptureCallback cb)
+        {
+            captureConfiguration.MonitorImpl_.OnMouseChanged = cb;
+            NativeFunctions.MonitoronMouseChanged(captureConfiguration.CaptureConfigurationPtr, cb);
+            return captureConfiguration;
+        }
 
         public static ScreenCaptureManager start_capturing(this CaptureConfigurationData<MonitorType> captureConfiguration)
         {
@@ -39,7 +45,12 @@ namespace SL
             NativeFunctions.WindowonFrameChanged(captureConfiguration.CaptureConfigurationPtr, cb);
             return captureConfiguration;
         }
-
+        public static CaptureConfigurationData<WindowType> onMouseChanged(this CaptureConfigurationData<WindowType> captureConfiguration, MouseCaptureCallback cb)
+        {
+            captureConfiguration.WindowImpl_.OnMouseChanged = cb;
+            NativeFunctions.WindowonMouseChanged(captureConfiguration.CaptureConfigurationPtr, cb);
+            return captureConfiguration;
+        }
         public static ScreenCaptureManager start_capturing(this CaptureConfigurationData<WindowType> captureConfiguration)
         {
             var r = new ScreenCaptureManager(NativeFunctions.Windowstart_capturing(captureConfiguration.CaptureConfigurationPtr), captureConfiguration.WindowImpl_);
@@ -48,20 +59,20 @@ namespace SL
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Point
+        public class Point
         {
             public int x;
             public int y;
         }
         [StructLayout(LayoutKind.Sequential)]
-        public struct MousePoint
+        public class MousePoint
         {
             public Point Position;
             public Point HotSpot;
         };
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Window
+        public class Window
         {
             public IntPtr Handle;
             public Point Position;
@@ -71,7 +82,7 @@ namespace SL
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct Monitor
+        public class Monitor
         {
             public int Id;
             public int Index;
@@ -91,7 +102,7 @@ namespace SL
             public float Scaling;
         }
         [StructLayout(LayoutKind.Sequential)]
-        public struct ImageRect
+        public class ImageRect
         {
             public int left;
             public int top;
@@ -99,7 +110,7 @@ namespace SL
             public int bottom;
         }
         [StructLayout(LayoutKind.Sequential)]
-        public struct Image
+        public class Image
         {
             public ImageRect Bounds;
             public int BytesToNextRow;
@@ -108,19 +119,13 @@ namespace SL
             // alpha is always unused and might contain garbage
             public IntPtr Data;
         }
-        [StructLayout(LayoutKind.Sequential)]
-        public struct ImageBGRA
-        {
-            public char B;
-            public char G;
-            public char R;
-            public char A;
-        }
 
         public delegate Window[] WindowCallback();
         public delegate Monitor[] MonitorCallback();
-        public delegate void ScreenCaptureCallback(ref Image img, ref Monitor monitor);
-        public delegate void WindowCaptureCallback(ref Image img, ref Window window);
+
+        public delegate void MouseCaptureCallback(Image img, MousePoint mousePoint);
+        public delegate void ScreenCaptureCallback(Image img, Monitor monitor);
+        public delegate void WindowCaptureCallback(Image img, Window window);
         public class MonitorType
         {
         }
@@ -129,17 +134,17 @@ namespace SL
         }
         public class ScreenCaptureManager : IDisposable
         {
-            private CaptureData<NativeFunctions.MonitorWindowCallback, ScreenCaptureCallback> ScreenCaptureData;
-            private CaptureData<NativeFunctions.MonitorWindowCallback, WindowCaptureCallback> WindowCaptureData;
+            private CaptureData<NativeFunctions.MonitorWindowCallback, ScreenCaptureCallback, MouseCaptureCallback> ScreenCaptureData;
+            private CaptureData<NativeFunctions.MonitorWindowCallback, WindowCaptureCallback, MouseCaptureCallback> WindowCaptureData;
             private bool disposedValue;
             private IntPtr ScreenCapturePtr = IntPtr.Zero;
 
-            public ScreenCaptureManager(IntPtr p, CaptureData<NativeFunctions.MonitorWindowCallback, ScreenCaptureCallback> d)
+            public ScreenCaptureManager(IntPtr p, CaptureData<NativeFunctions.MonitorWindowCallback, ScreenCaptureCallback, MouseCaptureCallback> d)
             {
                 ScreenCapturePtr = p;
                 ScreenCaptureData = d;
             }
-            public ScreenCaptureManager(IntPtr p, CaptureData<NativeFunctions.MonitorWindowCallback, WindowCaptureCallback> d)
+            public ScreenCaptureManager(IntPtr p, CaptureData<NativeFunctions.MonitorWindowCallback, WindowCaptureCallback, MouseCaptureCallback> d)
             {
                 ScreenCapturePtr = p;
                 WindowCaptureData = d;
@@ -193,18 +198,19 @@ namespace SL
             }
         }
 
-        public class CaptureData<MonitorCallback, ScreenCaptureCallback>
+        public class CaptureData<MonitorCallback, ScreenCaptureCallback, MouseCaptureCallback>
         {
             public MonitorCallback getThingsToWatch;
             public ScreenCaptureCallback OnFrameChanged;
+            public MouseCaptureCallback OnMouseChanged;
             public ScreenCaptureCallback OnNewFrame;
             public int FrameTimerInMS = 100;
         };
 
         public class CaptureConfigurationData<T> : IDisposable
         {
-            public CaptureData<NativeFunctions.MonitorWindowCallback, ScreenCaptureCallback> MonitorImpl_;
-            public CaptureData<NativeFunctions.MonitorWindowCallback, WindowCaptureCallback> WindowImpl_;
+            public CaptureData<NativeFunctions.MonitorWindowCallback, ScreenCaptureCallback, MouseCaptureCallback> MonitorImpl_;
+            public CaptureData<NativeFunctions.MonitorWindowCallback, WindowCaptureCallback, MouseCaptureCallback> WindowImpl_;
             private bool disposedValue;
             public IntPtr CaptureConfigurationPtr = IntPtr.Zero;
 
@@ -267,7 +273,7 @@ namespace SL
                 };
                 return new CaptureConfigurationData<MonitorType>
                 {
-                    MonitorImpl_ = new CaptureData<NativeFunctions.MonitorWindowCallback, ScreenCaptureCallback>
+                    MonitorImpl_ = new CaptureData<NativeFunctions.MonitorWindowCallback, ScreenCaptureCallback, MouseCaptureCallback>
                     {
                         getThingsToWatch = newcb
                     },
@@ -290,7 +296,7 @@ namespace SL
                 };
                 return new CaptureConfigurationData<WindowType>
                 {
-                    WindowImpl_ = new CaptureData<NativeFunctions.MonitorWindowCallback, WindowCaptureCallback>
+                    WindowImpl_ = new CaptureData<NativeFunctions.MonitorWindowCallback, WindowCaptureCallback, MouseCaptureCallback>
                     {
                         getThingsToWatch = newcb
                     },
@@ -302,7 +308,7 @@ namespace SL
         private static int GetMonitorsAllocationSize = 16;
         public static Monitor[] GetMonitors()
         {
-            return GetThings<Monitor>(ref GetMonitorsAllocationSize, NativeFunctions.GetMonitors); 
+            return GetThings<Monitor>(ref GetMonitorsAllocationSize, NativeFunctions.GetMonitors);
         }
 
         private static int GetWindowsAllocationSize = 16;
@@ -334,10 +340,6 @@ namespace SL
             Marshal.FreeHGlobal(copyunmanagedArray);
             return mangagedArray;
         }
-        public static bool isMonitorInsideBounds(Monitor[] monitors, Monitor monitor)
-        {
-            return NativeFunctions.isMonitorInsideBounds(monitors, monitors.Length, monitor);
-        }
 
         public static class NativeFunctions
         {
@@ -347,10 +349,7 @@ namespace SL
             public static extern int GetMonitors(IntPtr buffer, int buffer_size);
             [DllImport("screen_capture_lite_shared")]
             public static extern int GetWindows(IntPtr buffer, int buffer_size);
-            [DllImport("screen_capture_lite_shared")]
-            [return: MarshalAs(UnmanagedType.I1)]
-            public static extern bool isMonitorInsideBounds(Monitor[] monitors, int monitorsize, Monitor monitor);
-            [DllImport("screen_capture_lite_shared")]
+            [DllImport("screen_capture_lite_shared")] 
             public static extern IntPtr CreateWindowCaptureConfiguration(MonitorWindowCallback callback);
             [DllImport("screen_capture_lite_shared")]
             public static extern IntPtr CreateMonitorCaptureConfiguration(MonitorWindowCallback callback);
@@ -375,13 +374,17 @@ namespace SL
             [DllImport("screen_capture_lite_shared")]
             public static extern void MonitoronFrameChanged(IntPtr ptr, ScreenCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared")]
+            public static extern void MonitoronMouseChanged(IntPtr ptr, MouseCaptureCallback monitorCallback);
+            [DllImport("screen_capture_lite_shared")]
             //this function will free the input pointer calling FreeCaptureConfiguration internally since its no longer needed. This makes it easier to reason about the c# code.
             public static extern IntPtr Monitorstart_capturing(IntPtr ptr);
 
             [DllImport("screen_capture_lite_shared")]
             public static extern void WindowonNewFrame(IntPtr ptr, WindowCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared")]
-            public static extern void WindowonFrameChanged(IntPtr ptr, WindowCaptureCallback monitorCallback);
+            public static extern void WindowonFrameChanged(IntPtr ptr, WindowCaptureCallback monitorCallback); 
+            [DllImport("screen_capture_lite_shared")]
+            public static extern void WindowonMouseChanged(IntPtr ptr, MouseCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared")]
             //this function will free the input pointer calling FreeCaptureConfiguration internally since its no longer needed. This makes it easier to reason about the c# code.
             public static extern IntPtr Windowstart_capturing(IntPtr ptr);

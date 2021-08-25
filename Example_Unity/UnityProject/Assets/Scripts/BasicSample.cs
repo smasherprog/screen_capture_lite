@@ -124,6 +124,7 @@ public class BasicSample : MonoBehaviour {
     void OnApplicationQuit() {
         if (screenCaptureManager != null) {
             Debug.Log("OnApplicationQuit");
+            yield WaitForSeconds (0.1f);
             screenCaptureManager.stop();
             screenCaptureManager = null;
         }

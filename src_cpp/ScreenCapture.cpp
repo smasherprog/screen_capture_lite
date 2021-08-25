@@ -148,7 +148,7 @@ namespace Screen_Capture {
         virtual void pause() override { Thread_Data_->CommonData_.Paused = true; }
         virtual bool isPaused() const override { return Thread_Data_->CommonData_.Paused; }
         virtual void resume() override { Thread_Data_->CommonData_.Paused = false; }
-        virtual void stop() override { Thread_Data_->CommonData_.TerminateThreadsEvent = true; }
+        virtual void stop() override { Thread_Data_->CommonData_.TerminateThreadsEvent = true;Thread_Data_->CommonData_.Paused = false;  }
     };
 
     class ScreenCaptureConfiguration : public ICaptureConfiguration<ScreenCaptureCallback> {

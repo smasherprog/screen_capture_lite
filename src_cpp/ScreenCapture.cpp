@@ -128,13 +128,11 @@ namespace Screen_Capture {
                         std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep for 1 second since an error occcured
 
                         ThreadMgr.Init(Thread_Data_);
-                        std::cout << "Screencapture.start: thread restart" << std::endl;
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
                 }
                 Thread_Data_->CommonData_.TerminateThreadsEvent = true;
                 ThreadMgr.Join();
-                std::cout << "Screencapture.start: thread joined" << std::endl;
             });
         }
         virtual void setFrameChangeInterval(const std::shared_ptr<Timer> &timer) override
@@ -150,9 +148,7 @@ namespace Screen_Capture {
         virtual void pause() override { Thread_Data_->CommonData_.Paused = true; }
         virtual bool isPaused() const override { return Thread_Data_->CommonData_.Paused; }
         virtual void resume() override { Thread_Data_->CommonData_.Paused = false; }
-
-        virtual bool expectedErrorEvent() const override { return Thread_Data_->CommonData_.ExpectedErrorEvent; }
-        virtual void abort() override { Thread_Data_->CommonData_.TerminateThreadsEvent = true; }
+        virtual void stop() override { Thread_Data_->CommonData_.TerminateThreadsEvent = true; }
     };
 
     class ScreenCaptureConfiguration : public ICaptureConfiguration<ScreenCaptureCallback> {
@@ -221,6 +217,7 @@ namespace Screen_Capture {
         void pausecapturing(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->pause(); }
         bool isPaused(IScreenCaptureManagerWrapper *ptr) { return ptr->ptr->isPaused(); }
         void resume(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->resume(); }
+        void stop(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->stop(); }
 
         void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr) { delete ptr; }
 

@@ -60,7 +60,6 @@ dlldata.c
 *.scc
 *.db
 *.opendb
-*.dll
 
 # Chutzpah Test files
 _Chutzpah*
@@ -186,6 +185,22 @@ UpgradeLog*.htm
 # Microsoft Fakes
 FakesAssemblies/
 
+# Unity Game Engine
+/Example_Unity/UnityProject/[Ll]ibrary/
+/Example_Unity/UnityProject/[Tt]emp/
+/Example_Unity/UnityProject/[Oo]bj/
+/Example_Unity/UnityProject/[Bb]uild/
+/Example_Unity/UnityProject/[Bb]uilds/
+/Example_Unity/UnityProject/[Ll]ogs/
+/Example_Unity/UnityProject/[Mm]emoryCaptures/
+/Example_Unity/UnityProject/SteamBuildUploader/ContentBuilder/content
+/Example_Unity/UnityProject/SteamBuildUploader/ContentBuilder/builder
+/Example_Unity/UnityProject/*.sln
+/Example_Unity/UnityProject/*.csproj
+/Example_Unity/UnityProject/.vscode/
+# Never ignore Asset meta data
+!/Example_Unity/UnityProject/[Aa]ssets/**/*.meta
+
 # =========================
 # Operating System Files
 # =========================
@@ -243,3 +258,4 @@ cmake_uninstall.cmake
 CMakeSettings.json
 *.dll
 *.sh
+.vscode

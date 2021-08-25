@@ -195,9 +195,8 @@ namespace Screen_Capture {
         virtual bool isPaused() const = 0;
         // Will resume all capturing if paused, otherwise has no effect
         virtual void resume() = 0;
-        // has aborted capturing
-        virtual bool expectedErrorEvent() const = 0;
-        virtual void abort() = 0;
+        // Will stop all Threads
+        virtual void stop() = 0;
     };
 
     template <typename CAPTURECALLBACK> class ICaptureConfiguration {
@@ -227,6 +226,7 @@ namespace Screen_Capture {
         SC_LITE_C_EXTERN void pausecapturing(IScreenCaptureManagerWrapper *ptr);
         SC_LITE_C_EXTERN bool isPaused(IScreenCaptureManagerWrapper *ptr);
         SC_LITE_C_EXTERN void resume(IScreenCaptureManagerWrapper *ptr);
+        SC_LITE_C_EXTERN void stop(IScreenCaptureManagerWrapper *ptr);
 
         typedef int (*C_API_WindowCaptureCallback)(const Image &img, const Window &monitor);
         SC_LITE_C_EXTERN void WindowonNewFrame(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);

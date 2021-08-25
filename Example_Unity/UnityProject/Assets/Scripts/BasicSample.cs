@@ -44,8 +44,8 @@ public class BasicSample : MonoBehaviour {
         });
 
         // ACTIVATE ONLY ONE OF THE FOLLOWING
-        // captureConfigurationData.onNewFrame( ImageMonitorCallback );
-        captureConfigurationData.onFrameChanged( ImageMonitorCallback ); 
+        captureConfigurationData.onNewFrame( ImageMonitorCallback );
+        // captureConfigurationData.onFrameChanged( ImageMonitorCallback ); 
         // captureConfigurationData.onMouseChanged( ImageMousepointCallback );
 
         Screen_Capture.ScreenCaptureManager scm = captureConfigurationData.start_capturing();
@@ -110,11 +110,12 @@ public class BasicSample : MonoBehaviour {
 
                 // this is not valid from time to time, but i dont know why
                 if ((scImage.Bounds.width*scImage.Bounds.height*4)==scBytes.Length) {
+                    Debug.Log($"{scImage.Bounds.width}/{scImage.Bounds.height} {(scImage.Bounds.width*scImage.Bounds.height*4)}=?={scBytes.Length}");
                     scTexture.LoadRawTextureData(scBytes);
                     scTexture.Apply();
                 }
                 else {
-                    Debug.Log($"invalid amout of data: {scImage.Bounds.width}/{scImage.Bounds.height} {(scImage.Bounds.width*scImage.Bounds.height*4)}=?={scBytes.Length}");
+                    Debug.LogError($"invalid amout of data: {scImage.Bounds.width}/{scImage.Bounds.height} {(scImage.Bounds.width*scImage.Bounds.height*4)}=?={scBytes.Length}");
                 }
             }
         }

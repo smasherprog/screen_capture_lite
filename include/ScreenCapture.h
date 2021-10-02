@@ -211,11 +211,22 @@ namespace Screen_Capture {
     };
 
     namespace C_API {
-        typedef int (*C_API_ScreenCaptureCallback)(const Image &img, const Monitor &monitor);
-        typedef int (*C_API_MouseCaptureCallback)(const Image *img, const MousePoint &monitor); 
+
+        typedef int (*C_API_ScreenCaptureCallback)(const Image *img, const Monitor *monitor);
+        typedef int (*C_API_ScreenCaptureCallbackWithContext)(const Image *img, const Monitor *monitor, void *context);
+
+        typedef int (*C_API_MouseCaptureCallback)(const Image *img, const MousePoint *monitor);
+        typedef int (*C_API_MouseCaptureCallbackWithContext)(const Image *img, const MousePoint *monitor, void *context);
+
         SC_LITE_C_EXTERN void MonitoronNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
+        SC_LITE_C_EXTERN void MonitoronNewFrameWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallbackWithContext cb);
+
         SC_LITE_C_EXTERN void MonitoronFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
+        SC_LITE_C_EXTERN void MonitoronFrameChangedWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallbackWithContext cb);
+
         SC_LITE_C_EXTERN void MonitoronMouseChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb);
+        SC_LITE_C_EXTERN void MonitoronMouseChangedWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallbackWithContext cb);
+
         SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *Monitorstart_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
 
         SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr); 
@@ -225,24 +236,45 @@ namespace Screen_Capture {
         SC_LITE_C_EXTERN bool isPaused(IScreenCaptureManagerWrapper *ptr);
         SC_LITE_C_EXTERN void resume(IScreenCaptureManagerWrapper *ptr);
 
-        typedef int (*C_API_WindowCaptureCallback)(const Image &img, const Window &monitor);
+        typedef int (*C_API_WindowCaptureCallback)(const Image *img, const Window *monitor);
+        typedef int (*C_API_WindowCaptureCallbackWithContext)(const Image *img, const Window *monitor, void *context);
+
         SC_LITE_C_EXTERN void WindowonNewFrame(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);
+        SC_LITE_C_EXTERN void WindowonNewFrameWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallbackWithContext cb);
+
         SC_LITE_C_EXTERN void WindowonFrameChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);
+        SC_LITE_C_EXTERN void WindowonFrameChangedWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallbackWithContext cb);
+
         SC_LITE_C_EXTERN void WindowonMouseChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb);
+        SC_LITE_C_EXTERN void WindowonMouseChangedWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallbackWithContext cb);
+
         SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *Windowstart_capturing(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr);
     }; // namespace C_API
 
     // the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want
     // to be captured
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
-    namespace C_API { 
-        typedef int (*C_API_MonitorCallback)(Monitor *buffer, int buffersize); 
-        typedef int (*C_API_WindowCallback)(Window *buffer, int buffersize); 
+
+    namespace C_API {
+
+        typedef int (*C_API_WindowCallback)(Window *buffer, int buffersize);
+        typedef int (*C_API_MonitorCallback)(Monitor *buffer, int buffersize);
+
+        typedef int (*C_API_WindowCallbackWithContext)(Window *buffer, int buffersize, void *context);
+        typedef int (*C_API_MonitorCallbackWithContext)(Monitor *buffer, int buffersize, void *context);
+
         SC_LITE_C_EXTERN ICaptureConfigurationScreenCaptureCallbackWrapper *CreateMonitorCaptureConfiguration(C_API_MonitorCallback monitorstocapture);
+        SC_LITE_C_EXTERN ICaptureConfigurationScreenCaptureCallbackWrapper *CreateMonitorCaptureConfigurationWithContext(C_API_MonitorCallbackWithContext monitorstocapture, void *context);
+
         SC_LITE_C_EXTERN void FreeMonitorCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
-        SC_LITE_C_EXTERN ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfiguration(C_API_WindowCallback monitorstocapture);
+
+        SC_LITE_C_EXTERN ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfiguration(C_API_WindowCallback windowstocapture);
+        SC_LITE_C_EXTERN ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfigurationWithContext(C_API_WindowCallbackWithContext windowstocapture, void *context);
+
         SC_LITE_C_EXTERN void FreeWindowCaptureConfiguration(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr);
+
     }; // namespace C_API
+
     // the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to
     // be captured
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback &windowstocapture);

@@ -13,18 +13,26 @@
 namespace SL {
 namespace Screen_Capture {
     namespace C_API {
+
         class ICaptureConfigurationScreenCaptureCallbackWrapper {
           public:
+            void * const context;
             std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> ptr;
+            explicit ICaptureConfigurationScreenCaptureCallbackWrapper(void *context = nullptr) : context(context), ptr() {}
         };
+
         class ICaptureConfigurationWindowCaptureCallbackWrapper {
           public:
+            void * const context;
             std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> ptr;
+            explicit ICaptureConfigurationWindowCaptureCallbackWrapper(void *context = nullptr) : context(context), ptr() {}
         };
+
         class IScreenCaptureManagerWrapper {
           public:
             std::shared_ptr<IScreenCaptureManager> ptr;
         };
+
         int GetMonitors(Monitor *monitors, int monitors_size)
         {
             auto local_monitors = Screen_Capture::GetMonitors();
@@ -64,6 +72,7 @@ namespace Screen_Capture {
                  (OffsetX(realmonitor) != OffsetX(monitor) || OffsetY(realmonitor) != OffsetY(monitor))) {
             return false;
         }
+
         return true;
     }
 
@@ -186,18 +195,55 @@ namespace Screen_Capture {
         }
     };
     namespace C_API {
+
         void MonitoronNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb)
         {
-            ptr->ptr = ptr->ptr->onNewFrame(cb);
+            ptr->ptr = ptr->ptr->onNewFrame([=](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor)
+            {
+                cb(&img, &monitor);
+            });
         }
+
+        void MonitoronNewFrameWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallbackWithContext cb)
+        {
+            ptr->ptr = ptr->ptr->onNewFrame([=](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor)
+            {
+                cb(&img, &monitor, ptr->context);
+            });
+        }
+
         void MonitoronFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb)
         {
-            ptr->ptr = ptr->ptr->onFrameChanged(cb);
+            ptr->ptr = ptr->ptr->onFrameChanged([=](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor)
+            {
+                cb(&img, &monitor);
+            });
         }
+
+        void MonitoronFrameChangedWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallbackWithContext cb)
+        {
+            ptr->ptr = ptr->ptr->onFrameChanged([=](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor)
+            {
+                cb(&img, &monitor, ptr->context);
+            });
+        }
+
         void MonitoronMouseChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb)
         {
-            ptr->ptr = ptr->ptr->onMouseChanged(cb);
-        } 
+            ptr->ptr = ptr->ptr->onMouseChanged([=](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint)
+            {
+                cb(img, &mousepoint);
+            });
+        }
+
+        void MonitoronMouseChangedWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallbackWithContext cb)
+        {
+            ptr->ptr = ptr->ptr->onMouseChanged([=](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint)
+            {
+                cb(img, &mousepoint, ptr->context);
+            });
+        }
+
         IScreenCaptureManagerWrapper *Monitorstart_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr)
         {
             auto p = new IScreenCaptureManagerWrapper{ptr->ptr->start_capturing()};
@@ -209,28 +255,68 @@ namespace Screen_Capture {
         {
             ptr->ptr->setFrameChangeInterval(std::chrono::milliseconds(milliseconds));
         }
+
         void setMouseChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds)
         {
             ptr->ptr->setMouseChangeInterval(std::chrono::milliseconds(milliseconds));
         }
+
         void pausecapturing(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->pause(); }
+
         bool isPaused(IScreenCaptureManagerWrapper *ptr) { return ptr->ptr->isPaused(); }
+
         void resume(IScreenCaptureManagerWrapper *ptr) { ptr->ptr->resume(); }
 
         void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr) { delete ptr; }
 
         void WindowonNewFrame(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb)
         {
-            ptr->ptr = ptr->ptr->onNewFrame(cb);
+            ptr->ptr = ptr->ptr->onNewFrame([=](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window)
+            {
+                cb(&img, &window);
+            });
         }
+
+        void WindowonNewFrameWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallbackWithContext cb)
+        {
+            ptr->ptr = ptr->ptr->onNewFrame([=](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window)
+            {
+                cb(&img, &window, ptr->context);
+            });
+        }
+
         void WindowonFrameChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb)
         {
-            ptr->ptr = ptr->ptr->onFrameChanged(cb);
+            ptr->ptr = ptr->ptr->onFrameChanged([=](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window)
+            {
+                cb(&img, &window);
+            });
         }
+
+        void WindowonFrameChangedWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallbackWithContext cb)
+        {
+            ptr->ptr = ptr->ptr->onFrameChanged([=](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Window &window)
+            {
+                cb(&img, &window, ptr->context);
+            });
+        }
+
         void WindowonMouseChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb)
         {
-            ptr->ptr = ptr->ptr->onMouseChanged(cb);
-        } 
+            ptr->ptr = ptr->ptr->onMouseChanged([=](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint)
+            {
+              cb(img, &mousepoint);
+            });
+        }
+
+        void WindowonMouseChangedWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallbackWithContext cb)
+        {
+            ptr->ptr = ptr->ptr->onMouseChanged([=](const SL::Screen_Capture::Image *img, const SL::Screen_Capture::MousePoint &mousepoint)
+            {
+                cb(img, &mousepoint, ptr->context);
+            });
+        }
+
         IScreenCaptureManagerWrapper *Windowstart_capturing(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr)
         {
             auto p = new IScreenCaptureManagerWrapper{ptr->ptr->start_capturing()};
@@ -298,20 +384,21 @@ namespace Screen_Capture {
             });
             return p;
         }
-        ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfiguration(C_API_WindowCallback monitorstocapture)
+
+        ICaptureConfigurationScreenCaptureCallbackWrapper *CreateMonitorCaptureConfigurationWithContext(C_API_MonitorCallbackWithContext monitorstocapture, void *context)
         {
-            auto p = new ICaptureConfigurationWindowCaptureCallbackWrapper();
+            auto p = new ICaptureConfigurationScreenCaptureCallbackWrapper(context);
             static auto maxbuffersize = 16;
             p->ptr = Screen_Capture::CreateCaptureConfiguration([=]() {
-                std::vector<Window> buffer;
+                std::vector<Monitor> buffer;
                 auto sizeguess = maxbuffersize;
                 buffer.resize(sizeguess);
-                auto sizeneeded = monitorstocapture(buffer.data(), sizeguess);
+                auto sizeneeded = monitorstocapture(buffer.data(), sizeguess, context);
                 if (sizeguess < sizeneeded) {
                     sizeguess = sizeneeded;
                     maxbuffersize = std::max(sizeneeded, maxbuffersize);
                     buffer.resize(sizeguess);
-                    sizeneeded = monitorstocapture(buffer.data(), sizeguess);
+                    sizeneeded = monitorstocapture(buffer.data(), sizeguess, context);
                     sizeguess = std::min(sizeguess, sizeneeded);
                     buffer.resize(sizeguess);
                     return buffer;
@@ -321,8 +408,59 @@ namespace Screen_Capture {
             });
             return p;
         }
+
+        ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfiguration(C_API_WindowCallback windowstocapture)
+        {
+            auto p = new ICaptureConfigurationWindowCaptureCallbackWrapper();
+            static auto maxbuffersize = 16;
+            p->ptr = Screen_Capture::CreateCaptureConfiguration([=]() {
+                std::vector<Window> buffer;
+                auto sizeguess = maxbuffersize;
+                buffer.resize(sizeguess);
+                auto sizeneeded = windowstocapture(buffer.data(), sizeguess);
+                if (sizeguess < sizeneeded) {
+                    sizeguess = sizeneeded;
+                    maxbuffersize = std::max(sizeneeded, maxbuffersize);
+                    buffer.resize(sizeguess);
+                    sizeneeded = windowstocapture(buffer.data(), sizeguess);
+                    sizeguess = std::min(sizeguess, sizeneeded);
+                    buffer.resize(sizeguess);
+                    return buffer;
+                }
+                buffer.resize(sizeneeded);
+                return buffer;
+            });
+            return p;
+        }
+
+        ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfigurationWithContext(C_API_WindowCallbackWithContext windowstocapture, void *context)
+        {
+            auto p = new ICaptureConfigurationWindowCaptureCallbackWrapper(context);
+            static auto maxbuffersize = 16;
+            p->ptr = Screen_Capture::CreateCaptureConfiguration([=]() {
+                std::vector<Window> buffer;
+                auto sizeguess = maxbuffersize;
+                buffer.resize(sizeguess);
+                auto sizeneeded = windowstocapture(buffer.data(), sizeguess, context);
+                if (sizeguess < sizeneeded) {
+                    sizeguess = sizeneeded;
+                    maxbuffersize = std::max(sizeneeded, maxbuffersize);
+                    buffer.resize(sizeguess);
+                    sizeneeded = windowstocapture(buffer.data(), sizeguess, context);
+                    sizeguess = std::min(sizeguess, sizeneeded);
+                    buffer.resize(sizeguess);
+                    return buffer;
+                }
+                buffer.resize(sizeneeded);
+                return buffer;
+            });
+            return p;
+        }
+
         void FreeMonitorCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr) { delete ptr; }
+
         void FreeWindowCaptureConfiguration(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr) { delete ptr; }
+
     }; // namespace C_API
 
     std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture)

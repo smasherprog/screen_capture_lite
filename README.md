@@ -1,4 +1,4 @@
-<H1>Please use the main repository (smasherprog/screen_capture_lite) , this is outdated</H1>
+<H1>Please only use the Unity Project in this repository, othervise rely on the main repository (smasherprog/screen_capture_lite)</H1>
 
 
 

@@ -1,3 +1,13 @@
+<H1>Please use the main repository (smasherprog/screen_capture_lite) , this is outdated</H1>
+
+
+
+
+
+
+
+
+
 <img src="Logotype primary.png" width="60%" height="60%" />
 
 <p>Above Logo created by https://github.com/mansya</p>

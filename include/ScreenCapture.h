@@ -29,19 +29,23 @@
 
 namespace SL {
 namespace Screen_Capture {
+
     namespace C_API {
         class IScreenCaptureManagerWrapper;
         class ICaptureConfigurationScreenCaptureCallbackWrapper;
         class ICaptureConfigurationWindowCaptureCallbackWrapper;
     }; // namespace C_API
+
     struct SC_LITE_EXTERN Point {
         int x;
         int y;
     };
+
     struct SC_LITE_EXTERN MousePoint {
         Point Position;
         Point HotSpot;
     };
+
     struct SC_LITE_EXTERN Window {
         size_t Handle;
         Point Position;
@@ -50,6 +54,7 @@ namespace Screen_Capture {
         // Name will always be lower case. It is converted to lower case internally by the library for comparisons
         char Name[128] = {0};
     };
+
     struct SC_LITE_EXTERN Monitor {
         int Id = INT32_MAX;
         int Index = INT32_MAX;
@@ -69,6 +74,7 @@ namespace Screen_Capture {
     };
 
     struct Image;
+
     struct ImageBGRA {
         unsigned char B, G, R, A;
     };

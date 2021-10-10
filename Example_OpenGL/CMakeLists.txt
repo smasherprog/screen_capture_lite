@@ -45,8 +45,8 @@ include_directories(
 	../include 
 ) 
 
-set(GLAD_GL "${GLFW_SOURCE_DIR}/deps/glad/gl.h"
-            "${GLFW_SOURCE_DIR}/deps/glad_gl.c")
+set(GLAD_GL glfw/deps/glad/gl.h
+            glfw/deps/glad_gl.c)
 
 option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)

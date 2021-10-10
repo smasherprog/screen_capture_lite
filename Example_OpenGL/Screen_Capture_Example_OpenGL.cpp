@@ -26,7 +26,7 @@ void AttachShader(GLuint program, GLenum type, const char *src)
     glDeleteShader(shader);
 }
 
-const char *vert = 1 + R"GLSL(
+const char *vert = R"GLSL(
 #version 330 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aColor;
@@ -40,7 +40,7 @@ void main() {
 }
 )GLSL";
 
-const char *frag = 1 + R"GLSL(
+const char *frag = R"GLSL(
 #version 330 core
 out vec4 FragColor;
 in vec3 ourColor;

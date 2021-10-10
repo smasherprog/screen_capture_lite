@@ -43,5 +43,5 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - script: | 
-          sudo apt install -y libx11-dev libxfixes-dev libxtst-dev libxinerama-dev libxrandr-dev 
+          sudo apt install -y libx11-dev libxfixes-dev libxtst-dev libxinerama-dev libxrandr-dev libxcursor-dev 
           CXX=clang++ CC=clang cmake . && make;

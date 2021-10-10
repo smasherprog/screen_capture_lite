@@ -48,6 +48,7 @@ endif()
 enable_testing() 
 
 if (${BUILD_EXAMPLE})
+  add_subdirectory(Example_OpenGL) 
   add_subdirectory(Example_CPP) 
   add_subdirectory(Example_CSharp) 
   add_subdirectory(Example_Unity) 

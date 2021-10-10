@@ -76,7 +76,6 @@ set(libsrc
 		${SCREEN_CAPTURE_PLATFORM_SRC}
 )
  
-
 message("Building STATIC Library")
 add_library(${PROJECT_NAME}_static STATIC ${libsrc})
 

@@ -1,4 +1,4 @@
-project(screen_capture_example_cpp)
+project(screen_capture_example_opengl_cpp)
 
 if(WIN32)
 	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)
@@ -40,23 +40,33 @@ else()
 endif()
 
 include_directories(
+	glfw/deps
+	glfw/include
 	../include 
 ) 
 
-add_executable(${PROJECT_NAME}_static
-	lodepng.cpp
-	Screen_Capture_Example.cpp
+set(GLAD_GL "${GLFW_SOURCE_DIR}/deps/glad/gl.h"
+            "${GLFW_SOURCE_DIR}/deps/glad_gl.c")
+
+option(GLFW_BUILD_EXAMPLES OFF)
+option(GLFW_BUILD_TESTS OFF)
+option(GLFW_BUILD_DOCS OFF) 
+option(BUILD_SHARED_LIBS OFF) 
+option(USE_MSVC_RUNTIME_LIBRARY_DLL OFF) 
+
+if (MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
+add_subdirectory(glfw) 
+
+add_executable(${PROJECT_NAME}_static  
+	Screen_Capture_Example_OpenGL.cpp
+	 ${GLAD_GL}
 )
-target_link_libraries(${PROJECT_NAME}_static screen_capture_lite_static ${${PROJECT_NAME}_PLATFORM_LIBS})  
 
-add_executable(${PROJECT_NAME}_shared  
-	lodepng.cpp
-	Screen_Capture_Example.cpp
-)
+target_link_libraries(${PROJECT_NAME}_static screen_capture_lite_static ${${PROJECT_NAME}_PLATFORM_LIBS} glfw)  
 
-target_link_libraries(${PROJECT_NAME}_shared screen_capture_lite_shared ${${PROJECT_NAME}_PLATFORM_LIBS}) 
-
-install (TARGETS ${PROJECT_NAME}_static ${PROJECT_NAME}_shared screen_capture_lite_shared
+install (TARGETS ${PROJECT_NAME}_static screen_capture_lite_static
 	RUNTIME DESTINATION Examples
 ) 
-  

@@ -124,20 +124,20 @@ namespace screen_capture_lite_example_csharp
             }).start_capturing();
 
             framgrabber.setFrameChangeInterval(100);
-            framgrabber.setMouseChangeInterval(100);
+            framgrabbeextern.setMouseChangeInterval(100);
             return framgrabber;
         }
 
         public static void Main(string[] args)
         {
             Console.WriteLine("Starting Capture Demo/Test");
-            var monitors = SL.Screen_Capture.GetMonitors();
+            var monitors = SL.Screen_Capture.SCL_GetMonitors();
             foreach(var item in monitors)
             {
                 WriteLine(item); 
             }
 
-            var windows = SL.Screen_Capture.GetWindows();
+            var windows = SL.Screen_Capture.SCL_GetWindows();
             foreach (var item in windows)
             {
                 WriteLine(item);
@@ -164,12 +164,12 @@ namespace screen_capture_lite_example_csharp
                 var counti = 0;
                 while (counti++ < 10)
                 {
-                    Debug.Assert(framgrabber.isPaused());
+                    Debug.Assert(framgrabber.SCL_IsPaused());
                     Console.Write(" . ");
                     System.Threading.Thread.Sleep(1 * 1000);
                 }
 
-                framgrabber.resume();
+                framgrabber.SCL_Resume();
                 Console.WriteLine("Testing changing the interval during runtime for race conditions ");
 
                 var start = DateTime.Now;
@@ -178,12 +178,12 @@ namespace screen_capture_lite_example_csharp
                     for (var t = 0; t < 100; t++)
                     {
                         framgrabber.setFrameChangeInterval(100);
-                        framgrabber.setMouseChangeInterval(100);
+                        framgrabber.SCL_SetMouseChangeInterval(100);
                     }
                 }
 
                 Console.WriteLine("Changing the cpature rate to 1 second");
-                framgrabber.setFrameChangeInterval(1000);
+                framgrabber.SCL_SetFrameChangeInterval(1000);
                 System.Threading.Thread.Sleep(1 * 1000);
             }
         }

@@ -352,50 +352,50 @@ namespace SL
             public delegate int MonitorWindowCallback(IntPtr buffer, int buffersize);
 
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern int GetMonitors(IntPtr buffer, int buffer_size);
+            public static extern int SCL_GetMonitors(IntPtr buffer, int buffer_size);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern int GetWindows(IntPtr buffer, int buffer_size);
+            public static extern int SCL_GetWindows(IntPtr buffer, int buffer_size);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern IntPtr CreateWindowCaptureConfiguration(MonitorWindowCallback callback);
+            public static extern IntPtr SCL_CreateWindowCaptureConfiguration(MonitorWindowCallback callback);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern IntPtr CreateMonitorCaptureConfiguration(MonitorWindowCallback callback);
+            public static extern IntPtr SCL_CreateMonitorCaptureConfiguration(MonitorWindowCallback callback);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void FreeMonitorCaptureConfiguration(IntPtr ptr);
+            public static extern void SCL_FreeMonitorCaptureConfiguration(IntPtr ptr);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void FreeWindowCaptureConfiguration(IntPtr ptr);
+            public static extern void SCL_FreeWindowCaptureConfiguration(IntPtr ptr);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void pausecapturing(IntPtr ptr);
+            public static extern void SCL_PauseCapturing(IntPtr ptr);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
             [return: MarshalAs(UnmanagedType.I1)]
-            public static extern bool isPaused(IntPtr ptr);
+            public static extern bool SCL_IsPaused(IntPtr ptr);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern bool resume(IntPtr ptr);
+            public static extern bool SCL_Resume(IntPtr ptr);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void setFrameChangeInterval(IntPtr ptr, int milliseconds);
+            public static extern void SCL_SetFrameChangeInterval(IntPtr ptr, int milliseconds);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void setMouseChangeInterval(IntPtr ptr, int milliseconds);
+            public static extern void SCL_SetMouseChangeInterval(IntPtr ptr, int milliseconds);
 
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void MonitoronNewFrame(IntPtr ptr, ScreenCaptureCallback monitorCallback);
+            public static extern void SCL_MonitorOnNewFrame(IntPtr ptr, ScreenCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void MonitoronFrameChanged(IntPtr ptr, ScreenCaptureCallback monitorCallback);
+            public static extern void SCL_MonitorOnFrameChanged(IntPtr ptr, ScreenCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void MonitoronMouseChanged(IntPtr ptr, MouseCaptureCallback monitorCallback);
+            public static extern void SCL_MonitorOnMouseChanged(IntPtr ptr, MouseCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
             //this function will free the input pointer calling FreeCaptureConfiguration internally since its no longer needed. This makes it easier to reason about the c# code.
-            public static extern IntPtr Monitorstart_capturing(IntPtr ptr);
+            public static extern IntPtr SCL_MonitorStartCapturing(IntPtr ptr);
 
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void WindowonNewFrame(IntPtr ptr, WindowCaptureCallback monitorCallback);
+            public static extern void SCL_WindowOnNewFrame(IntPtr ptr, WindowCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void WindowonFrameChanged(IntPtr ptr, WindowCaptureCallback monitorCallback); 
+            public static extern void SCL_WindowOnFrameChanged(IntPtr ptr, WindowCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void WindowonMouseChanged(IntPtr ptr, MouseCaptureCallback monitorCallback);
+            public static extern void SCL_WindowOnMouseChanged(IntPtr ptr, MouseCaptureCallback monitorCallback);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
             //this function will free the input pointer calling FreeCaptureConfiguration internally since its no longer needed. This makes it easier to reason about the c# code.
-            public static extern IntPtr Windowstart_capturing(IntPtr ptr);
+            public static extern IntPtr SCL_WindowStartCapturing(IntPtr ptr);
             [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-            public static extern void FreeIScreenCaptureManagerWrapper(IntPtr ptr);
+            public static extern void SCL_FreeIScreenCaptureManagerWrapper(IntPtr ptr);
         }
     }
 }

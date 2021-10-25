@@ -6,7 +6,9 @@
 // this is INTERNAL DO NOT USE!
 namespace SL {
 namespace Screen_Capture {
-    struct ImageRect {
+
+    struct ImageRect
+    {
         ImageRect() : ImageRect(0, 0, 0, 0) {}
         ImageRect(int l, int t, int r, int b) : left(l), top(t), right(r), bottom(b) {}
         int left;
@@ -15,7 +17,9 @@ namespace Screen_Capture {
         int bottom;
         bool Contains(const ImageRect &a) const { return left <= a.left && right >= a.right && top <= a.top && bottom >= a.bottom; }
     };
-    struct Image {
+
+    struct Image
+    {
         ImageRect Bounds;
         int RowStrideInBytes = 0;
         bool isContiguous = false;
@@ -27,8 +31,11 @@ namespace Screen_Capture {
     {
         return b.left == a.left && b.right == a.right && b.top == a.top && b.bottom == a.bottom;
     }
+
     int Height(const ImageRect &rect);
+
     int Width(const ImageRect &rect);
+
     const ImageRect &Rect(const Image &img);
 
     template <typename F, typename M, typename W> struct CaptureData {
@@ -39,6 +46,7 @@ namespace Screen_Capture {
         M OnMouseChanged;
         W getThingsToWatch;
     };
+
     struct CommonData {
         // Used to indicate abnormal error condition
         std::atomic<bool> UnexpectedErrorEvent;
@@ -49,6 +57,7 @@ namespace Screen_Capture {
         std::atomic<bool> TerminateThreadsEvent;
         std::atomic<bool> Paused;
     };
+
     struct Thread_Data {
 
         CaptureData<ScreenCaptureCallback, MouseCallback, MonitorCallback> ScreenCaptureData;

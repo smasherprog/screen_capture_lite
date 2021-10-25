@@ -2,18 +2,14 @@
 
 #if defined(WINDOWS) || defined(WIN32)
 #if defined(SC_LITE_DLL)
-#define SC_LITE_C_EXTERN extern "C" __declspec(dllexport)
 #define SC_LITE_EXTERN __declspec(dllexport)
 #else
-#define SC_LITE_C_EXTERN
 #define SC_LITE_EXTERN
 #endif
 #else
 #if defined(SC_LITE_DLL)
-#define SC_LITE_C_EXTERN extern "C"
 #define SC_LITE_EXTERN
 #else
-#define SC_LITE_C_EXTERN
 #define SC_LITE_EXTERN
 #endif
 #endif
@@ -29,12 +25,6 @@
 
 namespace SL {
 namespace Screen_Capture {
-
-    namespace C_API {
-        class IScreenCaptureManagerWrapper;
-        class ICaptureConfigurationScreenCaptureCallbackWrapper;
-        class ICaptureConfigurationWindowCaptureCallbackWrapper;
-    }; // namespace C_API
 
     struct SC_LITE_EXTERN Point {
         int x;
@@ -79,7 +69,7 @@ namespace Screen_Capture {
         unsigned char B, G, R, A;
     };
 
-    // index to self in the GetMonitors() function
+    // index to self in the SCL_GetMonitors() function
     SC_LITE_EXTERN int Index(const Monitor &mointor);
     // unique identifier
     SC_LITE_EXTERN int Id(const Monitor &mointor);
@@ -163,13 +153,7 @@ namespace Screen_Capture {
     SC_LITE_EXTERN std::vector<Monitor> GetMonitors();
     // will return all windows
     SC_LITE_EXTERN std::vector<Window> GetWindows();
-    namespace C_API {
-        //GetWindows and GetMonitors expect a pre allocated buffer with the size as the second input parameter. 
-        //The output of these functions is the actual total number of elements that the library had to return. So, applications should use this value in determininng how to preallocate data.
-        SC_LITE_C_EXTERN int GetWindows(Window *windows, int windows_size);
-        SC_LITE_C_EXTERN int GetMonitors(Monitor *monitors, int monitors_size);
-        SC_LITE_C_EXTERN bool isMonitorInsideBounds(const Monitor *monitors, const int monitorsize, const Monitor *monitor);
-    }; // namespace C_API
+
     SC_LITE_EXTERN bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Monitor &monitor)> ScreenCaptureCallback;
@@ -199,7 +183,7 @@ namespace Screen_Capture {
         virtual void pause() = 0;
         // Will return whether the library is paused
         virtual bool isPaused() const = 0;
-        // Will resume all capturing if paused, otherwise has no effect
+        // Will SCL_Resume all capturing if paused, otherwise has no effect
         virtual void resume() = 0;
     };
 
@@ -216,73 +200,13 @@ namespace Screen_Capture {
         virtual std::shared_ptr<IScreenCaptureManager> start_capturing() = 0;
     };
 
-    namespace C_API {
-
-        typedef int (*C_API_ScreenCaptureCallback)(const Image *img, const Monitor *monitor);
-        typedef int (*C_API_ScreenCaptureCallbackWithContext)(const Image *img, const Monitor *monitor, void *context);
-
-        typedef int (*C_API_MouseCaptureCallback)(const Image *img, const MousePoint *monitor);
-        typedef int (*C_API_MouseCaptureCallbackWithContext)(const Image *img, const MousePoint *monitor, void *context);
-
-        SC_LITE_C_EXTERN void MonitoronNewFrame(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
-        SC_LITE_C_EXTERN void MonitoronNewFrameWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallbackWithContext cb);
-
-        SC_LITE_C_EXTERN void MonitoronFrameChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallback cb);
-        SC_LITE_C_EXTERN void MonitoronFrameChangedWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_ScreenCaptureCallbackWithContext cb);
-
-        SC_LITE_C_EXTERN void MonitoronMouseChanged(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb);
-        SC_LITE_C_EXTERN void MonitoronMouseChangedWithContext(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallbackWithContext cb);
-
-        SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *Monitorstart_capturing(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
-
-        SC_LITE_C_EXTERN void FreeIScreenCaptureManagerWrapper(IScreenCaptureManagerWrapper *ptr); 
-        SC_LITE_C_EXTERN void setFrameChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds);
-        SC_LITE_C_EXTERN void setMouseChangeInterval(IScreenCaptureManagerWrapper *ptr, int milliseconds);
-        SC_LITE_C_EXTERN void pausecapturing(IScreenCaptureManagerWrapper *ptr);
-        SC_LITE_C_EXTERN bool isPaused(IScreenCaptureManagerWrapper *ptr);
-        SC_LITE_C_EXTERN void resume(IScreenCaptureManagerWrapper *ptr);
-
-        typedef int (*C_API_WindowCaptureCallback)(const Image *img, const Window *monitor);
-        typedef int (*C_API_WindowCaptureCallbackWithContext)(const Image *img, const Window *monitor, void *context);
-
-        SC_LITE_C_EXTERN void WindowonNewFrame(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);
-        SC_LITE_C_EXTERN void WindowonNewFrameWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallbackWithContext cb);
-
-        SC_LITE_C_EXTERN void WindowonFrameChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallback cb);
-        SC_LITE_C_EXTERN void WindowonFrameChangedWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_WindowCaptureCallbackWithContext cb);
-
-        SC_LITE_C_EXTERN void WindowonMouseChanged(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallback cb);
-        SC_LITE_C_EXTERN void WindowonMouseChangedWithContext(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr, C_API_MouseCaptureCallbackWithContext cb);
-
-        SC_LITE_C_EXTERN IScreenCaptureManagerWrapper *Windowstart_capturing(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr);
-    }; // namespace C_API
-
     // the callback of windowstocapture represents the list of monitors which should be captured. Users should return the list of monitors they want
     // to be captured
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<ScreenCaptureCallback>> CreateCaptureConfiguration(const MonitorCallback &monitorstocapture);
 
-    namespace C_API {
-
-        typedef int (*C_API_WindowCallback)(Window *buffer, int buffersize);
-        typedef int (*C_API_MonitorCallback)(Monitor *buffer, int buffersize);
-
-        typedef int (*C_API_WindowCallbackWithContext)(Window *buffer, int buffersize, void *context);
-        typedef int (*C_API_MonitorCallbackWithContext)(Monitor *buffer, int buffersize, void *context);
-
-        SC_LITE_C_EXTERN ICaptureConfigurationScreenCaptureCallbackWrapper *CreateMonitorCaptureConfiguration(C_API_MonitorCallback monitorstocapture);
-        SC_LITE_C_EXTERN ICaptureConfigurationScreenCaptureCallbackWrapper *CreateMonitorCaptureConfigurationWithContext(C_API_MonitorCallbackWithContext monitorstocapture, void *context);
-
-        SC_LITE_C_EXTERN void FreeMonitorCaptureConfiguration(ICaptureConfigurationScreenCaptureCallbackWrapper *ptr);
-
-        SC_LITE_C_EXTERN ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfiguration(C_API_WindowCallback windowstocapture);
-        SC_LITE_C_EXTERN ICaptureConfigurationWindowCaptureCallbackWrapper *CreateWindowCaptureConfigurationWithContext(C_API_WindowCallbackWithContext windowstocapture, void *context);
-
-        SC_LITE_C_EXTERN void FreeWindowCaptureConfiguration(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr);
-
-    }; // namespace C_API
-
     // the callback of windowstocapture represents the list of windows which should be captured. Users should return the list of windows they want to
     // be captured
     SC_LITE_EXTERN std::shared_ptr<ICaptureConfiguration<WindowCaptureCallback>> CreateCaptureConfiguration(const WindowCallback &windowstocapture);
+
 } // namespace Screen_Capture
 } // namespace SL

@@ -274,7 +274,6 @@ void SCL_MonitorOnMouseChangedWithContext(SCL_ICaptureConfigurationScreenCapture
 SCL_IScreenCaptureManagerWrapperRef SCL_MonitorStartCapturing(SCL_ICaptureConfigurationScreenCaptureCallbackWrapperRef ptr)
 {
     auto p = new IScreenCaptureManagerWrapper{ptr->ptr->start_capturing()};
-    SCL_FreeMonitorCaptureConfiguration(ptr);
     return p;
 }
 
@@ -359,7 +358,6 @@ void SCL_WindowOnMouseChangedWithContext(ICaptureConfigurationWindowCaptureCallb
 IScreenCaptureManagerWrapper *SCL_WindowStartCapturing(ICaptureConfigurationWindowCaptureCallbackWrapper *ptr)
 {
     auto p = new IScreenCaptureManagerWrapper{ptr->ptr->start_capturing()};
-    SCL_FreeWindowCaptureConfiguration(ptr);
     return p;
 }
 

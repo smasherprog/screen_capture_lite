@@ -121,7 +121,7 @@ public class BasicSample : MonoBehaviour {
         }
     }
 
-    void OnApplicationQuit() {
+    void OnDestroy() {
         if (screenCaptureManager != null) {
             screenCaptureManager.Dispose();
             screenCaptureManager = null;

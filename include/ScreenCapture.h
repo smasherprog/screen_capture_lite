@@ -67,12 +67,35 @@ namespace Screen_Capture {
         char Name[128] = {0};
         float Scaling = 1.0f;
     };
-
-    struct Image;
-    struct ImageBGRA {
+    struct SC_LITE_EXTERN ImageRect {
+        ImageRect() : ImageRect(0, 0, 0, 0) {}
+        ImageRect(const ImageRect& r) : ImageRect(r.left, r.top, r.right, r.bottom) {}
+        ImageRect(int l, int t, int r, int b) : left(l), top(t), right(r), bottom(b) {}
+        int left;
+        int top;
+        int right;
+        int bottom;
+        bool Contains(const ImageRect &a) const { return left <= a.left && right >= a.right && top <= a.top && bottom >= a.bottom; }
+    }; 
+    struct SC_LITE_EXTERN ImageBGRA {
         unsigned char B, G, R, A;
     };
+    struct SC_LITE_EXTERN Image {
+        ImageRect Bounds;
+        int RowStrideInBytes = 0;
+        bool isContiguous = false;
+        // alpha is always unused and might contain garbage
+        const ImageBGRA *Data = nullptr;
+    };
 
+    inline bool operator==(const ImageRect &a, const ImageRect &b)
+    {
+        return b.left == a.left && b.right == a.right && b.top == a.top && b.bottom == a.bottom;
+    }
+    SC_LITE_EXTERN int Height(const ImageRect &rect);
+    SC_LITE_EXTERN int Width(const ImageRect &rect);
+    SC_LITE_EXTERN const ImageRect &Rect(const Image &img);
+    
     // index to self in the GetMonitors() function
     SC_LITE_EXTERN int Index(const Monitor &mointor);
     // unique identifier

@@ -1,6 +1,6 @@
 using System;
 
-namespace Namazu.SCL
+namespace SCL
 {
     public class ScreenCaptureManager : IDisposable
     {

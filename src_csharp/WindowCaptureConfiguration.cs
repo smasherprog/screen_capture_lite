@@ -2,24 +2,28 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Namazu.SCL
+namespace SCL
 {
+
+    [StructLayout(LayoutKind.Sequential)]
     public class WindowCaptureConfiguration : IDisposable
     {
-        
+    
         public IntPtr Config { get; private set; }
 
-        private GCHandle _this;
-
         private readonly WindowCallback _windowCallback;
+
+        private IntPtr _handle;
 
         private Action<Image, Window> _onNewFrame;
         
         private Action<Image, Window> _onFrameChanged;
 
         private Action<Image, MousePoint> _onMouseChanged;
+        
+        private static readonly ThreadLocal<int> WindowSizeHint = new(() => 64);
 
-        private static readonly ThreadLocal<int> WindowSizeHint = new ThreadLocal<int>(() => 64);
+        private static readonly UnmanagedHandles<WindowCaptureConfiguration> UnmanagedHandles = new();
 
         public static Window[] GetWindows()
         {
@@ -28,80 +32,38 @@ namespace Namazu.SCL
 
         private static int OnCapture(IntPtr buffer, int buffersize, IntPtr context)
         {
-
-            var hnd = GCHandle.FromIntPtr(context);
-
-            try
-            {
-                var conf = (WindowCaptureConfiguration) hnd.Target;
-                var windows = conf._windowCallback();
-                var count = Math.Min(buffersize, windows.Length);
-                var output = new UnmanagedArray<Window>(buffer, buffersize);
-                for (var i = 0; i < count; i++) output[i] = windows[i];
-                return count;
-            }
-            finally
-            {
-                hnd.Free();
-            }
-
+            var conf = UnmanagedHandles.Get(context);
+            if (conf == null) throw new InvalidOperationException("Invalid Handle.");
+            var windows = conf._windowCallback();
+            var count = Math.Min(buffersize, windows.Length);
+            var output = new UnmanagedArray<Window>(buffer, buffersize);
+            for (var i = 0; i < count; i++) output[i] = windows[i];
+            return count;
         }
 
         private static void OnNewFrame(IntPtr imagePtr, IntPtr windowPtr, IntPtr context)
         {
-
-            var hnd = GCHandle.FromIntPtr(context);
-
-            try
-            {
-                var conf = (WindowCaptureConfiguration) hnd.Target;
-                var image = Marshal.PtrToStructure<Image>(imagePtr);
-                var window = Marshal.PtrToStructure<Window>(windowPtr);
-                conf._onNewFrame(image, window);
-            }
-            finally
-            {
-                hnd.Free();
-            }
-
+            var conf = UnmanagedHandles.Get(context);
+            if (conf == null) throw new InvalidOperationException("Invalid Handle.");
+            var image = Marshal.PtrToStructure<Image>(imagePtr);
+            var window = Marshal.PtrToStructure<Window>(windowPtr);
+            conf._onNewFrame(image, window);
         }
 
         private static void OnFrameChanged(IntPtr imagePtr, IntPtr windowPtr, IntPtr context)
         {
-            
-            var hnd = GCHandle.FromIntPtr(context);
-
-            try
-            {
-                var conf = (WindowCaptureConfiguration) hnd.Target;
-                var image = Marshal.PtrToStructure<Image>(imagePtr);
-                var window = Marshal.PtrToStructure<Window>(windowPtr);
-                conf._onFrameChanged(image, window);
-            }
-            finally
-            {
-                hnd.Free();
-            }
-
+            var conf = UnmanagedHandles.Get(context);
+            var image = Marshal.PtrToStructure<Image>(imagePtr);
+            var window = Marshal.PtrToStructure<Window>(windowPtr);
+            conf._onFrameChanged(image, window);
         }
 
         private static void OnMouseChanged(IntPtr imagePtr, IntPtr mousePointPtr, IntPtr context)
         {
-            
-            var hnd = GCHandle.FromIntPtr(context);
-
-            try
-            {
-                var conf = (WindowCaptureConfiguration) hnd.Target;
-                var image = Marshal.PtrToStructure<Image>(imagePtr);
-                var mousePoint = Marshal.PtrToStructure<MousePoint>(mousePointPtr);
-                conf._onMouseChanged(image, mousePoint);
-            }
-            finally
-            {
-                hnd.Free();
-            }
-
+            var conf = UnmanagedHandles.Get(context);
+            var image = Marshal.PtrToStructure<Image>(imagePtr);
+            var mousePoint = Marshal.PtrToStructure<MousePoint>(mousePointPtr);
+            conf._onMouseChanged(image, mousePoint);
         }
 
         public WindowCaptureConfiguration(WindowCallback callback)
@@ -109,8 +71,8 @@ namespace Namazu.SCL
             try
             {
                 _windowCallback = callback;
-                _this = GCHandle.Alloc(this, GCHandleType.Pinned);
-                Config = NativeFunctions.SCL_CreateWindowCaptureConfigurationWithContext(OnCapture, _this.AddrOfPinnedObject());
+                UnmanagedHandles.Add(this, out _handle);
+                Config = NativeFunctions.SCL_CreateWindowCaptureConfigurationWithContext(OnCapture, _handle);
             }
             catch
             {
@@ -179,9 +141,9 @@ namespace Namazu.SCL
                 Config = IntPtr.Zero;
             }
 
-            if (_this.IsAllocated)
+            if (_handle != IntPtr.Zero)
             {
-                _this.Free();
+                UnmanagedHandles.Remove(ref _handle);
             }
 
         }

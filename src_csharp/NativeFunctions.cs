@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Namazu.SCL
+namespace SCL
 {
 
     public static class NativeFunctions

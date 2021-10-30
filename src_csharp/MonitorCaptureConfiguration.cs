@@ -2,16 +2,18 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Namazu.SCL
+namespace SCL
 {
+
+    [StructLayout(LayoutKind.Sequential)]
     public class MonitorCaptureConfiguration : IDisposable
     {
 
         public IntPtr Config { get; private set; }
 
-        private GCHandle _this;
+        private IntPtr _handle;
 
-        private readonly MonitorCallback _monitorCallback;
+        private MonitorCallback _monitorCallback;
 
         private Action<Image, Monitor> _onNewFrame;
         
@@ -19,89 +21,51 @@ namespace Namazu.SCL
 
         private Action<Image, MousePoint> _onMouseChanged;
 
-        private static readonly ThreadLocal<int> MonitorSizeHint = new ThreadLocal<int>(() => 4);
+        private static readonly ThreadLocal<int> MonitorSizeHint = new(() => 4);
 
-        public static Monitor[] GetWindows()
+        private static readonly UnmanagedHandles<MonitorCaptureConfiguration> UnmanagedHandles = new();
+
+        public static Monitor[] GetMonitors()
         {
             return Utility.CopyUnmanagedWithHint<Monitor>(MonitorSizeHint, NativeFunctions.SCL_GetMonitors);
         }
 
         private static int OnCapture(IntPtr buffer, int buffersize, IntPtr context)
         {
-
-            var hnd = GCHandle.FromIntPtr(context);
-
-            try
-            {
-                var conf = (MonitorCaptureConfiguration) hnd.Target;
-                var monitors = conf._monitorCallback();
-                var count = Math.Min(buffersize, monitors.Length);
-                var output = new UnmanagedArray<Monitor>(buffer, buffersize);
-                for (var i = 0; i < count; i++) output[i] = monitors[i];
-                return count;
-            }
-            finally
-            {
-                hnd.Free();
-            }
-
+            if (context == IntPtr.Zero) throw new InvalidOperationException("Got null config.");
+            var conf = UnmanagedHandles.Get(context);
+            var monitors = conf._monitorCallback();
+            var count = Math.Min(buffersize, monitors.Length);
+            var output = new UnmanagedArray<Monitor>(buffer, buffersize);
+            for (var i = 0; i < count; i++) output[i] = monitors[i];
+            return count;
         }
 
         private static void OnNewFrame(IntPtr imagePtr, IntPtr windowPtr, IntPtr context)
         {
-
-            var hnd = GCHandle.FromIntPtr(context);
-
-            try
-            {
-                var conf = (MonitorCaptureConfiguration) hnd.Target;
-                var image = Marshal.PtrToStructure<Image>(imagePtr);
-                var window = Marshal.PtrToStructure<Monitor>(windowPtr);
-                conf._onNewFrame(image, window);
-            }
-            finally
-            {
-                hnd.Free();
-            }
-
+            if (context == IntPtr.Zero) throw new InvalidOperationException("Got null config.");
+            var conf = UnmanagedHandles.Get(context);
+            var image = Marshal.PtrToStructure<Image>(imagePtr);
+            var window = Marshal.PtrToStructure<Monitor>(windowPtr);
+            conf._onNewFrame(image, window);
         }
 
         private static void OnFrameChanged(IntPtr imagePtr, IntPtr windowPtr, IntPtr context)
         {
-            
-            var hnd = GCHandle.FromIntPtr(context);
-
-            try
-            {
-                var conf = (MonitorCaptureConfiguration) hnd.Target;
-                var image = Marshal.PtrToStructure<Image>(imagePtr);
-                var monitor = Marshal.PtrToStructure<Monitor>(windowPtr);
-                conf._onFrameChanged(image, monitor);
-            }
-            finally
-            {
-                hnd.Free();
-            }
-
+            if (context == IntPtr.Zero) throw new InvalidOperationException("Got null config.");
+            var conf = UnmanagedHandles.Get(context);
+            var image = Marshal.PtrToStructure<Image>(imagePtr);
+            var monitor = Marshal.PtrToStructure<Monitor>(windowPtr);
+            conf._onFrameChanged(image, monitor);
         }
 
         private static void OnMouseChanged(IntPtr imagePtr, IntPtr mousePointPtr, IntPtr context)
         {
-            
-            var hnd = GCHandle.FromIntPtr(context);
-
-            try
-            {
-                var conf = (MonitorCaptureConfiguration) hnd.Target;
-                var image = Marshal.PtrToStructure<Image>(imagePtr);
-                var mousePoint = Marshal.PtrToStructure<MousePoint>(mousePointPtr);
-                conf._onMouseChanged(image, mousePoint);
-            }
-            finally
-            {
-                hnd.Free();
-            }
-
+            if (context == IntPtr.Zero) throw new InvalidOperationException("Got null config.");
+            var conf = UnmanagedHandles.Get(context);
+            var image = Marshal.PtrToStructure<Image>(imagePtr);
+            var mousePoint = Marshal.PtrToStructure<MousePoint>(mousePointPtr);
+            conf._onMouseChanged(image, mousePoint);
         }
 
         public MonitorCaptureConfiguration(MonitorCallback callback)
@@ -109,8 +73,8 @@ namespace Namazu.SCL
             try
             {
                 _monitorCallback = callback;
-                _this = GCHandle.Alloc(this, GCHandleType.Pinned);
-                Config = NativeFunctions.SCL_CreateMonitorCaptureConfigurationWithContext(OnCapture, _this.AddrOfPinnedObject());
+                UnmanagedHandles.Add(this, out _handle);
+                Config = NativeFunctions.SCL_CreateMonitorCaptureConfigurationWithContext(OnCapture, _handle);
             }
             catch
             {
@@ -179,9 +143,9 @@ namespace Namazu.SCL
                 Config = IntPtr.Zero;
             }
 
-            if (_this.IsAllocated)
+            if (_handle != IntPtr.Zero)
             {
-                _this.Free();
+                UnmanagedHandles.Remove(ref _handle);
             }
 
         }

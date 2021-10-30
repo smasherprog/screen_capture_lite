@@ -1,25 +1,25 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Namazu.SCL
+namespace SCL
 {
     
     [StructLayout(LayoutKind.Sequential)]
-    public struct Point
+    public class Point
     {
         public int x;
         public int y;
     }
     
     [StructLayout(LayoutKind.Sequential)]
-    public struct MousePoint
+    public class MousePoint
     {
         public Point Position;
         public Point HotSpot;
     };
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct Window
+    public class Window
     {
         public IntPtr Handle;
         public Point Position;
@@ -29,7 +29,7 @@ namespace Namazu.SCL
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct Monitor
+    public class Monitor
     {
         public int Id;
         public int Index;
@@ -50,7 +50,7 @@ namespace Namazu.SCL
     }
     
     [StructLayout(LayoutKind.Sequential)]
-    public struct ImageRect
+    public class ImageRect
     {
         public int left;
         public int top;
@@ -59,7 +59,7 @@ namespace Namazu.SCL
     }
     
     [StructLayout(LayoutKind.Sequential)]
-    public struct Image
+    public class Image
     {
         public ImageRect Bounds;
         public int BytesToNextRow;

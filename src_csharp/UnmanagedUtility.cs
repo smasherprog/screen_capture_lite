@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Namazu.SCL
+namespace SCL
 {
 
     /// <summary>
@@ -137,6 +139,102 @@ namespace Namazu.SCL
             }
         }
         
+    }
+
+    /// <summary>
+    /// A thread-save way to pass data through native code and reference back to an original object. This type employs
+    /// a List of objects indexed by an integer wrapped in an instance of IntPtr.
+    ///
+    /// Mutations to this instance use copy-on-write semantics to control concurrency. Using this method avoids GC
+    /// pinning.
+    /// </summary>
+    /// <typeparam name="TManaged"></typeparam>
+    class UnmanagedHandles<TManaged> where TManaged : class
+    {
+        
+        private List<TManaged> _managed;
+
+        public void Add(TManaged managed, out IntPtr handle)
+        {
+
+            int result;
+            List<TManaged> update;
+            List<TManaged> current;
+
+            do
+            {
+
+                current = _managed;
+                Interlocked.MemoryBarrier();
+
+                if (current == null)
+                {
+                    update = new List<TManaged> {managed};
+                    result = 0;
+                }
+                else
+                {
+                    
+                    update = new List<TManaged>(current);
+                    var index = update.FindIndex(t => t == null);
+
+                    if (index < 0)
+                    {
+                        update.Add(managed);
+                        result = update.Count - 1;
+                    }
+                    else
+                    {
+                        update = current;
+                        update[result = index] = managed;
+                    }
+
+                }
+            } while (current != Interlocked.CompareExchange(ref _managed, update, current));
+
+            handle = new IntPtr(result + 1);
+
+        }
+
+        public TManaged Get(IntPtr handle)
+        {
+            return _managed[handle.ToInt32() - 1];
+        }
+
+        public TManaged Remove(ref IntPtr handle)
+        {
+            
+            TManaged result;
+            List<TManaged> update;
+            List<TManaged> current;
+
+            do
+            {
+
+                current = _managed;
+                Interlocked.MemoryBarrier();
+
+                if (current == null)
+                    throw new InvalidOperationException("Object not present.");
+
+                update = new List<TManaged>(current);
+
+                var index = handle.ToInt32() - 1;
+                var value = update[handle.ToInt32()];
+
+                if (value == null) 
+                    throw new InvalidOperationException($"No object at: {index})");
+
+                result = value;
+                update[index] = null;
+
+            } while (current != Interlocked.CompareExchange(ref _managed, update, current));
+
+            handle = IntPtr.Zero;
+            return result;
+
+        }
+
     }
     
 }

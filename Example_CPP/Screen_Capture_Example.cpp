@@ -68,7 +68,7 @@ void createframegrabber()
             return mons;
         })
             ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                //std::cout << "Difference detected!  " << img.Bounds << std::endl;
+                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
                 // Uncomment the below code to write the image to disk for debugging
                 /*
                         auto r = realcounter.fetch_add(1);
@@ -130,18 +130,17 @@ void createpartialframegrabber()
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
             auto mons = SL::Screen_Capture::GetMonitors();
+            auto newmons = std::vector<SL::Screen_Capture::Monitor>();
             std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
             for (auto &m : mons) {
-                // capture just a 512x512 square...  USERS SHOULD MAKE SURE bounds are
-                // valid!!!!
-                SL::Screen_Capture::OffsetX(m, SL::Screen_Capture::OffsetX(m) + 512);
-                SL::Screen_Capture::OffsetY(m, SL::Screen_Capture::OffsetY(m) + 512);
-                SL::Screen_Capture::Height(m, 512);
-                SL::Screen_Capture::Width(m, 512);
-
-                std::cout << m << std::endl;
+                if (SL::Screen_Capture::Height(m) >= 512 * 2 && SL::Screen_Capture::Width(m) >= 512 * 2) {
+                    SL::Screen_Capture::Height(m, 512);
+                    SL::Screen_Capture::Width(m, 512);
+                    std::cout << m << std::endl;
+                    newmons.push_back(m);
+                }
             }
-            return mons;
+            return newmons;
         })
             ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                 // Uncomment the below code to write the image to disk for debugging

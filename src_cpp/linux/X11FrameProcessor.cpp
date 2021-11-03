@@ -13,7 +13,6 @@ namespace Screen_Capture
 
     X11FrameProcessor::~X11FrameProcessor()
     {
-
         if(ShmInfo) {
             shmdt(ShmInfo->shmaddr);
             shmctl(ShmInfo->shmid, IPC_RMID, 0);

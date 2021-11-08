@@ -7,10 +7,10 @@
 namespace SL {
 namespace Screen_Capture {
     template <typename F, typename M, typename W> struct CaptureData {
-        std::shared_ptr<Timer> FrameTimer;
+        std::atomic<std::shared_ptr<Timer> > FrameTimer;
         F OnNewFrame;
         F OnFrameChanged;
-        std::shared_ptr<Timer> MouseTimer;
+        std::atomic<std::shared_ptr<Timer> > MouseTimer;
         M OnMouseChanged;
         W getThingsToWatch;
     };

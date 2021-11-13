@@ -8,19 +8,19 @@ namespace SCL
         public IntPtr Session { get; private set; }
 
         private IDisposable _configuration;
-        
+
         public Boolean IsPaused
         {
             get => NativeFunctions.SCL_IsPaused(Session) != 0;
             set
             {
-                if (IsPaused)
+                if (value)
                 {
-                    if (value) NativeFunctions.SCL_Resume(Session);
+                    NativeFunctions.SCL_PauseCapturing(Session);
                 }
                 else
                 {
-                    if (!value) NativeFunctions.SCL_PauseCapturing(Session);
+                    NativeFunctions.SCL_Resume(Session);
                 }
             }
         }

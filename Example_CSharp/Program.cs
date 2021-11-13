@@ -171,18 +171,10 @@ namespace screen_capture_lite_example_csharp
             return screenCaptureManager;
             
 
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        class naked
-        {
-        }
+        } 
 
         public static void Main(string[] args)
-        {
-
-            GCHandle.Alloc(new naked(), GCHandleType.Pinned);
-            
+        { 
             Console.WriteLine("Starting Capture Demo/Test");
             var monitors = SCL.MonitorCaptureConfiguration.GetMonitors();
             foreach(var item in monitors)

@@ -1,5 +1,5 @@
 //
-// Created by ptwohig on 10/17/21.
+// Created by ptwohig https://github.com/ptwohig on 10/17/21.
 //
 
 #ifndef SCREEN_CAPTURE_LITE_BUILD_SCREENCAPTURE_C_API_H

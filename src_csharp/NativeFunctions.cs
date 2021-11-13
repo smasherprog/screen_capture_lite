@@ -35,7 +35,6 @@ namespace SCL
         public static extern void SCL_PauseCapturing(IntPtr ptr);
         
         [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
-        [return: MarshalAs(UnmanagedType.I1)]
         public static extern int SCL_IsPaused(IntPtr ptr);
         
         [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]

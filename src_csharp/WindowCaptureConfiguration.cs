@@ -7,8 +7,7 @@ namespace SCL
 
     [StructLayout(LayoutKind.Sequential)]
     public class WindowCaptureConfiguration : IDisposable
-    {
-    
+    { 
         public IntPtr Config { get; private set; }
 
         private readonly WindowCallback _windowCallback;

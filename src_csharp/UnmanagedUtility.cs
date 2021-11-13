@@ -60,7 +60,7 @@ namespace SCL
         public UnmanagedArray<T> Array { get; private set; }
 
         /// <summary>
-        /// Allocates a new instance of the AutomaticUnmanagedArray, specifying the size of hte array as the number
+        /// Allocates a new instance of the AutomaticUnmanagedArray, specifying the size of the array as the number
         /// of instances in the array (not the number of bytes).
         /// </summary>
         /// <param name="size"></param>
@@ -86,7 +86,7 @@ namespace SCL
         /// <param name="size"></param>
         public void Realloc(int size)
         {
-            var ptr =  Marshal.ReAllocHGlobal(Array.Ptr, new IntPtr(size));
+            var ptr = Marshal.ReAllocHGlobal(Array.Ptr, new IntPtr(size));
             Array = new UnmanagedArray<T>(ptr, size);
         }
 
@@ -103,12 +103,12 @@ namespace SCL
                 array[key] = value;
             }
         }
-        
+
     }
 
     public static class Utility
     {
-        
+
         /// <summary>
         /// Gets a managed array of types from a buffer callback.
         /// </summary>
@@ -138,8 +138,43 @@ namespace SCL
 
             }
         }
-        
+
     }
+
+    class UnmanagedHandlesV2<TManaged> where TManaged : class
+    {
+        private System.Collections.Concurrent.ConcurrentQueue<int> _handles = new System.Collections.Concurrent.ConcurrentQueue<int>();
+        private TManaged[] _managed;
+        public UnmanagedHandlesV2(int maxsize = 256)
+        {
+            _managed = new TManaged[maxsize];
+            for (var i = 0; i < maxsize; i++)
+            {
+                this._handles.Enqueue(i);
+            }
+        }
+
+        public void Add(TManaged managed, out int handle)
+        {
+            if (!_handles.TryDequeue(out handle))
+            {
+                throw new Exception($"You have used up more than {_managed.Length} handles! This is not supported!");
+            }
+            _managed[handle] = managed;
+        }
+
+        public TManaged Get(int handle)
+        {
+            return _managed[handle];
+        }
+
+        public void Remove(int handle)
+        {
+            _managed[handle] = null;
+            _handles.Enqueue(handle);
+        }
+    }
+
 
     /// <summary>
     /// A thread-save way to pass data through native code and reference back to an original object. This type employs
@@ -151,7 +186,7 @@ namespace SCL
     /// <typeparam name="TManaged"></typeparam>
     class UnmanagedHandles<TManaged> where TManaged : class
     {
-        
+
         private List<TManaged> _managed;
 
         public void Add(TManaged managed, out IntPtr handle)
@@ -169,12 +204,12 @@ namespace SCL
 
                 if (current == null)
                 {
-                    update = new List<TManaged> {managed};
+                    update = new List<TManaged> { managed };
                     result = 0;
                 }
                 else
                 {
-                    
+
                     update = new List<TManaged>(current);
                     var index = update.FindIndex(t => t == null);
 
@@ -203,7 +238,7 @@ namespace SCL
 
         public TManaged Remove(ref IntPtr handle)
         {
-            
+
             TManaged result;
             List<TManaged> update;
             List<TManaged> current;
@@ -222,7 +257,7 @@ namespace SCL
                 var index = handle.ToInt32() - 1;
                 var value = update[index];
 
-                if (value == null) 
+                if (value == null)
                     throw new InvalidOperationException($"No object at: {index})");
 
                 result = value;
@@ -232,9 +267,9 @@ namespace SCL
 
             handle = IntPtr.Zero;
             return result;
- 
+
         }
 
     }
-    
+
 }

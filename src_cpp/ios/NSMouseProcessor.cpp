@@ -40,6 +40,7 @@ namespace Screen_Capture {
             if (datalen > ImageBufferSize || !ImageBuffer || !NewImageBuffer) {
                 NewImageBuffer = std::make_unique<unsigned char[]>(datalen);
                 ImageBuffer = std::make_unique<unsigned char[]>(datalen);
+                ImageBufferSize = datalen;
             }
 
             memcpy(NewImageBuffer.get(), buf, datalen);

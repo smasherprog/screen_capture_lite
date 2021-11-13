@@ -6,38 +6,6 @@
 // this is INTERNAL DO NOT USE!
 namespace SL {
 namespace Screen_Capture {
-
-    struct ImageRect
-    {
-        ImageRect() : ImageRect(0, 0, 0, 0) {}
-        ImageRect(int l, int t, int r, int b) : left(l), top(t), right(r), bottom(b) {}
-        int left;
-        int top;
-        int right;
-        int bottom;
-        bool Contains(const ImageRect &a) const { return left <= a.left && right >= a.right && top <= a.top && bottom >= a.bottom; }
-    };
-
-    struct Image
-    {
-        ImageRect Bounds;
-        int RowStrideInBytes = 0;
-        bool isContiguous = false;
-        // alpha is always unused and might contain garbage
-        const ImageBGRA *Data = nullptr;
-    };
-
-    inline bool operator==(const ImageRect &a, const ImageRect &b)
-    {
-        return b.left == a.left && b.right == a.right && b.top == a.top && b.bottom == a.bottom;
-    }
-
-    int Height(const ImageRect &rect);
-
-    int Width(const ImageRect &rect);
-
-    const ImageRect &Rect(const Image &img);
-
     template <typename F, typename M, typename W> struct CaptureData {
         std::shared_ptr<Timer> FrameTimer;
         F OnNewFrame;

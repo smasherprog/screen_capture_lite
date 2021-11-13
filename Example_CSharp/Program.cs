@@ -175,7 +175,8 @@ namespace screen_capture_lite_example_csharp
 
         public static void Main(string[] args)
         { 
-            Console.WriteLine("Starting Capture Demo/Test");
+            var startingmemory = GC.GetTotalMemory(false);
+            Console.WriteLine($"Starting Capture Demo/Test With {startingmemory.ToString("N0")} bytes of memory used");
             var monitors = SCL.MonitorCaptureConfiguration.GetMonitors();
             foreach(var item in monitors)
             {
@@ -267,7 +268,18 @@ namespace screen_capture_lite_example_csharp
                 System.Threading.Thread.Sleep(1 * 1000);
 
             }
-            
+
+            var counter = 0;
+            while (counter++ < 10)
+            { 
+                Console.WriteLine("Sleeping   .  and Freeing Memory");
+                System.Threading.Thread.Sleep(1 * 1000);
+                GC.Collect();
+            }
+
+            var endingmemory = GC.GetTotalMemory(false);
+            var difmemory = endingmemory - startingmemory;
+            Console.WriteLine($"Ending Capture Demo/Test With {endingmemory.ToString("N0")} bytes of memory used which is a different of {difmemory.ToString("N0")} bytes");
         }
     }
 }

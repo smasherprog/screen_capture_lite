@@ -4,11 +4,9 @@ using System.Threading;
 
 namespace SCL
 {
-
     [StructLayout(LayoutKind.Sequential)]
     public class MonitorCaptureConfiguration : IDisposable
     {
-
         public IntPtr Config { get; private set; }
 
         private IntPtr _handle;
@@ -16,11 +14,11 @@ namespace SCL
         private MonitorCallback _monitorCallback;
 
         private Action<Image, Monitor> _onNewFrame;
-        
+
         private Action<Image, Monitor> _onFrameChanged;
 
         private Action<Image, MousePoint> _onMouseChanged;
-
+        private bool disposedValue = false;
         private static readonly ThreadLocal<int> MonitorSizeHint = new(() => 4);
 
         private static readonly UnmanagedHandles<MonitorCaptureConfiguration> UnmanagedHandles = new();
@@ -85,7 +83,7 @@ namespace SCL
 
         public MonitorCaptureConfiguration OnNewFrame(Action<Image, Monitor> onNewFrame)
         {
-            
+
             if (_onNewFrame == null)
             {
                 _onNewFrame = onNewFrame;
@@ -97,9 +95,9 @@ namespace SCL
             }
 
             return this;
-            
+
         }
-        
+
         public MonitorCaptureConfiguration OnFrameChanged(Action<Image, Monitor> onFrameChanged)
         {
 
@@ -114,12 +112,12 @@ namespace SCL
             }
 
             return this;
-            
+
         }
 
         public MonitorCaptureConfiguration OnMouseChanged(Action<Image, MousePoint> onMouseChanged)
         {
-            
+
             if (_onMouseChanged == null)
             {
                 _onMouseChanged = onMouseChanged;
@@ -133,23 +131,42 @@ namespace SCL
             return this;
 
         }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (Config != IntPtr.Zero)
+                {
+                    NativeFunctions.SCL_FreeMonitorCaptureConfiguration(Config);
+                    Config = IntPtr.Zero;
+                }
+                if (_handle != IntPtr.Zero)
+                {
+                    UnmanagedHandles.Remove(ref _handle);
+                }
+
+                if (disposing)
+                {
+                    this._onFrameChanged = null;
+                    this._onMouseChanged = null;
+                    this._onNewFrame = null;
+                    this._monitorCallback = null;
+                }
+                disposedValue = true;
+            }
+        }
+
+        ~MonitorCaptureConfiguration()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
 
         public void Dispose()
         {
-
-            if (Config != IntPtr.Zero)
-            {
-                NativeFunctions.SCL_FreeMonitorCaptureConfiguration(Config);
-                Config = IntPtr.Zero;
-            }
-
-            if (_handle != IntPtr.Zero)
-            {
-                UnmanagedHandles.Remove(ref _handle);
-            }
-
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
-
     }
-    
 }

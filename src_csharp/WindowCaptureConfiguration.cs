@@ -144,7 +144,6 @@ namespace SCL
             if (_handle != IntPtr.Zero)
             {
                 UnmanagedHandles.Remove(ref _handle);
-                _handle = IntPtr.Zero;
             }
 
         }

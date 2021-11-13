@@ -220,7 +220,7 @@ namespace SCL
                 update = new List<TManaged>(current);
 
                 var index = handle.ToInt32() - 1;
-                var value = update[handle.ToInt32()];
+                var value = update[index];
 
                 if (value == null) 
                     throw new InvalidOperationException($"No object at: {index})");

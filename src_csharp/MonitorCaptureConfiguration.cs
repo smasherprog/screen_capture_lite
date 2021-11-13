@@ -62,9 +62,9 @@ namespace SCL
         private static void OnMouseChanged(IntPtr imagePtr, IntPtr mousePointPtr, IntPtr context)
         {
             if (context == IntPtr.Zero) throw new InvalidOperationException("Got null config.");
-            var conf = UnmanagedHandles.Get(context);
             var image = Marshal.PtrToStructure<Image>(imagePtr);
             var mousePoint = Marshal.PtrToStructure<MousePoint>(mousePointPtr);
+            var conf = UnmanagedHandles.Get(context);
             conf._onMouseChanged(image, mousePoint);
         }
 
@@ -146,6 +146,7 @@ namespace SCL
             if (_handle != IntPtr.Zero)
             {
                 UnmanagedHandles.Remove(ref _handle);
+                _handle = IntPtr.Zero;
             }
 
         }

@@ -48,56 +48,55 @@ namespace screen_capture_lite_example_csharp
                 
             }
 
-            using (var config = new SCL.MonitorCaptureConfiguration(SelectMonitors))
+            var config = new SCL.MonitorCaptureConfiguration(SelectMonitors);
+
+            config.OnNewFrame((image, monitor) =>
             {
-                config.OnNewFrame((image, monitor) =>
+                //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
+                //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                //WriteLine( img);
+                //WriteLine( monitor);
+                if ((DateTime.Now - onNewFramestart).TotalMilliseconds > 1000)
                 {
-                    //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
-                    //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                    //WriteLine( img);
-                    //WriteLine( monitor);
-                    if ((DateTime.Now - onNewFramestart).TotalMilliseconds > 1000)
-                    {
-                        Console.WriteLine("onNewFrame fps" + onNewFramecounter);
-                        onNewFramestart = DateTime.Now;
-                        onNewFramecounter = 0;
-                    }
+                    Console.WriteLine("onNewFrame fps" + onNewFramecounter);
+                    onNewFramestart = DateTime.Now;
+                    onNewFramecounter = 0;
+                }
 
-                    Interlocked.Increment(ref onNewFramecounter);
+                Interlocked.Increment(ref onNewFramecounter);
 
-                });
+            });
 
-                config.OnFrameChanged((image, monitor) =>
+            config.OnFrameChanged((image, monitor) =>
+            {
+                //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
+                //newBitmap.Save($"{onNewFramecounter++}onFrameChanged.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                //WriteLine( img);
+                //WriteLine( monitor);
+            });
+
+            config.OnMouseChanged((image, point) =>
+            {
+                if (image != null)
                 {
-                    //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
-                    //newBitmap.Save($"{onNewFramecounter++}onFrameChanged.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                    //WriteLine( img);
-                    //WriteLine( monitor);
-                });
-
-                config.OnMouseChanged((image, point) =>
+                    // var newBitmap = new Bitmap(image.Bounds.right - image.Bounds.left,
+                    //     image.Bounds.bottom - image.Bounds.top, image.BytesToNextRow,
+                    //     System.Drawing.Imaging.PixelFormat.Format32bppArgb, image.Data);
+                    // newBitmap.Save($"{onNewFramecounter++}NewMouseImage.jpg", System.Drawing.Imaging.ImageFormat.Png);
+                    // WriteLine(image);
+                    Console.WriteLine("New Mouse image");
+                }
+                else
                 {
-                    if (image != null)
-                    {
-                        // var newBitmap = new Bitmap(image.Bounds.right - image.Bounds.left,
-                        //     image.Bounds.bottom - image.Bounds.top, image.BytesToNextRow,
-                        //     System.Drawing.Imaging.PixelFormat.Format32bppArgb, image.Data);
-                        // newBitmap.Save($"{onNewFramecounter++}NewMouseImage.jpg", System.Drawing.Imaging.ImageFormat.Png);
-                        // WriteLine(image);
-                        Console.WriteLine("New Mouse image");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Mouse Moved");
-                    }
-                });
+                    Console.WriteLine("Mouse Moved");
+                }
+            });
 
-                var screenCaptureManager = new SCL.ScreenCaptureManager(config);
-                screenCaptureManager.SetFrameChangeInterval(100);
-                screenCaptureManager.SetMouseChangeInterval(100);
-                return screenCaptureManager;
-                
-            }
+            var screenCaptureManager = new SCL.ScreenCaptureManager(config);
+            screenCaptureManager.SetFrameChangeInterval(100);
+            screenCaptureManager.SetMouseChangeInterval(100);
+            return screenCaptureManager;
+            
 
         }
 
@@ -122,56 +121,55 @@ namespace screen_capture_lite_example_csharp
 
             }
 
-            using (var config = new SCL.WindowCaptureConfiguration(SelectWindows))
+            var config = new SCL.WindowCaptureConfiguration(SelectWindows);
+
+            config.OnNewFrame((image, window) =>
             {
-                config.OnNewFrame((image, window) =>
+                //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
+                //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                //WriteLine( img);
+                //WriteLine( monitor);
+                if ((DateTime.Now - onNewFramestart).TotalMilliseconds > 1000)
                 {
-                    //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
-                    //newBitmap.Save($"{onNewFramecounter++}onNewFrame.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                    //WriteLine( img);
-                    //WriteLine( monitor);
-                    if ((DateTime.Now - onNewFramestart).TotalMilliseconds > 1000)
-                    {
-                        Console.WriteLine("onNewFrame fps" + onNewFramecounter);
-                        onNewFramestart = DateTime.Now;
-                        onNewFramecounter = 0;
-                    }
+                    Console.WriteLine("onNewFrame fps" + onNewFramecounter);
+                    onNewFramestart = DateTime.Now;
+                    onNewFramecounter = 0;
+                }
 
-                    Interlocked.Increment(ref onNewFramecounter);
+                Interlocked.Increment(ref onNewFramecounter);
 
-                });
+            });
 
-                config.OnFrameChanged((image, window) =>
+            config.OnFrameChanged((image, window) =>
+            {
+                //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
+                //newBitmap.Save($"{onNewFramecounter++}onFrameChanged.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
+                //WriteLine( img);
+                //WriteLine( monitor);
+            });
+
+            config.OnMouseChanged((image, point) =>
+            {
+                if (image != null)
                 {
-                    //var newBitmap = new Bitmap(img.Bounds.right - img.Bounds.left, img.Bounds.bottom - img.Bounds.top, img.BytesToNextRow, System.Drawing.Imaging.PixelFormat.Format32bppRgb, img.Data);
-                    //newBitmap.Save($"{onNewFramecounter++}onFrameChanged.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-                    //WriteLine( img);
-                    //WriteLine( monitor);
-                });
-
-                config.OnMouseChanged((image, point) =>
+                    // var newBitmap = new Bitmap(image.Bounds.right - image.Bounds.left,
+                    //     image.Bounds.bottom - image.Bounds.top, image.BytesToNextRow,
+                    //     System.Drawing.Imaging.PixelFormat.Format32bppArgb, image.Data);
+                    // newBitmap.Save($"{onNewFramecounter++}NewMouseImage.jpg", System.Drawing.Imaging.ImageFormat.Png);
+                    // WriteLine(image);
+                    Console.WriteLine("New Mouse image");
+                }
+                else
                 {
-                    if (image != null)
-                    {
-                        // var newBitmap = new Bitmap(image.Bounds.right - image.Bounds.left,
-                        //     image.Bounds.bottom - image.Bounds.top, image.BytesToNextRow,
-                        //     System.Drawing.Imaging.PixelFormat.Format32bppArgb, image.Data);
-                        // newBitmap.Save($"{onNewFramecounter++}NewMouseImage.jpg", System.Drawing.Imaging.ImageFormat.Png);
-                        // WriteLine(image);
-                        Console.WriteLine("New Mouse image");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Mouse Moved");
-                    }
-                });
+                    Console.WriteLine("Mouse Moved");
+                }
+            });
 
-                var screenCaptureManager = new SCL.ScreenCaptureManager(config);
-                screenCaptureManager.SetFrameChangeInterval(100);
-                screenCaptureManager.SetMouseChangeInterval(100);
-                return screenCaptureManager;
-                
-            }
+            var screenCaptureManager = new SCL.ScreenCaptureManager(config);
+            screenCaptureManager.SetFrameChangeInterval(100);
+            screenCaptureManager.SetMouseChangeInterval(100);
+            return screenCaptureManager;
+            
 
         }
 

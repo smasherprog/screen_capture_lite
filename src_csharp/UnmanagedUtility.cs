@@ -232,7 +232,7 @@ namespace SCL
 
             handle = IntPtr.Zero;
             return result;
-
+ 
         }
 
     }

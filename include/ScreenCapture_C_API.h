@@ -88,7 +88,7 @@ typedef int (*SCL_WindowCallbackWithContext)(SCL_WindowRef buffer, int buffersiz
 typedef int (*SCL_MonitorCallbackWithContext)(SCL_MonitorRef buffer, int buffersize, void *context);
 
 #ifdef __cplusplus
-namespace SL::Screen_Capture::C_API
+extern "C"
 {
 #endif
 
@@ -164,7 +164,7 @@ SC_LITE_C_EXTERN
 SCL_IScreenCaptureManagerWrapperRef SCL_WindowStartCapturing(SCL_ICaptureConfigurationWindowCaptureCallbackWrapperRef ptr);
 
 SC_LITE_C_EXTERN
-void* SCL_Utility_CopyToContiguous(unsigned char *destination, SCL_ImageRef image);
+unsigned char* SCL_Utility_CopyToContiguous(unsigned char* destination, SCL_ImageRefConst image);
 
 SC_LITE_C_EXTERN
 SCL_ICaptureConfigurationScreenCaptureCallbackWrapperRef
@@ -207,7 +207,7 @@ SC_LITE_C_EXTERN
 void SCL_FreeWindowCaptureConfiguration(SCL_ICaptureConfigurationWindowCaptureCallbackWrapperRef ptr);
 
 #ifdef __cplusplus
-}; // namespace SL::Screen_Capture::C_API
+} // extern "C"
 #endif
 
 #endif // SCREEN_CAPTURE_LITE_BUILD_SCREENCAPTURE_SCL_H

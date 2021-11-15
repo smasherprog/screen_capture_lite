@@ -1,4 +1,5 @@
 #include "ScreenCapture.h"
+#include "ScreenCapture_C_API.h"
 #include "internal/SCCommon.h" //DONT USE THIS HEADER IN PRODUCTION CODE!!!! ITS INTERNAL FOR A REASON IT WILL CHANGE!!! ITS HERE FOR TESTS ONLY!!!
 #include <algorithm>
 #include <atomic>
@@ -18,6 +19,94 @@
 #define LODEPNG_COMPILE_DISK
 #include "lodepng.h"
 /////////////////////////////////////////////////////////////////////////
+
+void TestCopyContiguous()
+{
+
+    constexpr auto VALID(static_cast<unsigned char>(0xFF));
+    constexpr auto INVALID(static_cast<unsigned char>(0xFE));
+    constexpr auto PIXEL_DEPTH(sizeof(SL::Screen_Capture::ImageBGRA));
+    constexpr unsigned WIDTH(256), HEIGHT(256);
+
+    std::vector<SL::Screen_Capture::ImageBGRA> strided;
+
+    for (unsigned row(0); row < HEIGHT; ++row)
+    {
+        for (unsigned col(0); col < WIDTH; ++col)
+        {
+            strided.push_back(SL::Screen_Capture::ImageBGRA{VALID, VALID, VALID, VALID});
+        }
+    }
+
+    auto bytes = strided.size() * PIXEL_DEPTH;
+    std::vector<unsigned char> contiguous(bytes, static_cast<unsigned char>(0));
+    auto image = SL::Screen_Capture::Image{{ 0, 0, WIDTH, HEIGHT }, 0, true, strided.data() };
+
+    auto result = SCL_Utility_CopyToContiguous(contiguous.data(), &image);
+    auto distance = std::distance(contiguous.data(), static_cast<unsigned char*>(result));
+
+    if (distance != (WIDTH * HEIGHT * PIXEL_DEPTH)) std::abort();
+
+    auto const begin(contiguous.begin()), end(contiguous.end());
+
+    for (auto current(begin); current != end; ++current)
+    {
+        if (*current != VALID) std::abort();
+    }
+
+}
+
+void TestCopyNonContiguous()
+{
+
+    constexpr auto VALID(static_cast<unsigned char>(0xFF));
+    constexpr auto INVALID(static_cast<unsigned char>(0xFE));
+    constexpr auto PIXEL_DEPTH(sizeof(SL::Screen_Capture::ImageBGRA));
+    constexpr unsigned WIDTH(256), HEIGHT(256), PADDING(64), STRIDE_IN_BYTES((WIDTH + PADDING) * PIXEL_DEPTH);
+
+    std::vector<SL::Screen_Capture::ImageBGRA> strided;
+
+    for (unsigned row(0); row < HEIGHT; ++row)
+    {
+
+        for (unsigned col(0); col < WIDTH; ++col)
+        {
+            strided.push_back(SL::Screen_Capture::ImageBGRA{VALID, VALID, VALID, VALID});
+        }
+
+        for (unsigned pad(0); pad < PADDING; ++pad)
+        {
+            strided.push_back(SL::Screen_Capture::ImageBGRA{INVALID, INVALID, INVALID, INVALID});
+        }
+
+    }
+
+    auto bytes = strided.size() * PIXEL_DEPTH;
+    std::vector<unsigned char> contiguous(bytes, static_cast<unsigned char>(0));
+    auto image = SL::Screen_Capture::Image{{ 0, 0, WIDTH, HEIGHT }, STRIDE_IN_BYTES, false, strided.data() };
+
+    auto result = SCL_Utility_CopyToContiguous(contiguous.data(), &image);
+    auto distance = std::distance(contiguous.data(), static_cast<unsigned char*>(result));
+
+    // Ensures that the pointer incremented by only the amount written.
+    if (distance != (WIDTH * HEIGHT * PIXEL_DEPTH)) std::abort();
+
+    auto const begin(contiguous.begin());
+    auto contiguousEnd(begin), absoluteEnd(contiguous.end());
+
+    std::advance(contiguousEnd, WIDTH * HEIGHT * PIXEL_DEPTH);
+
+    for (auto current(begin); current != contiguousEnd; ++current)
+    {
+        if (*current != VALID) std::abort();
+    }
+
+    for (auto current(contiguousEnd); current != absoluteEnd; ++current)
+    {
+        if (*current != 0) std::abort();
+    }
+
+}
 
 void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char *dst, size_t dst_size)
 {
@@ -272,6 +361,9 @@ int main()
     std::srand(std::time(nullptr));
     std::cout << "Starting Capture Demo/Test" << std::endl;
     std::cout << "Testing captured monitor bounds check" << std::endl;
+
+    TestCopyContiguous();
+    TestCopyNonContiguous();
 
     auto goodmonitors = SL::Screen_Capture::GetMonitors();
     for (auto &m : goodmonitors) {

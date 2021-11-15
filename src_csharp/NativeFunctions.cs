@@ -91,7 +91,10 @@ namespace SCL
         
         [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
         public static extern void SCL_FreeIScreenCaptureManagerWrapper(IntPtr ptr);
-            
+
+        [DllImport("screen_capture_lite_shared", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr SCL_Utility_CopyToContiguous(IntPtr destination, IntPtr image);
+
     }
 
 }

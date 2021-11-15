@@ -51,6 +51,7 @@ namespace Screen_Capture {
             if (static_cast<int>(newsize) > ImageBufferSize || !ImageBuffer || !NewImageBuffer) {
                 NewImageBuffer = std::make_unique<unsigned char[]>(newsize);
                 ImageBuffer = std::make_unique<unsigned char[]>(newsize);
+                ImageBufferSize = newsize;
             }
 
             memcpy(ImageBuffer.get(), img->pixels, newsize);

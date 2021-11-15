@@ -47,17 +47,16 @@ add_executable(${PROJECT_NAME}_static
 	lodepng.cpp
 	Screen_Capture_Example.cpp
 )
-target_link_libraries(${PROJECT_NAME}_static screen_capture_lite_static ${${PROJECT_NAME}_PLATFORM_LIBS}) 
-add_test (NAME ${PROJECT_NAME}_static COMMAND ${PROJECT_NAME}_static)
+target_link_libraries(${PROJECT_NAME}_static screen_capture_lite_static ${${PROJECT_NAME}_PLATFORM_LIBS})  
 
 add_executable(${PROJECT_NAME}_shared  
 	lodepng.cpp
 	Screen_Capture_Example.cpp
 )
 
+target_link_libraries(${PROJECT_NAME}_shared screen_capture_lite_shared ${${PROJECT_NAME}_PLATFORM_LIBS}) 
+
 install (TARGETS ${PROJECT_NAME}_static ${PROJECT_NAME}_shared screen_capture_lite_shared
 	RUNTIME DESTINATION Examples
 ) 
   
-target_link_libraries(${PROJECT_NAME}_shared screen_capture_lite_shared ${${PROJECT_NAME}_PLATFORM_LIBS}) 
-add_test (NAME ${PROJECT_NAME}_shared COMMAND ${PROJECT_NAME}_shared)

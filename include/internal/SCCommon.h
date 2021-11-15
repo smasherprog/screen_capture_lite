@@ -2,42 +2,10 @@
 #include "ScreenCapture.h"
 #include <atomic>
 #include <thread>
-
+#include <assert.h>
 // this is INTERNAL DO NOT USE!
 namespace SL {
 namespace Screen_Capture {
-
-    struct ImageRect
-    {
-        ImageRect() : ImageRect(0, 0, 0, 0) {}
-        ImageRect(int l, int t, int r, int b) : left(l), top(t), right(r), bottom(b) {}
-        int left;
-        int top;
-        int right;
-        int bottom;
-        bool Contains(const ImageRect &a) const { return left <= a.left && right >= a.right && top <= a.top && bottom >= a.bottom; }
-    };
-
-    struct Image
-    {
-        ImageRect Bounds;
-        int RowStrideInBytes = 0;
-        bool isContiguous = false;
-        // alpha is always unused and might contain garbage
-        const ImageBGRA *Data = nullptr;
-    };
-
-    inline bool operator==(const ImageRect &a, const ImageRect &b)
-    {
-        return b.left == a.left && b.right == a.right && b.top == a.top && b.bottom == a.bottom;
-    }
-
-    int Height(const ImageRect &rect);
-
-    int Width(const ImageRect &rect);
-
-    const ImageRect &Rect(const Image &img);
-
     template <typename F, typename M, typename W> struct CaptureData {
         std::shared_ptr<Timer> FrameTimer;
         F OnNewFrame;
@@ -45,8 +13,7 @@ namespace Screen_Capture {
         std::shared_ptr<Timer> MouseTimer;
         M OnMouseChanged;
         W getThingsToWatch;
-    };
-
+    }; 
     struct CommonData {
         // Used to indicate abnormal error condition
         std::atomic<bool> UnexpectedErrorEvent;
@@ -88,8 +55,8 @@ namespace Screen_Capture {
     // void Copy(const Image& dst, const Image& src);
 
     SC_LITE_EXTERN std::vector<ImageRect> GetDifs(const Image &oldimg, const Image &newimg);
-    template <class F, class T, class C>
-    void ProcessCapture(const F &data, T &base, const C &mointor, const unsigned char *startsrc, int srcrowstride)
+    template <class F,  class C>
+    void ProcessCapture(const F &data, BaseFrameProcessor &base, const C &mointor, const unsigned char *startsrc, int srcrowstride)
     {
         ImageRect imageract;
         imageract.left = 0;
@@ -104,7 +71,7 @@ namespace Screen_Capture {
             wholeimg.isContiguous = dstrowstride == srcrowstride;
             data.OnNewFrame(wholeimg, mointor);
         }
-        if (data.OnFrameChanged) { // difs are needed!
+        if (data.OnFrameChanged) { // difs are needed, which means that we must hold the last known image in memory for comparisons...
             if (base.FirstRun) {
                 // first time through, just send the whole image
                 auto wholeimg = CreateImage(imageract, srcrowstride, startimgsrc);
@@ -114,7 +81,7 @@ namespace Screen_Capture {
             }
             else {
                 // user wants difs, lets do it!
-                auto newimg = CreateImage(imageract, srcrowstride - dstrowstride, startimgsrc);
+                auto newimg = CreateImage(imageract, srcrowstride, startimgsrc);
                 auto oldimg = CreateImage(imageract, 0, reinterpret_cast<const ImageBGRA *>(base.ImageBuffer.get()));
                 auto imgdifs = GetDifs(oldimg, newimg);
 
@@ -129,9 +96,12 @@ namespace Screen_Capture {
             }
             auto startdst = base.ImageBuffer.get();
             if (dstrowstride == srcrowstride) { // no need for multiple calls, there is no padding here
+                assert(base.ImageBufferSize >= dstrowstride * Height(mointor));
                 memcpy(startdst, startsrc, dstrowstride * Height(mointor));
             }
             else {
+                auto monheight = std::max(Height(mointor) -1, 0); ///just in case height is 0
+                assert(base.ImageBufferSize >= (monheight * srcrowstride) + dstrowstride);///the last row is all I care about, the inbetween rows will be moved up in chunk sizez of srcrowstride. This is a bounds assert
                 for (auto i = 0; i < Height(mointor); i++) {
                     memcpy(startdst + (i * dstrowstride), startsrc + (i * srcrowstride), dstrowstride);
                 }

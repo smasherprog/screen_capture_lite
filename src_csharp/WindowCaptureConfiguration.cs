@@ -8,19 +8,20 @@ namespace SCL
     [StructLayout(LayoutKind.Sequential)]
     public class WindowCaptureConfiguration : IDisposable
     {
-    
         public IntPtr Config { get; private set; }
 
-        private readonly WindowCallback _windowCallback;
+        private WindowCallback _windowCallback;
 
         private IntPtr _handle;
 
         private Action<Image, Window> _onNewFrame;
-        
+
         private Action<Image, Window> _onFrameChanged;
 
         private Action<Image, MousePoint> _onMouseChanged;
-        
+
+        private bool disposedValue = false;
+
         private static readonly ThreadLocal<int> WindowSizeHint = new(() => 64);
 
         private static readonly UnmanagedHandles<WindowCaptureConfiguration> UnmanagedHandles = new();
@@ -83,7 +84,7 @@ namespace SCL
 
         public WindowCaptureConfiguration OnNewFrame(Action<Image, Window> onNewFrame)
         {
-            
+
             if (_onNewFrame == null)
             {
                 _onNewFrame = onNewFrame;
@@ -95,9 +96,9 @@ namespace SCL
             }
 
             return this;
-            
+
         }
-        
+
         public WindowCaptureConfiguration OnFrameChanged(Action<Image, Window> onFrameChanged)
         {
 
@@ -112,12 +113,12 @@ namespace SCL
             }
 
             return this;
-            
+
         }
 
         public WindowCaptureConfiguration OnMouseChanged(Action<Image, MousePoint> onMouseChanged)
         {
-            
+
             if (_onMouseChanged == null)
             {
                 _onMouseChanged = onMouseChanged;
@@ -132,22 +133,44 @@ namespace SCL
 
         }
 
-        public void Dispose()
+        protected virtual void Dispose(bool disposing)
         {
-
-            if (Config != IntPtr.Zero)
+            if (!disposedValue)
             {
-                NativeFunctions.SCL_FreeWindowCaptureConfiguration(Config);
-                Config = IntPtr.Zero;
-            }
 
-            if (_handle != IntPtr.Zero)
-            {
-                UnmanagedHandles.Remove(ref _handle);
-            }
+                if (Config != IntPtr.Zero)
+                {
+                    NativeFunctions.SCL_FreeWindowCaptureConfiguration(Config);
+                    Config = IntPtr.Zero;
+                }
 
+                if (_handle != IntPtr.Zero)
+                {
+                    UnmanagedHandles.Remove(ref _handle);
+                }
+                if (disposing)
+                {
+                    this._onFrameChanged = null;
+                    this._onMouseChanged = null;
+                    this._onNewFrame = null;
+                    this._windowCallback = null;
+                }
+
+                disposedValue = true;
+            }
         }
 
-    }
+        ~WindowCaptureConfiguration()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
 
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
 }

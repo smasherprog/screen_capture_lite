@@ -113,16 +113,21 @@ void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char
     assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
     auto imgsrc = StartSrc(img);
     auto imgdist = dst;
-    for (auto h = 0; h < Height(img); h++) {
-        auto startimgsrc = imgsrc;
-        for (auto w = 0; w < Width(img); w++) {
-            *imgdist++ = imgsrc->R;
-            *imgdist++ = imgsrc->G;
-            *imgdist++ = imgsrc->B;
-            *imgdist++ = 0; // alpha should be zero
-            imgsrc++;
+    if (img.isContiguous) {
+        memcpy(imgdist, imgsrc, dst_size);
+    }
+    else { 
+        for (auto h = 0; h < Height(img); h++) {
+            auto startimgsrc = imgsrc;
+            for (auto w = 0; w < Width(img); w++) {
+                *imgdist++ = imgsrc->R;
+                *imgdist++ = imgsrc->G;
+                *imgdist++ = imgsrc->B;
+                *imgdist++ = 0; // alpha should be zero
+                imgsrc++;
+            }
+            imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
         }
-        imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
     }
 }
 

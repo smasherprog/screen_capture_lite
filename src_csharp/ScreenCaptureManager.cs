@@ -8,19 +8,21 @@ namespace SCL
         public IntPtr Session { get; private set; }
 
         private IDisposable _configuration;
-        
-        public Boolean IsPaused
+
+        private bool disposedValue = false;
+
+        public bool IsPaused
         {
             get => NativeFunctions.SCL_IsPaused(Session) != 0;
             set
             {
-                if (IsPaused)
+                if (value)
                 {
-                    if (value) NativeFunctions.SCL_Resume(Session);
+                    NativeFunctions.SCL_PauseCapturing(Session);
                 }
                 else
                 {
-                    if (!value) NativeFunctions.SCL_PauseCapturing(Session);
+                    NativeFunctions.SCL_Resume(Session);
                 }
             }
         }
@@ -37,16 +39,6 @@ namespace SCL
             Session = NativeFunctions.SCL_MonitorStartCapturing(config.Config);
         }
 
-        public void Dispose()
-        {
-
-            if (Session != IntPtr.Zero) NativeFunctions.SCL_FreeIScreenCaptureManagerWrapper(Session);
-            Session = IntPtr.Zero;
-
-            _configuration?.Dispose();
-            _configuration = null;
-
-        }
 
         public ScreenCaptureManager SetFrameChangeInterval(int milliseconds)
         {
@@ -66,5 +58,36 @@ namespace SCL
             return this;
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+
+                if (Session != IntPtr.Zero) NativeFunctions.SCL_FreeIScreenCaptureManagerWrapper(Session);
+                Session = IntPtr.Zero;
+
+                if (disposing)
+                {
+                    _configuration?.Dispose();
+                    _configuration = null;
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        ~ScreenCaptureManager()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

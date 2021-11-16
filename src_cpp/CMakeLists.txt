@@ -69,19 +69,20 @@ include_directories(
 set(libsrc 
 	../include/ScreenCapture.h 
 		../include/internal/SCCommon.h 
-		../include/internal/ThreadManager.h 
-		ScreenCapture.cpp 
-		SCCommon.cpp 
+		../include/internal/ThreadManager.h
+		ScreenCapture.c
+		ScreenCapture.cpp
+		SCCommon.cpp
 		ThreadManager.cpp
 		${SCREEN_CAPTURE_PLATFORM_SRC}
 )
- 
+
 message("Building STATIC Library")
 add_library(${PROJECT_NAME}_static STATIC ${libsrc})
 
   message("Building SHARED Library")
   
-    add_library(${PROJECT_NAME}_shared SHARED ${libsrc})
+    add_library(${PROJECT_NAME}_shared SHARED ${libsrc} ../include/ScreenCapture_C_API.h)
 
 	set_target_properties(${PROJECT_NAME}_shared PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
 	 if(WIN32) 

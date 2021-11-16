@@ -2,7 +2,7 @@
 #include "ScreenCapture.h"
 #include <atomic>
 #include <thread>
-
+#include <assert.h>
 // this is INTERNAL DO NOT USE!
 namespace SL {
 namespace Screen_Capture {
@@ -13,7 +13,7 @@ namespace Screen_Capture {
         std::shared_ptr<Timer> MouseTimer;
         M OnMouseChanged;
         W getThingsToWatch;
-    };
+    }; 
     struct CommonData {
         // Used to indicate abnormal error condition
         std::atomic<bool> UnexpectedErrorEvent;
@@ -24,6 +24,7 @@ namespace Screen_Capture {
         std::atomic<bool> TerminateThreadsEvent;
         std::atomic<bool> Paused;
     };
+
     struct Thread_Data {
 
         CaptureData<ScreenCaptureCallback, MouseCallback, MonitorCallback> ScreenCaptureData;
@@ -49,13 +50,13 @@ namespace Screen_Capture {
     enum DUPL_RETURN { DUPL_RETURN_SUCCESS = 0, DUPL_RETURN_ERROR_EXPECTED = 1, DUPL_RETURN_ERROR_UNEXPECTED = 2 };
     Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string &n, float scale);
     Monitor CreateMonitor(int index, int id, int adapter, int h, int w, int ox, int oy, const std::string &n, float scale); 
-    SC_LITE_EXTERN Image CreateImage(const ImageRect &imgrect, int rowpadding, const ImageBGRA *data);
+    SC_LITE_EXTERN Image CreateImage(const ImageRect &imgrect, int rowStrideInBytes, const ImageBGRA *data);
     // this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
     // void Copy(const Image& dst, const Image& src);
 
     SC_LITE_EXTERN std::vector<ImageRect> GetDifs(const Image &oldimg, const Image &newimg);
-    template <class F, class T, class C>
-    void ProcessCapture(const F &data, T &base, const C &mointor, const unsigned char *startsrc, int srcrowstride)
+    template <class F,  class C>
+    void ProcessCapture(const F &data, BaseFrameProcessor &base, const C &mointor, const unsigned char *startsrc, int srcrowstride)
     {
         ImageRect imageract;
         imageract.left = 0;
@@ -70,7 +71,7 @@ namespace Screen_Capture {
             wholeimg.isContiguous = dstrowstride == srcrowstride;
             data.OnNewFrame(wholeimg, mointor);
         }
-        if (data.OnFrameChanged) { // difs are needed!
+        if (data.OnFrameChanged) { // difs are needed, which means that we must hold the last known image in memory for comparisons...
             if (base.FirstRun) {
                 // first time through, just send the whole image
                 auto wholeimg = CreateImage(imageract, srcrowstride, startimgsrc);
@@ -80,7 +81,7 @@ namespace Screen_Capture {
             }
             else {
                 // user wants difs, lets do it!
-                auto newimg = CreateImage(imageract, srcrowstride - dstrowstride, startimgsrc);
+                auto newimg = CreateImage(imageract, srcrowstride, startimgsrc);
                 auto oldimg = CreateImage(imageract, 0, reinterpret_cast<const ImageBGRA *>(base.ImageBuffer.get()));
                 auto imgdifs = GetDifs(oldimg, newimg);
 
@@ -95,14 +96,17 @@ namespace Screen_Capture {
             }
             auto startdst = base.ImageBuffer.get();
             if (dstrowstride == srcrowstride) { // no need for multiple calls, there is no padding here
+                assert(base.ImageBufferSize >= dstrowstride * Height(mointor));
                 memcpy(startdst, startsrc, dstrowstride * Height(mointor));
             }
             else {
+                auto monheight = std::max(Height(mointor) -1, 0); ///just in case height is 0
+                assert(base.ImageBufferSize >= (monheight * srcrowstride) + dstrowstride);///the last row is all I care about, the inbetween rows will be moved up in chunk sizez of srcrowstride. This is a bounds assert
                 for (auto i = 0; i < Height(mointor); i++) {
                     memcpy(startdst + (i * dstrowstride), startsrc + (i * srcrowstride), dstrowstride);
                 }
             }
         }
     }
-} // namespace Screen_Capture
+} // namespace Screen_Captures
 } // namespace SL

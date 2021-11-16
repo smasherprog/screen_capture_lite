@@ -13,7 +13,12 @@
  
   <ItemGroup>   
     <Compile Include="Program.cs" />
-    <Compile Include="..\src_csharp\Screen_Capture_Lite.cs" Link="Screen_Capture_Lite.cs" />
+    <Compile Include="..\src_csharp\MonitorCaptureConfiguration.cs" Link="MonitorCaptureConfiguration.cs" />
+    <Compile Include="..\src_csharp\NativeFunctions.cs" Link="NativeFunctions.cs" />
+    <Compile Include="..\src_csharp\NativeTypes.cs" Link="NativeTypes.cs" />
+    <Compile Include="..\src_csharp\ScreenCaptureManager.cs" Link="ScreenCaptureManager.cs" />
+    <Compile Include="..\src_csharp\UnmanagedUtility.cs" Link="UnmanagedUtility.cs" />
+    <Compile Include="..\src_csharp\WindowCaptureConfiguration.cs" Link="WindowCaptureConfiguration.cs" />
   </ItemGroup>
  
   <ItemGroup> 

@@ -25,7 +25,7 @@ c++
 //Setup Screen Capture for all monitors
 auto framgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
 //add your own custom filtering here if you want to capture only some monitors
-    return SL::Screen_Capture::GetMonitors();
+    return SL::Screen_Capture::SCL_GetMonitors();
   })->onFrameChanged([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
   
   })->onNewFrame([&](const SL::Screen_Capture::Image& img, const SL::Screen_Capture::Monitor& monitor) {
@@ -34,13 +34,13 @@ auto framgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
   
   })->start_capturing();
 
-framgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
-framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
+framgrabber->SCL_SetFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
+framgrabber->SCL_SetMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
 
 
 //Setup Screen Capture for windows that have the title "cmake" in it
 auto windowframgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
-  auto windows = SL::Screen_Capture::GetWindows();
+  auto windows = SL::Screen_Capture::SCL_GetWindows();
   std::string srchterm = "cmake";
   // convert to lower case for easier comparisons
   std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale());});
@@ -61,8 +61,8 @@ auto windowframgrabber =  SL::Screen_Capture::CreateCaptureConfiguration([]() {
   
   })->start_capturing();
 
-windowframgrabber->setFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
-windowframgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
+windowframgrabber->SCL_SetFrameChangeInterval(std::chrono::milliseconds(100));//100 ms
+windowframgrabber->SCL_SetMouseChangeInterval(std::chrono::milliseconds(100));//100 ms
 
 ```
 
@@ -74,7 +74,7 @@ c#
 //Setup Screen Capture for all monitors
 var framgrabber = SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfiguration(() =>
 {
-   var mons = SL.Screen_Capture.GetMonitors();
+   var mons = SL.Screen_Capture.SCL_GetMonitors();
    Console.WriteLine("Library is requesting the list of monitors to capture!");
    for (int i = 0; i < mons.Length; ++i)
    {
@@ -91,14 +91,14 @@ var framgrabber = SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfigurat
 { 
 
 }).start_capturing();
-framgrabber.setFrameChangeInterval(100);
-framgrabber.setMouseChangeInterval(100);
+framgrabber.SCL_SetFrameChangeInterval(100);
+framgrabber.SCL_SetMouseChangeInterval(100);
 
 
 //Setup Screen Capture for windows that have the title "google" in it
 var framgrabber = SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfiguration(() =>
 {
-	var windows = SL.Screen_Capture.GetWindows();
+	var windows = SL.Screen_Capture.SCL_GetWindows();
 	Console.WriteLine("Library is requesting the list of windows to capture!");
 	for (int i = 0; i < windows.Length; ++i)
 	{
@@ -115,8 +115,8 @@ var framgrabber = SL.Screen_Capture.CaptureConfiguration.CreateCaptureConfigurat
 	  
 }).start_capturing();
 
-framgrabber.setFrameChangeInterval(100);
-framgrabber.setMouseChangeInterval(100);
+framgrabber.SCL_SetFrameChangeInterval(100);
+framgrabber.SCL_SetMouseChangeInterval(100);
 
 ```
 <h3>Library Usage</h3>
@@ -128,31 +128,31 @@ framgrabber.setMouseChangeInterval(100);
 <p>Calls to ICaptureConfiguration cannot be changed after start_capturing is called. You must destroy it and recreate it!</p>
 <ul>
     <li>
-    ICaptureConfiguration::onNewFrame: This will call back when a new frame is ready on the interval specified in setFrameChangeInterval
+    ICaptureConfiguration::onNewFrame: This will call back when a new frame is ready on the interval specified in SCL_SetFrameChangeInterval
     </li>
     <li>
     ICaptureConfiguration::onFrameChanged: This will call back when differences are detected between the last frame and the current one. This is usefull when you want to stream data that you are only sending what has changed, not everything!
     </li>
     <li>
-    ICaptureConfiguration::onMouseChanged: This will call back when the mouse has changed location or the mouse image has changed up to a maximum rate specified in setMouseChangeInterval
+    ICaptureConfiguration::onMouseChanged: This will call back when the mouse has changed location or the mouse image has changed up to a maximum rate specified in SCL_SetMouseChangeInterval
     </li>
 </ul>
 <h4>IScreenCaptureManager</h4>
 <p>Calls to IScreenCaptureManager can be changed at any time from any thread as all calls are thread safe!</p>
 <ul>
     <li>
-    IScreenCaptureManager::setFrameChangeInterval: This will set the maximum rate that the library will attempt to capture frame events.
+    IScreenCaptureManager::SCL_SetFrameChangeInterval: This will set the maximum rate that the library will attempt to capture frame events.
     </li>
     <li>
- IScreenCaptureManager::setMouseChangeInterval: This will set the maximum rate that the library will attempt to capture mouse events.
+ IScreenCaptureManager::SCL_SetMouseChangeInterval: This will set the maximum rate that the library will attempt to capture mouse events.
     </li>
     <li>
     IScreenCaptureManager::pause: all threads will stop capturing.
     </li>
     <li>
-    IScreenCaptureManager::isPaused: obvious!
+    IScreenCaptureManager::SCL_IsPaused: obvious!
     </li>
     <li>
-    IScreenCaptureManager::resume: all threads will resume capturing.
+    IScreenCaptureManager::SCL_Resume: all threads will SCL_Resume capturing.
     </li>
 </ul>

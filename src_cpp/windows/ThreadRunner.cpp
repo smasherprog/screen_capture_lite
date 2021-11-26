@@ -27,6 +27,10 @@ namespace Screen_Capture {
             }
         }
     }
+
+    void RequestScreenCapture() {}
+    bool CanRequestScreenCapture() { return false; }
+
     bool IsScreenCaptureEnabled()
     {
         HDESK CurrentDesktop = nullptr;

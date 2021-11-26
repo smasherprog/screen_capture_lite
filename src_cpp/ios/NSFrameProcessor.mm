@@ -195,11 +195,17 @@ namespace SL{
                 return p->Resume();
             }
         }
-        bool IsScreenCaptureEnabled_(){
+        bool IsScreenCaptureEnabled(){
             if (@available(macOS 10.15, *)) {
                 return CGPreflightScreenCaptureAccess();
             }
             return true;
         }
+        void RequestScreenCapture(){
+            if (@available(macOS 10.15, *)) {
+                CGRequestScreenCaptureAccess();
+            }
+        } 
+        bool CanRequestScreenCapture() { return true; }
     }
 }

@@ -8,7 +8,7 @@ execute_process(COMMAND dotnet --version
                   OUTPUT_QUIET
                   ERROR_QUIET)
 if(result) 
-    message(WARNING "CMake failed: dotnet executable not found but by this build. You must install dotnet to generate csharp bindings")
+    message(STATUS "dotnet executable not found but by this build, if you want to build CSharp Bindings, you must install dotnet")
 else()
     set(PLATFORM x64)
     if(NOT DEFINED CMAKE_GENERATOR_PLATFORM)

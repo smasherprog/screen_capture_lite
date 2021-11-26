@@ -10,7 +10,6 @@ namespace SL {
         void setMinFrameDuration(NSFrameProcessorImpl*, const std::chrono::microseconds& );
         void Pause_(NSFrameProcessorImpl*);
         void Resume_(NSFrameProcessorImpl*);
-        bool IsScreenCaptureEnabled();
     
     DUPL_RETURN Init(NSFrameProcessorImpl* createdimpl, NSFrameProcessor* parent, const std::chrono::microseconds& );
         

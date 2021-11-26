@@ -195,7 +195,7 @@ namespace SL{
                 return p->Resume();
             }
         }
-        bool IsScreenCaptureEnabled(){
+        bool IsScreenCaptureEnabled_(){
             if (@available(macOS 10.15, *)) {
                 return CGPreflightScreenCaptureAccess();
             }

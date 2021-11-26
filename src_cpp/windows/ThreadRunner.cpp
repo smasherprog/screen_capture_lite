@@ -27,6 +27,25 @@ namespace Screen_Capture {
             }
         }
     }
+    bool IsScreenCaptureEnabled()
+    {
+        HDESK CurrentDesktop = nullptr;
+        CurrentDesktop = OpenInputDesktop(0, FALSE, GENERIC_ALL);
+        if (!CurrentDesktop) {
+            // We do not have access to the desktop so request a retry
+            return false;
+        }
+
+        // Attach desktop to this thread
+        bool DesktopAttached = SetThreadDesktop(CurrentDesktop) != 0;
+        CloseDesktop(CurrentDesktop);
+        CurrentDesktop = nullptr;
+        if (!DesktopAttached) {
+            // We do not have access to the desktop so request a retry
+            return false;
+        }
+        return true;
+    }
     template <class T> bool SwitchToInputDesktop(const std::shared_ptr<T> data)
     {
         HDESK CurrentDesktop = nullptr;

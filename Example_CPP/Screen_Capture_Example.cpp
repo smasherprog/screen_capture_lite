@@ -367,12 +367,17 @@ int main()
     if (SL::Screen_Capture::IsScreenCaptureEnabled()) {
         std::cout << "Application Allowed to Capture the screen!" << std::endl;
     }
-    else {
+    else if (SL::Screen_Capture::CanRequestScreenCapture()){
         std::cout << "Application Not Allowed to Capture the screen. Waiting for permission " << std::endl;
         while (!SL::Screen_Capture::IsScreenCaptureEnabled()) {
+            SL::Screen_Capture::RequestScreenCapture();
             std::cout << " . ";
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
+    }
+    else {
+        std::cout << "Cannot Capture the screen due to permission issues. Exiting" << std::endl;
+        return 0;
     }
 
     auto goodmonitors = SL::Screen_Capture::GetMonitors();

@@ -1,7 +1,8 @@
 #include "NSFrameProcessorm.h"
 #include <thread>
 #include <chrono>
- 
+#include <AppKit/AppKit.h>
+
 @implementation FrameProcessor
 
 -(SL::Screen_Capture::DUPL_RETURN) Init:(SL::Screen_Capture::NSFrameProcessor*) parent second:(CMTime)interval
@@ -193,6 +194,12 @@ namespace SL{
             if(p){
                 return p->Resume();
             }
+        }
+        bool IsScreenCaptureEnabled(){
+            if (@available(macOS 10.15, *)) {
+                return CGPreflightScreenCaptureAccess();
+            }
+            return true;
         }
     }
 }

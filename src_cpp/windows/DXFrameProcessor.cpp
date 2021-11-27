@@ -364,7 +364,7 @@ namespace Screen_Capture {
         } 
        
         auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData); 
-        ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, startsrc, MappingDesc.RowPitch, nullptr);
+        ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, startsrc, MappingDesc.RowPitch);
         return DUPL_RETURN_SUCCESS;
     }
 } // namespace Screen_Capture

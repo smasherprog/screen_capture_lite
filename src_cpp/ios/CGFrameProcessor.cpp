@@ -42,8 +42,7 @@ namespace Screen_Capture {
 
         auto rawdatas = CGDataProviderCopyData(prov);
         auto buf = CFDataGetBytePtr(rawdatas);
-        auto overridecontigousvalue = false;
-        ProcessCapture(Data->WindowCaptureData, *this, window, buf, bytesperrow, &overridecontigousvalue);
+        ProcessCapture(Data->WindowCaptureData, *this, window, buf, bytesperrow);
 	  
         CFRelease(rawdatas);
         CGImageRelease(imageRef);

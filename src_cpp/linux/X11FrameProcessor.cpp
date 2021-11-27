@@ -98,7 +98,7 @@ namespace Screen_Capture
                          AllPlanes)) {
             return DUPL_RETURN_ERROR_EXPECTED;
         }
-        ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, (unsigned char*)XImage_->data, XImage_->bytes_per_line, nullptr);
+        ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, (unsigned char*)XImage_->data, XImage_->bytes_per_line);
         return Ret;
     }
     DUPL_RETURN X11FrameProcessor::ProcessFrame(Window& selectedwindow){
@@ -119,7 +119,7 @@ namespace Screen_Capture
                          AllPlanes)) {
             return DUPL_RETURN_ERROR_EXPECTED;
         }
-        ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, (unsigned char*)XImage_->data, XImage_->bytes_per_line, nullptr);
+        ProcessCapture(Data->WindowCaptureData, *this, selectedwindow, (unsigned char*)XImage_->data, XImage_->bytes_per_line);
         return Ret;
     }
 }

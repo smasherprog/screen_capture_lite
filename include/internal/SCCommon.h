@@ -56,8 +56,7 @@ namespace Screen_Capture {
 
     SC_LITE_EXTERN std::vector<ImageRect> GetDifs(const Image &oldimg, const Image &newimg);
     template <class F, class C>
-    void ProcessCapture(const F &data, BaseFrameProcessor &base, const C &mointor, const unsigned char *startsrc, int srcrowstride,
-                        bool *overridecontiguous)
+    void ProcessCapture(const F &data, BaseFrameProcessor &base, const C &mointor, const unsigned char *startsrc, int srcrowstride)
     {
         ImageRect imageract;
         imageract.left = 0;
@@ -77,9 +76,6 @@ namespace Screen_Capture {
                 // first time through, just send the whole image
                 auto wholeimg = CreateImage(imageract, srcrowstride, startimgsrc);
                 wholeimg.isContiguous = dstrowstride == srcrowstride;
-                if (overridecontiguous) {
-                    wholeimg.isContiguous = *overridecontiguous;
-                }
                 data.OnFrameChanged(wholeimg, mointor);
                 base.FirstRun = false;
             }

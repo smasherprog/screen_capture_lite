@@ -43,8 +43,7 @@ namespace Screen_Capture {
         return Ret;
     }
     DUPL_RETURN GDIFrameProcessor::ProcessFrame(const Monitor &currentmonitorinfo)
-    {
-
+    { 
         auto Ret = DUPL_RETURN_SUCCESS;
 
         ImageRect ret;

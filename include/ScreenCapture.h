@@ -175,6 +175,15 @@ namespace Screen_Capture {
     SC_LITE_EXTERN std::vector<Monitor> GetMonitors();
     // will return all windows
     SC_LITE_EXTERN std::vector<Window> GetWindows();
+    // MAC, permission can be requested, but the app still needs to be restarted after permission is given.
+    // Linux/windows You cannot request permissions, You either have it or not! 
+    SC_LITE_EXTERN bool IsScreenCaptureEnabled();
+    // MAC, permission can be requested, but the app still needs to be restarted after permission is given.
+    // Linux/windows You cannot request permissions, You either have it or not!
+    SC_LITE_EXTERN void RequestScreenCapture();
+    //MAC, permission can be requested, but the app still needs to be restarted after permission is given.
+    //Linux/windows You cannot request permissions, You either have it or not!
+    SC_LITE_EXTERN bool CanRequestScreenCapture();
 
     SC_LITE_EXTERN bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor);
     typedef std::function<void(const SL::Screen_Capture::Image &img, const Window &window)> WindowCaptureCallback;

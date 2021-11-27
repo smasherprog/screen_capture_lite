@@ -165,12 +165,12 @@ void createframegrabber()
             ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                 // Uncomment the below code to write the image to disk for debugging
 
-                auto r = realcounter.fetch_add(1);
-                auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
-                auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-                auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
+                //auto r = realcounter.fetch_add(1);
+                //auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
+                //auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+                //auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
 
                 if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
                     1000) {

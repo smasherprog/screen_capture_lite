@@ -95,7 +95,8 @@
     CVPixelBufferLockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
     auto bytesperrow = CVPixelBufferGetBytesPerRow(imageBuffer);
     auto buf = static_cast<unsigned char*>(CVPixelBufferGetBaseAddress(imageBuffer));
-    SL::Screen_Capture::ProcessCapture(data->ScreenCaptureData, *(self.nsframeprocessor), selectedmonitor, buf, bytesperrow);
+    auto overridecontigousvalue = false;
+    SL::Screen_Capture::ProcessCapture(data->ScreenCaptureData, *(self.nsframeprocessor), selectedmonitor, buf, bytesperrow, &overridecontigousvalue);
     CVPixelBufferUnlockBaseAddress(imageBuffer, kCVPixelBufferLock_ReadOnly);
     self.Working = false;
 }

@@ -30,30 +30,28 @@ void TestCopyContiguous()
 
     std::vector<SL::Screen_Capture::ImageBGRA> strided;
 
-    for (unsigned row(0); row < HEIGHT; ++row)
-    {
-        for (unsigned col(0); col < WIDTH; ++col)
-        {
+    for (unsigned row(0); row < HEIGHT; ++row) {
+        for (unsigned col(0); col < WIDTH; ++col) {
             strided.push_back(SL::Screen_Capture::ImageBGRA{VALID, VALID, VALID, VALID});
         }
     }
 
     auto bytes = strided.size() * PIXEL_DEPTH;
     std::vector<unsigned char> contiguous(bytes, static_cast<unsigned char>(0));
-    auto image = SL::Screen_Capture::Image{{ 0, 0, WIDTH, HEIGHT }, 0, true, strided.data() };
+    auto image = SL::Screen_Capture::Image{{0, 0, WIDTH, HEIGHT}, 0, true, strided.data()};
 
     auto result = SCL_Utility_CopyToContiguous(contiguous.data(), &image);
-    auto distance = std::distance(contiguous.data(), static_cast<unsigned char*>(result));
+    auto distance = std::distance(contiguous.data(), static_cast<unsigned char *>(result));
 
-    if (distance != (WIDTH * HEIGHT * PIXEL_DEPTH)) std::abort();
+    if (distance != (WIDTH * HEIGHT * PIXEL_DEPTH))
+        std::abort();
 
     auto const begin(contiguous.begin()), end(contiguous.end());
 
-    for (auto current(begin); current != end; ++current)
-    {
-        if (*current != VALID) std::abort();
+    for (auto current(begin); current != end; ++current) {
+        if (*current != VALID)
+            std::abort();
     }
-
 }
 
 void TestCopyNonContiguous()
@@ -66,68 +64,59 @@ void TestCopyNonContiguous()
 
     std::vector<SL::Screen_Capture::ImageBGRA> strided;
 
-    for (unsigned row(0); row < HEIGHT; ++row)
-    {
+    for (unsigned row(0); row < HEIGHT; ++row) {
 
-        for (unsigned col(0); col < WIDTH; ++col)
-        {
+        for (unsigned col(0); col < WIDTH; ++col) {
             strided.push_back(SL::Screen_Capture::ImageBGRA{VALID, VALID, VALID, VALID});
         }
 
-        for (unsigned pad(0); pad < PADDING; ++pad)
-        {
+        for (unsigned pad(0); pad < PADDING; ++pad) {
             strided.push_back(SL::Screen_Capture::ImageBGRA{INVALID, INVALID, INVALID, INVALID});
         }
-
     }
 
     auto bytes = strided.size() * PIXEL_DEPTH;
     std::vector<unsigned char> contiguous(bytes, static_cast<unsigned char>(0));
-    auto image = SL::Screen_Capture::Image{{ 0, 0, WIDTH, HEIGHT }, STRIDE_IN_BYTES, false, strided.data() };
+    auto image = SL::Screen_Capture::Image{{0, 0, WIDTH, HEIGHT}, STRIDE_IN_BYTES, false, strided.data()};
 
     auto result = SCL_Utility_CopyToContiguous(contiguous.data(), &image);
-    auto distance = std::distance(contiguous.data(), static_cast<unsigned char*>(result));
+    auto distance = std::distance(contiguous.data(), static_cast<unsigned char *>(result));
 
     // Ensures that the pointer incremented by only the amount written.
-    if (distance != (WIDTH * HEIGHT * PIXEL_DEPTH)) std::abort();
+    if (distance != (WIDTH * HEIGHT * PIXEL_DEPTH))
+        std::abort();
 
     auto const begin(contiguous.begin());
     auto contiguousEnd(begin), absoluteEnd(contiguous.end());
 
     std::advance(contiguousEnd, WIDTH * HEIGHT * PIXEL_DEPTH);
 
-    for (auto current(begin); current != contiguousEnd; ++current)
-    {
-        if (*current != VALID) std::abort();
+    for (auto current(begin); current != contiguousEnd; ++current) {
+        if (*current != VALID)
+            std::abort();
     }
 
-    for (auto current(contiguousEnd); current != absoluteEnd; ++current)
-    {
-        if (*current != 0) std::abort();
+    for (auto current(contiguousEnd); current != absoluteEnd; ++current) {
+        if (*current != 0)
+            std::abort();
     }
-
 }
 
 void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char *dst, size_t dst_size)
 {
     assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
     auto imgsrc = StartSrc(img);
-    auto imgdist = dst;
-    if (img.isContiguous) {
-        memcpy(imgdist, imgsrc, dst_size);
-    }
-    else { 
-        for (auto h = 0; h < Height(img); h++) {
-            auto startimgsrc = imgsrc;
-            for (auto w = 0; w < Width(img); w++) {
-                *imgdist++ = imgsrc->R;
-                *imgdist++ = imgsrc->G;
-                *imgdist++ = imgsrc->B;
-                *imgdist++ = 0; // alpha should be zero
-                imgsrc++;
-            }
-            imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
+    auto imgdist = dst; 
+    for (auto h = 0; h < Height(img); h++) {
+        auto startimgsrc = imgsrc;
+        for (auto w = 0; w < Width(img); w++) {
+            *imgdist++ = imgsrc->R;
+            *imgdist++ = imgsrc->G;
+            *imgdist++ = imgsrc->B;
+            *imgdist++ = 0; // alpha should be zero
+            imgsrc++;
         }
+        imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
     }
 }
 
@@ -175,15 +164,14 @@ void createframegrabber()
             })
             ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                 // Uncomment the below code to write the image to disk for debugging
-                /*
-                        auto r = realcounter.fetch_add(1);
-                        auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
-                        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-                        auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
-                        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
-                */
+
+                //auto r = realcounter.fetch_add(1);
+                //auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
+                //auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+                //auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
+
                 if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
                     1000) {
                     std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
@@ -369,6 +357,23 @@ int main()
 
     TestCopyContiguous();
     TestCopyNonContiguous();
+
+    std::cout << "Checking for Permission to capture the screen" << std::endl;
+    if (SL::Screen_Capture::IsScreenCaptureEnabled()) {
+        std::cout << "Application Allowed to Capture the screen!" << std::endl;
+    }
+    else if (SL::Screen_Capture::CanRequestScreenCapture()) {
+        std::cout << "Application Not Allowed to Capture the screen. Waiting for permission " << std::endl;
+        while (!SL::Screen_Capture::IsScreenCaptureEnabled()) {
+            SL::Screen_Capture::RequestScreenCapture();
+            std::cout << " . ";
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+    else {
+        std::cout << "Cannot Capture the screen due to permission issues. Exiting" << std::endl;
+        return 0;
+    }
 
     auto goodmonitors = SL::Screen_Capture::GetMonitors();
     for (auto &m : goodmonitors) {

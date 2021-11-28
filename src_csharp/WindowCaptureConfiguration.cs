@@ -22,13 +22,13 @@ namespace SCL
 
         private bool disposedValue = false;
 
-        private static readonly ThreadLocal<int> WindowSizeHint = new(() => 64);
+        private static int WindowSizeHint = 64;
 
         private static readonly UnmanagedHandles<WindowCaptureConfiguration> UnmanagedHandles = new();
 
         public static Window[] GetWindows()
         {
-            return Utility.CopyUnmanagedWithHint<Window>(WindowSizeHint, NativeFunctions.SCL_GetWindows);
+            return Utility.CopyUnmanagedWithHint<Window>(ref WindowSizeHint, NativeFunctions.SCL_GetWindows);
         }
 
         private static int OnCapture(IntPtr buffer, int buffersize, IntPtr context)
@@ -146,7 +146,8 @@ namespace SCL
 
                 if (_handle != IntPtr.Zero)
                 {
-                    UnmanagedHandles.Remove(ref _handle);
+                    UnmanagedHandles.Remove(_handle);
+                    _handle = IntPtr.Zero;
                 }
                 if (disposing)
                 {

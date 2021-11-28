@@ -79,7 +79,6 @@ namespace Screen_Capture {
         ImageRect Bounds;
         int RowStrideInBytes = 0;
         bool isContiguous = false;
-        // alpha is always unused and might contain garbage
         const ImageBGRA *Data = nullptr;
     };
 

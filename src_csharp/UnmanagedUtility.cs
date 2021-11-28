@@ -116,119 +116,48 @@ namespace SCL
         /// <param name="callback"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T[] CopyUnmanagedWithHint<T>(ThreadLocal<int> hint, BufferCallback callback)
+        public static T[] CopyUnmanagedWithHint<T>(ref int hint, BufferCallback callback)
         {
-            using (var unmanaged = new AutomaticUnmanagedArray<T>(hint.Value))
+            var newarraysize = hint; 
+            var oldhintvalue = newarraysize;
+            using (var unmanaged = new AutomaticUnmanagedArray<T>(newarraysize))
             {
-
-                int actual = hint.Value;
-
                 do
                 {
-                    actual = callback(unmanaged.Array.Ptr, actual);
-                    if (actual > unmanaged.Array.Size) unmanaged.Realloc(actual);
-                } while (unmanaged.Array.Size < actual);
+                    newarraysize = callback(unmanaged.Array.Ptr, newarraysize);
+                    if (newarraysize > unmanaged.Array.Size) unmanaged.Realloc(newarraysize);
+                } while (unmanaged.Array.Size < newarraysize);
 
-                hint.Value = actual;
-
-                var managed = new T[actual];
-                for (var i = 0; i < actual; i++) managed[i] = unmanaged[i];
-
+                Interlocked.CompareExchange(ref hint, newarraysize, oldhintvalue);
+                
+                var managed = new T[newarraysize];
+                for (var i = 0; i < newarraysize; i++) managed[i] = unmanaged[i]; 
                 return managed;
 
             }
-        }
-
+        } 
     }
 
-    class UnmanagedHandlesV2<TManaged> where TManaged : class
+    class UnmanagedHandles<TManaged> where TManaged : class
     {
-        private System.Collections.Concurrent.ConcurrentQueue<int> _handles = new System.Collections.Concurrent.ConcurrentQueue<int>();
+        private System.Collections.Concurrent.ConcurrentQueue<IntPtr> _handles = new System.Collections.Concurrent.ConcurrentQueue<IntPtr>();
         private TManaged[] _managed;
-        public UnmanagedHandlesV2(int maxsize = 256)
+        public UnmanagedHandles(int maxsize = 256)
         {
             _managed = new TManaged[maxsize];
-            for (var i = 0; i < maxsize; i++)
+            for (var i = 1; i < maxsize+1; i++)
             {
-                this._handles.Enqueue(i);
+                this._handles.Enqueue(new IntPtr(i));
             }
         }
 
-        public void Add(TManaged managed, out int handle)
+        public void Add(TManaged managed, out IntPtr handle)
         {
             if (!_handles.TryDequeue(out handle))
             {
                 throw new Exception($"You have used up more than {_managed.Length} handles! This is not supported!");
             }
-            _managed[handle] = managed;
-        }
-
-        public TManaged Get(int handle)
-        {
-            return _managed[handle];
-        }
-
-        public void Remove(int handle)
-        {
-            _managed[handle] = null;
-            _handles.Enqueue(handle);
-        }
-    }
-
-
-    /// <summary>
-    /// A thread-save way to pass data through native code and reference back to an original object. This type employs
-    /// a List of objects indexed by an integer wrapped in an instance of IntPtr.
-    ///
-    /// Mutations to this instance use copy-on-write semantics to control concurrency. Using this method avoids GC
-    /// pinning.
-    /// </summary>
-    /// <typeparam name="TManaged"></typeparam>
-    class UnmanagedHandles<TManaged> where TManaged : class
-    {
-
-        private List<TManaged> _managed;
-
-        public void Add(TManaged managed, out IntPtr handle)
-        {
-
-            int result;
-            List<TManaged> update;
-            List<TManaged> current;
-
-            do
-            {
-
-                current = _managed;
-                Interlocked.MemoryBarrier();
-
-                if (current == null)
-                {
-                    update = new List<TManaged> { managed };
-                    result = 0;
-                }
-                else
-                {
-
-                    update = new List<TManaged>(current);
-                    var index = update.FindIndex(t => t == null);
-
-                    if (index < 0)
-                    {
-                        update.Add(managed);
-                        result = update.Count - 1;
-                    }
-                    else
-                    {
-                        update = current;
-                        update[result = index] = managed;
-                    }
-
-                }
-            } while (current != Interlocked.CompareExchange(ref _managed, update, current));
-
-            handle = new IntPtr(result + 1);
-
+            _managed[handle.ToInt32()-1] = managed;
         }
 
         public TManaged Get(IntPtr handle)
@@ -236,40 +165,11 @@ namespace SCL
             return _managed[handle.ToInt32() - 1];
         }
 
-        public TManaged Remove(ref IntPtr handle)
+        public void Remove(IntPtr handle)
         {
-
-            TManaged result;
-            List<TManaged> update;
-            List<TManaged> current;
-
-            do
-            {
-
-                current = _managed;
-                Interlocked.MemoryBarrier();
-
-                if (current == null)
-                    throw new InvalidOperationException("Object not present.");
-
-                update = new List<TManaged>(current);
-
-                var index = handle.ToInt32() - 1;
-                var value = update[index];
-
-                if (value == null)
-                    throw new InvalidOperationException($"No object at: {index})");
-
-                result = value;
-                update[index] = null;
-
-            } while (current != Interlocked.CompareExchange(ref _managed, update, current));
-
-            handle = IntPtr.Zero;
-            return result;
-
+            _managed[handle.ToInt32() - 1] = null;
+            _handles.Enqueue(handle);
         }
-
     }
 
 }

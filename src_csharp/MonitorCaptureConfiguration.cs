@@ -19,13 +19,13 @@ namespace SCL
 
         private Action<Image, MousePoint> _onMouseChanged;
         private bool disposedValue = false;
-        private static readonly ThreadLocal<int> MonitorSizeHint = new(() => 4);
+        private static int MonitorSizeHint = 8;
 
         private static readonly UnmanagedHandles<MonitorCaptureConfiguration> UnmanagedHandles = new();
 
         public static Monitor[] GetMonitors()
         {
-            return Utility.CopyUnmanagedWithHint<Monitor>(MonitorSizeHint, NativeFunctions.SCL_GetMonitors);
+            return Utility.CopyUnmanagedWithHint<Monitor>(ref MonitorSizeHint, NativeFunctions.SCL_GetMonitors);
         }
 
         private static int OnCapture(IntPtr buffer, int buffersize, IntPtr context)
@@ -142,7 +142,8 @@ namespace SCL
                 }
                 if (_handle != IntPtr.Zero)
                 {
-                    UnmanagedHandles.Remove(ref _handle);
+                    UnmanagedHandles.Remove(_handle);
+                    _handle = IntPtr.Zero;
                 }
 
                 if (disposing)

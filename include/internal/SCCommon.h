@@ -51,8 +51,6 @@ namespace Screen_Capture {
     Monitor CreateMonitor(int index, int id, int h, int w, int ox, int oy, const std::string &n, float scale);
     Monitor CreateMonitor(int index, int id, int adapter, int h, int w, int ox, int oy, const std::string &n, float scale); 
     SC_LITE_EXTERN Image CreateImage(const ImageRect &imgrect, int rowStrideInBytes, const ImageBGRA *data);
-    // this function will copy data from the src into the dst. The only requirement is that src must not be larger than dst, but it can be smaller
-    // void Copy(const Image& dst, const Image& src);
 
     SC_LITE_EXTERN std::vector<ImageRect> GetDifs(const Image &oldimg, const Image &newimg);
     template <class F,  class C>

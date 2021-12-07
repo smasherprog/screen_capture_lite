@@ -104,7 +104,7 @@ class ScreenCaptureManager : public IScreenCaptureManager {
             ThreadManager ThreadMgr;
             ThreadMgr.Init(Thread_Data_);
 
-            while (!Thread_Data_->CommonData_.TerminateThreadsEven && !ShuttingDown) {
+            while (!Thread_Data_->CommonData_.TerminateThreadsEvent && !ShuttingDown) {
                 if (Thread_Data_->CommonData_.ExpectedErrorEvent) {
                     Thread_Data_->CommonData_.TerminateThreadsEvent = true;
                     ThreadMgr.Join();

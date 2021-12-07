@@ -66,8 +66,6 @@ namespace C_API {
 
 }; // namespace C_API
 
-static bool ScreenCaptureManagerExists = false;
-
 class ScreenCaptureManager : public IScreenCaptureManager {
 
   public:
@@ -75,12 +73,9 @@ class ScreenCaptureManager : public IScreenCaptureManager {
     std::shared_ptr<Thread_Data> Thread_Data_;
 
     std::thread Thread_;
-
+    bool ShuttingDown = false;
     ScreenCaptureManager()
     {
-        // you must ONLY HAVE ONE INSTANCE RUNNING AT A TIME. Destroy the first instance then create one!
-        assert(!ScreenCaptureManagerExists);
-        ScreenCaptureManagerExists = true;
         Thread_Data_ = std::make_shared<Thread_Data>();
         Thread_Data_->CommonData_.Paused = false;
         Thread_Data_->ScreenCaptureData.FrameTimer = std::make_shared<Timer>(100ms);
@@ -91,6 +86,7 @@ class ScreenCaptureManager : public IScreenCaptureManager {
 
     virtual ~ScreenCaptureManager()
     {
+        ShuttingDown = true;
         Thread_Data_->CommonData_.TerminateThreadsEvent = true; // set the exit flag for the threads
         Thread_Data_->CommonData_.Paused = false;               // unpaused the threads to let everything exit
         if (Thread_.get_id() == std::this_thread::get_id()) {
@@ -99,28 +95,30 @@ class ScreenCaptureManager : public IScreenCaptureManager {
         else if (Thread_.joinable()) {
             Thread_.join();
         }
-        ScreenCaptureManagerExists = false;
     }
 
     void start()
     {
         Thread_ = std::thread([&]() {
+            if(ShuttingDown) return;
             ThreadManager ThreadMgr;
-
             ThreadMgr.Init(Thread_Data_);
 
-            while (!Thread_Data_->CommonData_.TerminateThreadsEvent) {
-
+            while (!Thread_Data_->CommonData_.TerminateThreadsEven && !ShuttingDown) {
                 if (Thread_Data_->CommonData_.ExpectedErrorEvent) {
                     Thread_Data_->CommonData_.TerminateThreadsEvent = true;
                     ThreadMgr.Join();
                     Thread_Data_->CommonData_.ExpectedErrorEvent = Thread_Data_->CommonData_.UnexpectedErrorEvent =
                         Thread_Data_->CommonData_.TerminateThreadsEvent = false;
-                    // Clean up
-                    std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep for 1 second since an error occcured
-
-                    ThreadMgr.Init(Thread_Data_);
-                }
+                    
+                    // Clean up and rebuild
+                    if(!ShuttingDown){
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1000)); // sleep for 1 second since an error occcured
+                        ThreadMgr.Init(Thread_Data_);
+                    } else { 
+                        Thread_Data_->CommonData_.TerminateThreadsEvent = true;
+                    }
+                }  
                 std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
             Thread_Data_->CommonData_.TerminateThreadsEvent = true;

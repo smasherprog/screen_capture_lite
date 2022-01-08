@@ -106,7 +106,7 @@ void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char
 {
     assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
     auto imgsrc = StartSrc(img);
-    auto imgdist = dst; 
+    auto imgdist = dst;
     for (auto h = 0; h < Height(img); h++) {
         auto startimgsrc = imgsrc;
         for (auto w = 0; w < Width(img); w++) {
@@ -165,12 +165,12 @@ void createframegrabber()
             ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                 // Uncomment the below code to write the image to disk for debugging
 
-                //auto r = realcounter.fetch_add(1);
-                //auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
-                //auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-                //auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                //ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                //tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
+                // auto r = realcounter.fetch_add(1);
+                // auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
+                // auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+                // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
 
                 if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
                     1000) {
@@ -281,27 +281,39 @@ void createpartialframegrabber()
     framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
 }
 
+
+auto getWindowToCapture(std::string window_to_search_for = "blizzard")
+{
+    auto windows = SL::Screen_Capture::GetWindows(); 
+    // convert to lower case for easier comparisons
+    std::transform(window_to_search_for.begin(), window_to_search_for.end(), window_to_search_for.begin(),
+                   [](char c) { return std::tolower(c, std::locale()); });
+    decltype(windows) filtereditems;
+    for (auto &a : windows) {
+        std::string name = a.Name;
+        std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
+        if (name.find(window_to_search_for) != std::string::npos) {
+            filtereditems.push_back(a);
+            std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
+        }
+    }
+
+    return filtereditems;
+}
+
 void createwindowgrabber()
 {
+    auto w = getWindowToCapture();
+    if (w.empty()) {
+        std::cout << "In order to test window capturing, you must modify the getWindowToCapture() function to search for a window that actually exists!" << std::endl;
+        return;
+    }
     realcounter = 0;
     onNewFramecounter = 0;
     framgrabber = nullptr;
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
-            auto windows = SL::Screen_Capture::GetWindows();
-            std::string srchterm = "blizzard";
-            // convert to lower case for easier comparisons
-            std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
-            decltype(windows) filtereditems;
-            for (auto &a : windows) {
-                std::string name = a.Name;
-                std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
-                if (name.find(srchterm) != std::string::npos) {
-                    filtereditems.push_back(a);
-                    std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
-                }
-            }
-
+            auto filtereditems = getWindowToCapture(); 
             return filtereditems;
         })
 

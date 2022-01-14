@@ -92,16 +92,12 @@ namespace Screen_Capture {
                     data.OnFrameChanged(difimg, mointor);
                 }
             }
-            auto startdst = base.ImageBuffer.get();
-            if (dstrowstride == srcrowstride) { // no need for multiple calls, there is no padding here
-                assert(base.ImageBufferSize >= dstrowstride * Height(mointor));
+            auto startdst = base.ImageBuffer.get(); 
+            assert(base.ImageBufferSize >= dstrowstride * Height(mointor));
+            if (dstrowstride == srcrowstride) { // no need for multiple calls, there is no padding here 
                 memcpy(startdst, startsrc, dstrowstride * Height(mointor));
             }
-            else {
-                auto monheight = std::max(Height(mointor) - 1, 0); /// just in case height is 0
-                assert(base.ImageBufferSize >=
-                       (monheight * srcrowstride) + dstrowstride); /// the last row is all I care about, the inbetween rows will be moved up in chunk
-                                                                   /// sizez of srcrowstride. This is a bounds assert
+            else { 
                 for (auto i = 0; i < Height(mointor); i++) {
                     memcpy(startdst + (i * dstrowstride), startsrc + (i * srcrowstride), dstrowstride);
                 }

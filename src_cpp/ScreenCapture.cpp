@@ -137,13 +137,23 @@ namespace Screen_Capture {
         }
         virtual void setFrameChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
+#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L
             Thread_Data_->ScreenCaptureData.FrameTimer.store(timer);
             Thread_Data_->WindowCaptureData.FrameTimer.store(timer);
+#else
+            std::atomic_store(&Thread_Data_->ScreenCaptureData.FrameTimer, timer);
+            std::atomic_store(&Thread_Data_->WindowCaptureData.FrameTimer, timer);
+#endif  
         }
         virtual void setMouseChangeInterval(const std::shared_ptr<Timer> &timer) override
         {
+#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L
             Thread_Data_->ScreenCaptureData.MouseTimer.store(timer);
             Thread_Data_->WindowCaptureData.MouseTimer.store(timer);
+#else
+            std::atomic_store(&Thread_Data_->ScreenCaptureData.MouseTimer, timer);
+            std::atomic_store(&Thread_Data_->WindowCaptureData.MouseTimer, timer);
+#endif  
         }
         virtual void pause() override { Thread_Data_->CommonData_.Paused = true; }
         virtual bool isPaused() const override { return Thread_Data_->CommonData_.Paused; }

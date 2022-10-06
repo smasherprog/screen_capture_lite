@@ -8,7 +8,7 @@ execute_process(COMMAND dotnet --version
                   OUTPUT_QUIET
                   ERROR_QUIET)
 if(result) 
-    message(WARNING "CMake failed: dotnet executable not found but by this build. You must install dotnet to generate csharp bindings")
+    message(STATUS "dotnet executable not found but by this build, if you want to build CSharp Bindings, you must install dotnet")
 else()  
    set(PLATFORM x64)
     if(NOT DEFINED CMAKE_GENERATOR_PLATFORM)
@@ -25,7 +25,12 @@ else()
           ${CMAKE_CURRENT_LIST_DIR}/${CSPROJ}
           ${CMAKE_BINARY_DIR}/src_csharp
         COMMAND ${CMAKE_COMMAND} -E copy
-          ${CMAKE_CURRENT_LIST_DIR}/Screen_Capture_Lite.cs
+          ${CMAKE_CURRENT_LIST_DIR}/MonitorCaptureConfiguration.cs
+          ${CMAKE_CURRENT_LIST_DIR}/NativeFunctions.cs
+          ${CMAKE_CURRENT_LIST_DIR}/NativeTypes.cs
+          ${CMAKE_CURRENT_LIST_DIR}/ScreenCaptureManager.cs
+          ${CMAKE_CURRENT_LIST_DIR}/UnmanagedUtility.cs
+          ${CMAKE_CURRENT_LIST_DIR}/WindowCaptureConfiguration.cs
           ${CMAKE_BINARY_DIR}/src_csharp
         COMMAND dotnet build --configuration ${CMAKE_BUILD_TYPE} /p:Platform=${PLATFORM} ${CMAKE_BINARY_DIR}/src_csharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}
         COMMENT "Building ${PROJECT_NAME} dotnet build --configuration ${CMAKE_BUILD_TYPE} /p:Platform=${PLATFORM} ${CMAKE_BINARY_DIR}/src_csharp/${CSPROJ} -o ${CMAKE_BINARY_DIR}"
@@ -42,6 +47,3 @@ install (FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pdb
     OPTIONAL
 )
 endif()
-
-
- 

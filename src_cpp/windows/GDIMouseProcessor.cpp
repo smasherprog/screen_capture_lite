@@ -73,6 +73,7 @@ namespace Screen_Capture {
             if (static_cast<int>(newsize) > ImageBufferSize || !ImageBuffer || !NewImageBuffer) {
                 NewImageBuffer = std::make_unique<unsigned char[]>(newsize);
                 ImageBuffer = std::make_unique<unsigned char[]>(newsize);
+                ImageBufferSize = newsize;
             }
 
             GetDIBits(MonitorDC.DC, bitmap.Bitmap, 0, (UINT)ret.bottom, NewImageBuffer.get(), (BITMAPINFO *)&bi, DIB_RGB_COLORS);

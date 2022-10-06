@@ -1,4 +1,5 @@
 #include "ScreenCapture.h"
+#include "ScreenCapture_C_API.h"
 #include "internal/SCCommon.h" //DONT USE THIS HEADER IN PRODUCTION CODE!!!! ITS INTERNAL FOR A REASON IT WILL CHANGE!!! ITS HERE FOR TESTS ONLY!!!
 #include <algorithm>
 #include <atomic>
@@ -19,26 +20,103 @@
 #include "lodepng.h"
 /////////////////////////////////////////////////////////////////////////
 
+void TestCopyContiguous()
+{
+
+    constexpr auto VALID(static_cast<unsigned char>(0xFF));
+    constexpr auto INVALID(static_cast<unsigned char>(0xFE));
+    constexpr auto PIXEL_DEPTH(sizeof(SL::Screen_Capture::ImageBGRA));
+    constexpr unsigned WIDTH(256), HEIGHT(256);
+
+    std::vector<SL::Screen_Capture::ImageBGRA> strided;
+
+    for (unsigned row(0); row < HEIGHT; ++row) {
+        for (unsigned col(0); col < WIDTH; ++col) {
+            strided.push_back(SL::Screen_Capture::ImageBGRA{VALID, VALID, VALID, VALID});
+        }
+    }
+
+    auto bytes = strided.size() * PIXEL_DEPTH;
+    std::vector<unsigned char> contiguous(bytes, static_cast<unsigned char>(0));
+    auto image = SL::Screen_Capture::Image{{0, 0, WIDTH, HEIGHT}, 0, true, strided.data()};
+
+    auto result = SCL_Utility_CopyToContiguous(contiguous.data(), &image);
+    auto distance = std::distance(contiguous.data(), static_cast<unsigned char *>(result));
+
+    if (distance != (WIDTH * HEIGHT * PIXEL_DEPTH))
+        std::abort();
+
+    auto const begin(contiguous.begin()), end(contiguous.end());
+
+    for (auto current(begin); current != end; ++current) {
+        if (*current != VALID)
+            std::abort();
+    }
+}
+
+void TestCopyNonContiguous()
+{
+
+    constexpr auto VALID(static_cast<unsigned char>(0xFF));
+    constexpr auto INVALID(static_cast<unsigned char>(0xFE));
+    constexpr auto PIXEL_DEPTH(sizeof(SL::Screen_Capture::ImageBGRA));
+    constexpr unsigned WIDTH(256), HEIGHT(256), PADDING(64), STRIDE_IN_BYTES((WIDTH + PADDING) * PIXEL_DEPTH);
+
+    std::vector<SL::Screen_Capture::ImageBGRA> strided;
+
+    for (unsigned row(0); row < HEIGHT; ++row) {
+
+        for (unsigned col(0); col < WIDTH; ++col) {
+            strided.push_back(SL::Screen_Capture::ImageBGRA{VALID, VALID, VALID, VALID});
+        }
+
+        for (unsigned pad(0); pad < PADDING; ++pad) {
+            strided.push_back(SL::Screen_Capture::ImageBGRA{INVALID, INVALID, INVALID, INVALID});
+        }
+    }
+
+    auto bytes = strided.size() * PIXEL_DEPTH;
+    std::vector<unsigned char> contiguous(bytes, static_cast<unsigned char>(0));
+    auto image = SL::Screen_Capture::Image{{0, 0, WIDTH, HEIGHT}, STRIDE_IN_BYTES, false, strided.data()};
+
+    auto result = SCL_Utility_CopyToContiguous(contiguous.data(), &image);
+    auto distance = std::distance(contiguous.data(), static_cast<unsigned char *>(result));
+
+    // Ensures that the pointer incremented by only the amount written.
+    if (distance != (WIDTH * HEIGHT * PIXEL_DEPTH))
+        std::abort();
+
+    auto const begin(contiguous.begin());
+    auto contiguousEnd(begin), absoluteEnd(contiguous.end());
+
+    std::advance(contiguousEnd, WIDTH * HEIGHT * PIXEL_DEPTH);
+
+    for (auto current(begin); current != contiguousEnd; ++current) {
+        if (*current != VALID)
+            std::abort();
+    }
+
+    for (auto current(contiguousEnd); current != absoluteEnd; ++current) {
+        if (*current != 0)
+            std::abort();
+    }
+}
+
 void ExtractAndConvertToRGBA(const SL::Screen_Capture::Image &img, unsigned char *dst, size_t dst_size)
 {
     assert(dst_size >= static_cast<size_t>(SL::Screen_Capture::Width(img) * SL::Screen_Capture::Height(img) * sizeof(SL::Screen_Capture::ImageBGRA)));
     auto imgsrc = StartSrc(img);
     auto imgdist = dst;
-    if (img.isContiguous) {
-        memcpy(imgdist, imgsrc, dst_size);
-    }
-    else { 
-        for (auto h = 0; h < Height(img); h++) {
-            auto startimgsrc = imgsrc;
-            for (auto w = 0; w < Width(img); w++) {
-                *imgdist++ = imgsrc->R;
-                *imgdist++ = imgsrc->G;
-                *imgdist++ = imgsrc->B;
-                *imgdist++ = 0; // alpha should be zero
-                imgsrc++;
-            }
-            imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
+    for (auto h = 0; h < Height(img); h++) {
+        auto startimgsrc = imgsrc;
+        for (auto w = 0; w < Width(img); w++) {
+            *imgdist++ = imgsrc->R;
+            *imgdist++ = imgsrc->G;
+            *imgdist++ = imgsrc->B;
+            *imgdist++ = 0; // alpha should be zero
+            imgsrc++;
         }
+        imgsrc = SL::Screen_Capture::GotoNextRow(img, startimgsrc);
     }
 }
 
@@ -73,7 +151,7 @@ void createframegrabber()
             return mons;
         })
             ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
-                //std::cout << "Difference detected!  " << img.Bounds << std::endl;
+                // std::cout << "Difference detected!  " << img.Bounds << std::endl;
                 // Uncomment the below code to write the image to disk for debugging
                 /*
                         auto r = realcounter.fetch_add(1);
@@ -86,15 +164,14 @@ void createframegrabber()
             })
             ->onNewFrame([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                 // Uncomment the below code to write the image to disk for debugging
-                /*
-                        auto r = realcounter.fetch_add(1);
-                        auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
-                        auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
-                        auto imgbuffer(std::make_unique<unsigned char[]>(size));
-                        ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
-                        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
-                        tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
-                */
+
+                // auto r = realcounter.fetch_add(1);
+                // auto s = std::to_string(r) + std::string("MONITORNEW_") + std::string(".jpg");
+                // auto size = Width(img) * Height(img) * sizeof(SL::Screen_Capture::ImageBGRA);
+                // auto imgbuffer(std::make_unique<unsigned char[]>(size));
+                // ExtractAndConvertToRGBA(img, imgbuffer.get(), size);
+                // tje_encode_to_file(s.c_str(), Width(img), Height(img), 4, (const unsigned char *)imgbuffer.get());
+
                 if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - onNewFramestart).count() >=
                     1000) {
                     std::cout << "onNewFrame fps" << onNewFramecounter << std::endl;
@@ -135,18 +212,17 @@ void createpartialframegrabber()
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
             auto mons = SL::Screen_Capture::GetMonitors();
+            auto newmons = std::vector<SL::Screen_Capture::Monitor>();
             std::cout << "Library is requesting the list of monitors to capture!" << std::endl;
             for (auto &m : mons) {
-                // capture just a 512x512 square...  USERS SHOULD MAKE SURE bounds are
-                // valid!!!!
-                SL::Screen_Capture::OffsetX(m, SL::Screen_Capture::OffsetX(m) + 512);
-                SL::Screen_Capture::OffsetY(m, SL::Screen_Capture::OffsetY(m) + 512);
-                SL::Screen_Capture::Height(m, 512);
-                SL::Screen_Capture::Width(m, 512);
-
-                std::cout << m << std::endl;
+                if (SL::Screen_Capture::Height(m) >= 512 * 2 && SL::Screen_Capture::Width(m) >= 512 * 2) {
+                    SL::Screen_Capture::Height(m, 512);
+                    SL::Screen_Capture::Width(m, 512);
+                    std::cout << m << std::endl;
+                    newmons.push_back(m);
+                }
             }
-            return mons;
+            return newmons;
         })
             ->onFrameChanged([&](const SL::Screen_Capture::Image &img, const SL::Screen_Capture::Monitor &monitor) {
                 // Uncomment the below code to write the image to disk for debugging
@@ -205,27 +281,39 @@ void createpartialframegrabber()
     framgrabber->setMouseChangeInterval(std::chrono::milliseconds(100));
 }
 
+
+auto getWindowToCapture(std::string window_to_search_for = "blizzard")
+{
+    auto windows = SL::Screen_Capture::GetWindows(); 
+    // convert to lower case for easier comparisons
+    std::transform(window_to_search_for.begin(), window_to_search_for.end(), window_to_search_for.begin(),
+                   [](char c) { return std::tolower(c, std::locale()); });
+    decltype(windows) filtereditems;
+    for (auto &a : windows) {
+        std::string name = a.Name;
+        std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
+        if (name.find(window_to_search_for) != std::string::npos) {
+            filtereditems.push_back(a);
+            std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
+        }
+    }
+
+    return filtereditems;
+}
+
 void createwindowgrabber()
 {
+    auto w = getWindowToCapture();
+    if (w.empty()) {
+        std::cout << "In order to test window capturing, you must modify the getWindowToCapture() function to search for a window that actually exists!" << std::endl;
+        return;
+    }
     realcounter = 0;
     onNewFramecounter = 0;
     framgrabber = nullptr;
     framgrabber =
         SL::Screen_Capture::CreateCaptureConfiguration([]() {
-            auto windows = SL::Screen_Capture::GetWindows();
-            std::string srchterm = "blizzard";
-            // convert to lower case for easier comparisons
-            std::transform(srchterm.begin(), srchterm.end(), srchterm.begin(), [](char c) { return std::tolower(c, std::locale()); });
-            decltype(windows) filtereditems;
-            for (auto &a : windows) {
-                std::string name = a.Name;
-                std::transform(name.begin(), name.end(), name.begin(), [](char c) { return std::tolower(c, std::locale()); });
-                if (name.find(srchterm) != std::string::npos) {
-                    filtereditems.push_back(a);
-                    std::cout << "ADDING WINDOW  Height " << a.Size.y << "  Width  " << a.Size.x << "   " << a.Name << std::endl;
-                }
-            }
-
+            auto filtereditems = getWindowToCapture(); 
             return filtereditems;
         })
 
@@ -278,6 +366,26 @@ int main()
     std::srand(std::time(nullptr));
     std::cout << "Starting Capture Demo/Test" << std::endl;
     std::cout << "Testing captured monitor bounds check" << std::endl;
+
+    TestCopyContiguous();
+    TestCopyNonContiguous();
+
+    std::cout << "Checking for Permission to capture the screen" << std::endl;
+    if (SL::Screen_Capture::IsScreenCaptureEnabled()) {
+        std::cout << "Application Allowed to Capture the screen!" << std::endl;
+    }
+    else if (SL::Screen_Capture::CanRequestScreenCapture()) {
+        std::cout << "Application Not Allowed to Capture the screen. Waiting for permission " << std::endl;
+        while (!SL::Screen_Capture::IsScreenCaptureEnabled()) {
+            SL::Screen_Capture::RequestScreenCapture();
+            std::cout << " . ";
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+    else {
+        std::cout << "Cannot Capture the screen due to permission issues. Exiting" << std::endl;
+        return 0;
+    }
 
     auto goodmonitors = SL::Screen_Capture::GetMonitors();
     for (auto &m : goodmonitors) {

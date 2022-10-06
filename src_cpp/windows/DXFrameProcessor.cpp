@@ -362,6 +362,7 @@ namespace Screen_Capture {
                                   L"DrawSurface_GetPixelColor: Could not read the pixel color because the mapped subresource returned NULL", L"Error",
                                   hr, SystemTransitionsExpectedErrors);
         } 
+       
         auto startsrc = reinterpret_cast<unsigned char *>(MappingDesc.pData); 
         ProcessCapture(Data->ScreenCaptureData, *this, SelectedMonitor, startsrc, MappingDesc.RowPitch);
         return DUPL_RETURN_SUCCESS;

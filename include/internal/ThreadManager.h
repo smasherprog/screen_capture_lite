@@ -99,7 +99,11 @@ namespace Screen_Capture {
             // get a copy of the shared_ptr in a safe way
             
             frameprocessor.Resume();
+#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L
+            auto timer = data->ScreenCaptureData.FrameTimer.load();
+#else
             auto timer = std::atomic_load(&data->ScreenCaptureData.FrameTimer);
+#endif
             timer->start();
             auto monitors = GetMonitors();
             if (isMonitorInsideBounds(monitors, monitor) && !HasMonitorsChanged(startmonitors, monitors)) {
@@ -145,7 +149,11 @@ namespace Screen_Capture {
         }
         while (!data->CommonData_.TerminateThreadsEvent) {
             // get a copy of the shared_ptr in a safe way
+#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L
+            auto timer = data->WindowCaptureData.FrameTimer.load();
+#else
             auto timer = std::atomic_load(&data->WindowCaptureData.FrameTimer);
+#endif  
             timer->start();
             ret = frameprocessor.ProcessFrame(wnd);
             if (ret != DUPL_RETURN_SUCCESS) {

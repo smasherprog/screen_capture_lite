@@ -128,7 +128,7 @@ class ScreenCaptureManager : public IScreenCaptureManager {
 
     virtual void setFrameChangeInterval(const std::shared_ptr<Timer> &timer) override
     {
-#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L
+#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L && !defined(__MINGW32__)
             Thread_Data_->ScreenCaptureData.FrameTimer.store(timer);
             Thread_Data_->WindowCaptureData.FrameTimer.store(timer);
 #else
@@ -139,7 +139,7 @@ class ScreenCaptureManager : public IScreenCaptureManager {
 
     virtual void setMouseChangeInterval(const std::shared_ptr<Timer> &timer) override
     {
-#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L
+#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L && !defined(__MINGW32__)
             Thread_Data_->ScreenCaptureData.MouseTimer.store(timer);
             Thread_Data_->WindowCaptureData.MouseTimer.store(timer);
 #else

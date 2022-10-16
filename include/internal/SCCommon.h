@@ -7,14 +7,14 @@
 namespace SL {
 namespace Screen_Capture {
     template <typename F, typename M, typename W> struct CaptureData {
-#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L
+#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L && !defined(__MINGW32__)
         std::atomic<std::shared_ptr<Timer> > FrameTimer;
 #else
         std::shared_ptr<Timer> FrameTimer;
 #endif
         F OnNewFrame;
         F OnFrameChanged;
-#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L
+#if defined(_WIN32) && defined(__cplusplus) && __cplusplus >= 202002L && !defined(__MINGW32__)
         std::atomic<std::shared_ptr<Timer> > MouseTimer;
 #else
         std::shared_ptr<Timer> MouseTimer;

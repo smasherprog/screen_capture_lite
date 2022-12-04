@@ -7,23 +7,25 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <span>
 #include <thread>
 #include <type_traits>
 
 namespace SL::Screen_Capture {
 
-template <class MonitorT> bool IsMonitorInsideBounds(MonitorT monitors, const Monitor &monitor)
+bool IsMonitorInsideBounds(const Monitor *monitors, const int monitorsize, const Monitor &monitor)
 {
 
     auto totalwidth = 0;
 
-    for (auto &m : monitors) {
-        totalwidth += Width(m);
+    for (int i = 0; i < monitorsize; i++) {
+        totalwidth += Width(monitors[i]);
     }
 
     // if the monitor doesnt exist any more!
-    if (std::find_if(begin(monitors), end(monitors), [&](auto &m) { return m.Id == monitor.Id; }) == end(monitors)) {
+    int index = 0;
+    while(index < monitorsize && monitors[index].Id != monitor.Id)
+        index++;
+    if (index == monitorsize) {
         return false;
     } // if the area to capture is outside the dimensions of the desktop!!
 
@@ -44,7 +46,7 @@ template <class MonitorT> bool IsMonitorInsideBounds(MonitorT monitors, const Mo
     return true;
 }
 
-bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor) { return IsMonitorInsideBounds(monitors, monitor); }
+bool isMonitorInsideBounds(const std::vector<Monitor> &monitors, const Monitor &monitor) { return IsMonitorInsideBounds(monitors.data(), (int)monitors.size(), monitor); }
 
 namespace C_API {
 
@@ -272,7 +274,7 @@ int SCL_GetWindows(SCL_WindowRef windows, int monitors_size)
 
 int SCL_IsMonitorInsideBounds(SCL_MonitorRefConst monitors, const int monitorsize, SCL_MonitorRefConst monitor)
 {
-    return int(IsMonitorInsideBounds(std::span(monitors, monitorsize), *monitor));
+    return int(IsMonitorInsideBounds(monitors, monitorsize, *monitor));
 }
 
 void SCL_MonitorOnNewFrame(SCL_ICaptureConfigurationScreenCaptureCallbackWrapperRef ptr, SCL_ScreenCaptureCallback cb)

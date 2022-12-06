@@ -50,8 +50,7 @@ set(GLAD_GL glfw/deps/glad/gl.h
 
 option(GLFW_BUILD_EXAMPLES OFF)
 option(GLFW_BUILD_TESTS OFF)
-option(GLFW_BUILD_DOCS OFF) 
-option(BUILD_SHARED_LIBS OFF) 
+option(GLFW_BUILD_DOCS OFF)
 option(USE_MSVC_RUNTIME_LIBRARY_DLL OFF) 
 
 if (MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
@@ -60,13 +59,13 @@ endif()
 
 add_subdirectory(glfw) 
 
-add_executable(${PROJECT_NAME}_static  
+add_executable(${PROJECT_NAME} 
 	Screen_Capture_Example_OpenGL.cpp
 	 ${GLAD_GL}
 )
 
-target_link_libraries(${PROJECT_NAME}_static screen_capture_lite_static ${${PROJECT_NAME}_PLATFORM_LIBS} glfw)  
+target_link_libraries(${PROJECT_NAME} screen_capture_lite ${${PROJECT_NAME}_PLATFORM_LIBS} glfw)  
 
-install (TARGETS ${PROJECT_NAME}_static screen_capture_lite_static
+install (TARGETS ${PROJECT_NAME} screen_capture_lite
 	RUNTIME DESTINATION Examples
 ) 

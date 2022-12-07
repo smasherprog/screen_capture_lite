@@ -23,11 +23,6 @@ else()
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
 endif()
 
-add_subdirectory(src_cpp) 
-if(${BUILD_CSHARP} AND ${BUILD_SHARED_LIBS})
-	add_subdirectory(src_csharp) 
-endif()
-
 if(${BUILD_SHARED_LIBS})
    set(TARGET_SUFFIX shared)
 else()
@@ -35,6 +30,11 @@ else()
 endif()
 
 set(TARGET_NAME screen_capture_lite_${TARGET_SUFFIX})
+
+add_subdirectory(src_cpp) 
+if(${BUILD_CSHARP} AND ${BUILD_SHARED_LIBS})
+	add_subdirectory(src_csharp) 
+endif()
 
 install (TARGETS ${TARGET_NAME}
 	ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}

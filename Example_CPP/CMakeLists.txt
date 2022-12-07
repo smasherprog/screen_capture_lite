@@ -49,9 +49,9 @@ add_executable(${PROJECT_NAME}_${TARGET_SUFFIX}
 	lodepng.cpp
 	Screen_Capture_Example.cpp
 )
-target_link_libraries(${PROJECT_NAME}_${TARGET_SUFFIX} ${TARGET_NAME} ${${PROJECT_NAME}_PLATFORM_LIBS})
+target_link_libraries(${PROJECT_NAME}_${TARGET_SUFFIX} screen_capture_lite_${TARGET_SUFFIX} ${${PROJECT_NAME}_PLATFORM_LIBS})
 
-install (TARGETS ${PROJECT_NAME}_${TARGET_SUFFIX} ${TARGET_NAME}
+install (TARGETS ${PROJECT_NAME}_${TARGET_SUFFIX} screen_capture_lite_${TARGET_SUFFIX}
 	RUNTIME DESTINATION Examples
 ) 
   

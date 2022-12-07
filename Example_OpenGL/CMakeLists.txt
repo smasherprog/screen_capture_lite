@@ -66,8 +66,8 @@ add_executable(${PROJECT_NAME}_${TARGET_SUFFIX}
 	 ${GLAD_GL}
 )
 
-target_link_libraries(${PROJECT_NAME}_${TARGET_SUFFIX} ${TARGET_NAME} ${${PROJECT_NAME}_PLATFORM_LIBS} glfw)  
+target_link_libraries(${PROJECT_NAME}_${TARGET_SUFFIX} screen_capture_lite_${TARGET_SUFFIX} ${${PROJECT_NAME}_PLATFORM_LIBS} glfw)  
 
-install (TARGETS ${PROJECT_NAME}_${TARGET_SUFFIX} ${TARGET_NAME}
+install (TARGETS ${PROJECT_NAME}_${TARGET_SUFFIX} screen_capture_lite_${TARGET_SUFFIX}
 	RUNTIME DESTINATION Examples
 ) 

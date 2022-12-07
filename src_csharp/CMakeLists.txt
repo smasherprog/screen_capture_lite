@@ -47,8 +47,4 @@ install (FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pdb
     OPTIONAL
 )
 
-install (TARGETS screen_capture_lite_shared
-	RUNTIME DESTINATION Examples 
-) 
-
 endif()

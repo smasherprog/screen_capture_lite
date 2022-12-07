@@ -45,13 +45,13 @@ include_directories(
 	../include 
 ) 
 
-add_executable(${PROJECT_NAME}
+add_executable(${PROJECT_NAME}_${TARGET_SUFFIX}
 	lodepng.cpp
 	Screen_Capture_Example.cpp
 )
-target_link_libraries(${PROJECT_NAME} screen_capture_lite ${${PROJECT_NAME}_PLATFORM_LIBS})
+target_link_libraries(${PROJECT_NAME}_${TARGET_SUFFIX} ${TARGET_NAME} ${${PROJECT_NAME}_PLATFORM_LIBS})
 
-install (TARGETS ${PROJECT_NAME} screen_capture_lite
+install (TARGETS ${PROJECT_NAME}_${TARGET_SUFFIX} ${TARGET_NAME}
 	RUNTIME DESTINATION Examples
 ) 
   

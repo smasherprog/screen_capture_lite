@@ -1,0 +1,15 @@
+set(screen_capture_lite_shared_FOUND 1)
+
+set(screen_capture_lite_shared_VERSION_COUNT 2)
+set(screen_capture_lite_shared_VERSION_MAJOR "@CMAKE_PROJECT_VERSION_MAJOR@")
+set(screen_capture_lite_shared_VERSION_MINOR "@CMAKE_PROJECT_VERSION_MINOR@")
+
+set(screen_capture_lite_shared_INCLUDE_DIR "@CMAKE_INSTALL_PREFIX@/include")
+set(screen_capture_lite_shared_INCLUDE_DIRS ${screen_capture_lite_shared_INCLUDE_DIR})
+
+set(screen_capture_lite_shared_LIBRARY_DIR "@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@")
+
+find_library(screen_capture_lite_shared_LIBRARY screen_capture_lite_shared HINTS ${screen_capture_lite_shared_LIBRARY_DIR})
+
+set(screen_capture_lite_shared_LIBS ${screen_capture_lite_shared_LIBRARY})
+set(screen_capture_lite_shared_LIBRARIES ${screen_capture_lite_shared_LIBS})

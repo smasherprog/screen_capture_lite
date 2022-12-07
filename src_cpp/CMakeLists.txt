@@ -79,17 +79,17 @@ set(libsrc
 
 if(NOT ${BUILD_SHARED_LIBS})
     message("Building STATIC Library")
-    add_library(${PROJECT_NAME} STATIC ${libsrc})
+    add_library(${PROJECT_NAME}_static STATIC ${libsrc})
 else()
   message("Building SHARED Library")
   
-    add_library(${PROJECT_NAME} SHARED ${libsrc} ../include/ScreenCapture_C_API.h)
+    add_library(${PROJECT_NAME}_shared SHARED ${libsrc} ../include/ScreenCapture_C_API.h)
 
-	set_target_properties(${PROJECT_NAME} PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
+	set_target_properties(${PROJECT_NAME}_shared PROPERTIES DEFINE_SYMBOL SC_LITE_DLL)
 	 if(WIN32) 
-		target_link_libraries(${PROJECT_NAME} Dwmapi)
+		target_link_libraries(${PROJECT_NAME}_shared Dwmapi)
 		if (!MINGW)
-			install (FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+			install (FILES $<TARGET_PDB_FILE:${PROJECT_NAME}_shared> DESTINATION bin OPTIONAL)
 		endif()
 	elseif(APPLE)
 		find_package(Threads REQUIRED)
@@ -101,7 +101,7 @@ else()
         find_library(corevideo_lib CoreVideo REQUIRED)
        
         target_link_libraries(
-           ${PROJECT_NAME}
+           ${PROJECT_NAME}_shared
             ${CMAKE_THREAD_LIBS_INIT}
             ${corefoundation_lib}
             ${cocoa_lib}
@@ -120,7 +120,7 @@ else()
 		endif()
 		find_package(Threads REQUIRED)
 		target_link_libraries(
-            ${PROJECT_NAME}
+            ${PROJECT_NAME}_shared
 			${X11_LIBRARIES}
 			${X11_Xfixes_LIB}
 			${X11_XTest_LIB}

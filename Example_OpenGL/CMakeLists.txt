@@ -1,9 +1,10 @@
 project(screen_capture_example_opengl_cpp)
 
-if(WIN32)
+if(NOT ${BUILD_SHARED_LIBS})
+  if(WIN32)
 	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)
 	add_definitions(-DNOMINMAX)
-elseif(APPLE)
+  elseif(APPLE)
     find_package(Threads REQUIRED)
     find_library(corefoundation_lib CoreFoundation REQUIRED)
     find_library(cocoa_lib Cocoa REQUIRED)
@@ -21,7 +22,7 @@ elseif(APPLE)
         ${coregraphics_lib}  
         ${corevideo_lib}
     ) 
-else()
+  else()
 	find_package(X11 REQUIRED)
 	if(!X11_XTest_FOUND)
  		message(FATAL_ERROR "X11 extensions are required, but not found!")
@@ -37,6 +38,7 @@ else()
 		${X11_Xinerama_LIB}
 		${CMAKE_THREAD_LIBS_INIT}
 	)
+  endif()
 endif()
 
 include_directories(
@@ -59,13 +61,13 @@ endif()
 
 add_subdirectory(glfw) 
 
-add_executable(${PROJECT_NAME} 
+add_executable(${PROJECT_NAME}_${TARGET_SUFFIX} 
 	Screen_Capture_Example_OpenGL.cpp
 	 ${GLAD_GL}
 )
 
-target_link_libraries(${PROJECT_NAME} screen_capture_lite ${${PROJECT_NAME}_PLATFORM_LIBS} glfw)  
+target_link_libraries(${PROJECT_NAME}_${TARGET_SUFFIX} ${TARGET_NAME} ${${PROJECT_NAME}_PLATFORM_LIBS} glfw)  
 
-install (TARGETS ${PROJECT_NAME} screen_capture_lite
+install (TARGETS ${PROJECT_NAME}_${TARGET_SUFFIX} ${TARGET_NAME}
 	RUNTIME DESTINATION Examples
 ) 

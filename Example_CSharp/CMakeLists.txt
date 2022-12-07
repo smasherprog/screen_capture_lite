@@ -18,8 +18,8 @@ else()
     ENDIF()
     message(STATUS "Found dotnet executable CSHARP bindings will be generated!")
     add_custom_command(OUTPUT ${OUTPUT} 
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite> ${CMAKE_CURRENT_LIST_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite> ${CMAKE_BINARY_DIR}/Example_CSharp
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${CMAKE_CURRENT_LIST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_NAME}> ${CMAKE_BINARY_DIR}/Example_CSharp
     COMMAND ${CMAKE_COMMAND} -E copy
       ${CMAKE_CURRENT_LIST_DIR}/${CSPROJ}
       ${CMAKE_BINARY_DIR}/Example_CSharp

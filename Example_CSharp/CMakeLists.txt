@@ -39,7 +39,7 @@ install (FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pdb
     OPTIONAL
 )
  
-install (TARGETS screen_capture_lite
+install (TARGETS ${TARGET_NAME}
 	RUNTIME DESTINATION Examples 
 ) 
 

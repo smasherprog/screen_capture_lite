@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(screen_capture_lite_build VERSION 17.1)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_DEBUG_POSTFIX "d")
+#set(CMAKE_DEBUG_POSTFIX "d")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) 
 option(BUILD_EXAMPLE "Build example" ON)

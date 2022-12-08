@@ -1,0 +1,15 @@
+set(screen_capture_lite_static_FOUND 1)
+
+set(screen_capture_lite_static_VERSION_COUNT 2)
+set(screen_capture_lite_static_VERSION_MAJOR "@CMAKE_PROJECT_VERSION_MAJOR@")
+set(screen_capture_lite_static_VERSION_MINOR "@CMAKE_PROJECT_VERSION_MINOR@")
+
+set(screen_capture_lite_static_INCLUDE_DIR "@CMAKE_INSTALL_PREFIX@/include")
+set(screen_capture_lite_static_INCLUDE_DIRS ${screen_capture_lite_static_INCLUDE_DIR})
+
+set(screen_capture_lite_static_LIBRARY_DIR "@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@")
+
+find_library(screen_capture_lite_static_LIBRARY screen_capture_lite_static HINTS ${screen_capture_lite_static_LIBRARY_DIR})
+
+set(screen_capture_lite_static_LIBS ${screen_capture_lite_static_LIBRARY})
+set(screen_capture_lite_static_LIBRARIES ${screen_capture_lite_static_LIBS})

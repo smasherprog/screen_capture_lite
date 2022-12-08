@@ -18,8 +18,8 @@ else()
     ENDIF()
     message(STATUS "Found dotnet executable CSHARP bindings will be generated!")
     add_custom_command(OUTPUT ${OUTPUT} 
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_CURRENT_LIST_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_shared> ${CMAKE_BINARY_DIR}/Example_CSharp
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_${TARGET_SUFFIX}> ${CMAKE_CURRENT_LIST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:screen_capture_lite_${TARGET_SUFFIX}> ${CMAKE_BINARY_DIR}/Example_CSharp
     COMMAND ${CMAKE_COMMAND} -E copy
       ${CMAKE_CURRENT_LIST_DIR}/${CSPROJ}
       ${CMAKE_BINARY_DIR}/Example_CSharp
@@ -39,7 +39,7 @@ install (FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pdb
     OPTIONAL
 )
  
-install (TARGETS screen_capture_lite_shared
+install (TARGETS screen_capture_lite_${TARGET_SUFFIX}
 	RUNTIME DESTINATION Examples 
 ) 
 

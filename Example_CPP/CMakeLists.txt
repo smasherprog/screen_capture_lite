@@ -1,9 +1,13 @@
 project(screen_capture_example_cpp)
 
 if(WIN32)
-	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)
 	add_definitions(-DNOMINMAX)
-elseif(APPLE)
+endif()
+
+if(NOT ${BUILD_SHARED_LIBS})
+  if(WIN32)
+	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)
+  elseif(APPLE)
     find_package(Threads REQUIRED)
     find_library(corefoundation_lib CoreFoundation REQUIRED)
     find_library(cocoa_lib Cocoa REQUIRED)
@@ -21,7 +25,7 @@ elseif(APPLE)
         ${coregraphics_lib}  
         ${corevideo_lib}
     ) 
-else()
+  else()
 	find_package(X11 REQUIRED)
 	if(!X11_XTest_FOUND)
  		message(FATAL_ERROR "X11 extensions are required, but not found!")
@@ -37,26 +41,20 @@ else()
 		${X11_Xinerama_LIB}
 		${CMAKE_THREAD_LIBS_INIT}
 	)
+  endif()
 endif()
 
 include_directories(
 	../include 
 ) 
 
-add_executable(${PROJECT_NAME}_static
+add_executable(${PROJECT_NAME}_${TARGET_SUFFIX}
 	lodepng.cpp
 	Screen_Capture_Example.cpp
 )
-target_link_libraries(${PROJECT_NAME}_static screen_capture_lite_static ${${PROJECT_NAME}_PLATFORM_LIBS})  
+target_link_libraries(${PROJECT_NAME}_${TARGET_SUFFIX} screen_capture_lite_${TARGET_SUFFIX} ${${PROJECT_NAME}_PLATFORM_LIBS})
 
-add_executable(${PROJECT_NAME}_shared  
-	lodepng.cpp
-	Screen_Capture_Example.cpp
-)
-
-target_link_libraries(${PROJECT_NAME}_shared screen_capture_lite_shared ${${PROJECT_NAME}_PLATFORM_LIBS}) 
-
-install (TARGETS ${PROJECT_NAME}_static ${PROJECT_NAME}_shared screen_capture_lite_shared
+install (TARGETS ${PROJECT_NAME}_${TARGET_SUFFIX} screen_capture_lite_${TARGET_SUFFIX}
 	RUNTIME DESTINATION Examples
 ) 
   

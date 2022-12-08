@@ -37,7 +37,7 @@ else()
       )
 
     add_custom_target(${PROJECT_NAME} ALL DEPENDS ${OUTPUT})
-    add_dependencies(${PROJECT_NAME} screen_capture_lite_shared)
+    add_dependencies(${PROJECT_NAME} screen_capture_lite_${TARGET_SUFFIX})
 
 install (FILES ${CMAKE_BINARY_DIR}/${OUTPUT}
 	DESTINATION bin
@@ -46,4 +46,5 @@ install (FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pdb
 	DESTINATION bin
     OPTIONAL
 )
+
 endif()

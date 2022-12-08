@@ -1,9 +1,12 @@
 project(screen_capture_example_cpp)
 
+if(WIN32)
+	add_definitions(-DNOMINMAX)
+endif()
+
 if(NOT ${BUILD_SHARED_LIBS})
   if(WIN32)
 	set(${PROJECT_NAME}_PLATFORM_LIBS Dwmapi)
-	add_definitions(-DNOMINMAX)
   elseif(APPLE)
     find_package(Threads REQUIRED)
     find_library(corefoundation_lib CoreFoundation REQUIRED)

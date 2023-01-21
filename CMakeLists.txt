@@ -49,7 +49,7 @@ configure_file(modules/${TARGET_NAME}Config.cmake.in ${TARGET_NAME}Config.cmake 
 #install(EXPORT ${TARGET_NAME}-config FILE ${TARGET_NAME}-config.cmake DESTINATION lib/cmake/screen_capture_lite)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}Config.cmake
-  DESTINATION lib${LIB_SUFFIX}/cmake)
+  DESTINATION lib${LIB_SUFFIX}/cmake/${TARGET_NAME})
 
  
 install (FILES 

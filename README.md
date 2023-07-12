@@ -120,7 +120,7 @@ framgrabber.SCL_SetMouseChangeInterval(100);
 
 ```
 <h3>Library Usage</h3>
-<p>Only define what are are interested in. Do not define a callback for onMouseChanged if you dont want that information. If you do, the library will assume that you want mouse information and monitor that --so DONT!</p>
+<p>Only define what you are interested in. Do not define a callback for onMouseChanged if you dont want that information. If you do, the library will assume that you want mouse information and monitor that --so DONT!</p>
 <p>Again, DONT DEFINE CALLBACKS FOR EVENTS YOU DONT CARE ABOUT. If you do, the library will do extra work assuming you want the information.</p>
 <p>The library owns all image data so if you want to use it for your own purpose after the callback has completed you MUST copy the data out!</p>
 <p>Each monitor or window will run in its own thread so there is no blocking or internal synchronization. If you are capturing three monitors, a thread is capturing each monitor.</p>

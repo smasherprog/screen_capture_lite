@@ -26,6 +26,11 @@ namespace SCL
 
         private static readonly UnmanagedHandles<WindowCaptureConfiguration> UnmanagedHandles = new();
 
+        private static MonitorWindowCallbackWithContext _onCaptureWithContext = OnCapture;
+        private static WindowCaptureCallbackWithContext _onNewFrameWithContext = OnNewFrame;
+        private static WindowCaptureCallbackWithContext _onFrameChangedWithContext = OnFrameChanged;
+        private static MouseCaptureCallbackWithContext _onMouseChangedWithContext = OnMouseChanged;
+
         public static Window[] GetWindows()
         {
             return Utility.CopyUnmanagedWithHint<Window>(ref WindowSizeHint, NativeFunctions.SCL_GetWindows);
@@ -73,7 +78,7 @@ namespace SCL
             {
                 _windowCallback = callback;
                 UnmanagedHandles.Add(this, out _handle);
-                Config = NativeFunctions.SCL_CreateWindowCaptureConfigurationWithContext(OnCapture, _handle);
+                Config = NativeFunctions.SCL_CreateWindowCaptureConfigurationWithContext(_onCaptureWithContext, _handle);
             }
             catch
             {
@@ -88,7 +93,7 @@ namespace SCL
             if (_onNewFrame == null)
             {
                 _onNewFrame = onNewFrame;
-                NativeFunctions.SCL_WindowOnNewFrameWithContext(Config, OnNewFrame);
+                NativeFunctions.SCL_WindowOnNewFrameWithContext(Config, _onNewFrameWithContext);
             }
             else
             {
@@ -105,7 +110,7 @@ namespace SCL
             if (_onFrameChanged == null)
             {
                 _onFrameChanged = onFrameChanged;
-                NativeFunctions.SCL_WindowOnFrameChangedWithContext(Config, OnFrameChanged);
+                NativeFunctions.SCL_WindowOnFrameChangedWithContext(Config, _onFrameChangedWithContext);
             }
             else
             {
@@ -122,7 +127,7 @@ namespace SCL
             if (_onMouseChanged == null)
             {
                 _onMouseChanged = onMouseChanged;
-                NativeFunctions.SCL_WindowOnMouseChangedWithContext(Config, OnMouseChanged);
+                NativeFunctions.SCL_WindowOnMouseChangedWithContext(Config, _onMouseChangedWithContext);
             }
             else
             {

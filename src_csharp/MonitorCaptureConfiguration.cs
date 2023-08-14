@@ -21,6 +21,11 @@ namespace SCL
         private bool disposedValue = false;
         private static int MonitorSizeHint = 8;
 
+        private static MonitorWindowCallbackWithContext _onCaptureWithContext = OnCapture;
+        private static ScreenCaptureCallbackWithContext _onNewFrameWithContext = OnNewFrame;
+        private static ScreenCaptureCallbackWithContext _onFrameChangedWithContext = OnFrameChanged;
+        private static MouseCaptureCallbackWithContext _onMouseChangedWithContext = OnMouseChanged;
+
         private static readonly UnmanagedHandles<MonitorCaptureConfiguration> UnmanagedHandles = new();
 
         public static Monitor[] GetMonitors()
@@ -72,7 +77,7 @@ namespace SCL
             {
                 _monitorCallback = callback;
                 UnmanagedHandles.Add(this, out _handle);
-                Config = NativeFunctions.SCL_CreateMonitorCaptureConfigurationWithContext(OnCapture, _handle);
+                Config = NativeFunctions.SCL_CreateMonitorCaptureConfigurationWithContext(_onCaptureWithContext, _handle);
             }
             catch
             {
@@ -87,7 +92,7 @@ namespace SCL
             if (_onNewFrame == null)
             {
                 _onNewFrame = onNewFrame;
-                NativeFunctions.SCL_MonitorOnNewFrameWithContext(Config, OnNewFrame);
+                NativeFunctions.SCL_MonitorOnNewFrameWithContext(Config, _onNewFrameWithContext);
             }
             else
             {
@@ -104,7 +109,7 @@ namespace SCL
             if (_onFrameChanged == null)
             {
                 _onFrameChanged = onFrameChanged;
-                NativeFunctions.SCL_MonitorOnFrameChangedWithContext(Config, OnFrameChanged);
+                NativeFunctions.SCL_MonitorOnFrameChangedWithContext(Config, _onFrameChangedWithContext);
             }
             else
             {
@@ -121,7 +126,7 @@ namespace SCL
             if (_onMouseChanged == null)
             {
                 _onMouseChanged = onMouseChanged;
-                NativeFunctions.SCL_MonitorOnMouseChangedWithContext(Config, OnMouseChanged);
+                NativeFunctions.SCL_MonitorOnMouseChangedWithContext(Config, _onMouseChangedWithContext);
             }
             else
             {

@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(WINDOWS) || defined(WIN32)
+#if defined(WINDOWS) || defined(WIN32) || defined(__MINGW32__)
 #if defined(SC_LITE_DLL)
 #define SC_LITE_EXTERN __declspec(dllexport)
 #else

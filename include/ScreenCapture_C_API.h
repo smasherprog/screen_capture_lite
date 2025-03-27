@@ -5,7 +5,7 @@
 #ifndef SCREEN_CAPTURE_LITE_BUILD_SCREENCAPTURE_C_API_H
 #define SCREEN_CAPTURE_LITE_BUILD_SCREENCAPTURE_C_API_H
 
-#if defined(WINDOWS) || defined(WIN32)
+#if defined(WINDOWS) || defined(WIN32) || defined(__MINGW32__)
 #if defined(SC_LITE_DLL) && defined(__cplusplus)
 #define SC_LITE_C_EXTERN extern "C" __declspec(dllexport)
 #else

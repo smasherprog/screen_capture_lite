@@ -7,9 +7,6 @@
 #include <d3d11.h>
 #include <dxgi1_2.h>
 
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "d3d11.lib")
-
 namespace SL {
     namespace Screen_Capture {
         class DXFrameProcessor : public BaseFrameProcessor {

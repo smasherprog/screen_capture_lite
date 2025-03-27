@@ -1,6 +1,10 @@
 #include "GDIFrameProcessor.h"
 #include <Dwmapi.h>
 
+#ifndef PW_RENDERFULLCONTENT
+    #define PW_RENDERFULLCONTENT 2
+#endif
+
 namespace SL {
 namespace Screen_Capture {
 

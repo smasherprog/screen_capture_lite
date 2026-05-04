@@ -8,8 +8,11 @@
 #include <windows.h>
 
 #include <iostream>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <utility>
 
 namespace SL {
 namespace Screen_Capture {
@@ -84,15 +87,68 @@ namespace Screen_Capture {
         // need to switch to the input desktop for capturing...
         if (!SwitchToInputDesktop(data))
             return;
+
+        enum class CaptureBackend { DXGI, GDI };
+        using MonitorKey = std::pair<int, int>;
+
+        const MonitorKey monitor_key(Adapter(monitor), Id(monitor));
+        static std::mutex preferred_backend_mutex;
+        static std::map<MonitorKey, CaptureBackend> preferred_backends;
+
+        auto preferred_backend = CaptureBackend::DXGI;
+        {
+            std::lock_guard<std::mutex> lock(preferred_backend_mutex);
+            const auto found = preferred_backends.find(monitor_key);
+            if (found != preferred_backends.end()) {
+                preferred_backend = found->second;
+            }
+        }
 #if defined _DEBUG || !defined NDEBUG
         std::cout << "Starting to Capture on Monitor " << Name(monitor) << std::endl;
-        std::cout << "Trying DirectX Desktop Duplication " << std::endl;
+        if (preferred_backend == CaptureBackend::GDI) {
+            std::cout << "Trying GDI Capturing first " << std::endl;
+        }
+        else {
+            std::cout << "Trying DirectX Desktop Duplication first " << std::endl;
+        }
 #endif
-        if (!TryCaptureMonitor<DXFrameProcessor>(data, monitor)) { // if DX is not supported, fallback to GDI capture
+        if (preferred_backend == CaptureBackend::GDI) {
+            if (!TryCaptureMonitor<GDIFrameProcessor>(data, monitor)) {
 #if defined _DEBUG || !defined NDEBUG
-            std::cout << "DirectX Desktop Duplication not supported, falling back to GDI Capturing . . ." << std::endl;
+                std::cout << "GDI capture not supported, falling back to DirectX Desktop Duplication . . ." << std::endl;
 #endif
-            TryCaptureMonitor<GDIFrameProcessor>(data, monitor);
+                {
+                    std::lock_guard<std::mutex> lock(preferred_backend_mutex);
+                    preferred_backends[monitor_key] = CaptureBackend::DXGI;
+                }
+                if (!TryCaptureMonitor<DXFrameProcessor>(data, monitor)) {
+                    std::lock_guard<std::mutex> lock(preferred_backend_mutex);
+                    preferred_backends[monitor_key] = CaptureBackend::GDI;
+                }
+            }
+        }
+        else {
+            const auto capture_started = TryCaptureMonitor<DXFrameProcessor>(data, monitor);
+            if (!capture_started) { // if DX is not supported, fallback to GDI capture
+#if defined _DEBUG || !defined NDEBUG
+                std::cout << "DirectX Desktop Duplication not supported, falling back to GDI Capturing . . ." << std::endl;
+#endif
+                {
+                    std::lock_guard<std::mutex> lock(preferred_backend_mutex);
+                    preferred_backends[monitor_key] = CaptureBackend::GDI;
+                }
+                if (!TryCaptureMonitor<GDIFrameProcessor>(data, monitor)) {
+                    std::lock_guard<std::mutex> lock(preferred_backend_mutex);
+                    preferred_backends[monitor_key] = CaptureBackend::DXGI;
+                }
+            }
+            else if (data->CommonData_.ExpectedErrorEvent) {
+#if defined _DEBUG || !defined NDEBUG
+                std::cout << "DirectX Desktop Duplication exited, trying GDI Capturing on restart . . ." << std::endl;
+#endif
+                std::lock_guard<std::mutex> lock(preferred_backend_mutex);
+                preferred_backends[monitor_key] = CaptureBackend::GDI;
+            }
         }
     }
 

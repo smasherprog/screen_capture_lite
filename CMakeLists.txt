@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
+
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND NOT DEFINED CMAKE_OSX_DEPLOYMENT_TARGET)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version")
+endif()
+
 project(screen_capture_lite_build VERSION 17.1)
 
 set(CMAKE_CXX_STANDARD 17)
